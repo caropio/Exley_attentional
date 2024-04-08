@@ -27,18 +27,11 @@ assoc_2 = pd.read_csv(path + file + '/EXLEY_ASSO_' + date_2 + '.csv')
 assoc_3 = pd.read_csv(path + file + '/EXLEY_ASSO_' + date_3 + '.csv')
 
 assoc_sum = pd.concat([assoc_1, assoc_2, assoc_3], ignore_index=True)
-# assoc_sum = assoc_2
 assoc_sum = assoc_sum.drop(assoc_sum[assoc_sum['participant._current_page_name'] != 'prolific'].index)
 
 assoc = pd.DataFrame()
 assoc['id'] = assoc_sum['participant.code'] 
 assoc['charity choice'] = assoc_sum['player.association_choice']
-
-###############################
-###############################
-# EXCLUDE PARTICIPANTS THAT DID N'IMPORTE QUOI (attentional and comprehension check)
-###############################
-###############################
 
 # Concatenate the datasets (each case of part 3)
 outcome_data = pd.concat([collect_1, collect_2, collect_3], ignore_index=True)
