@@ -24,30 +24,25 @@ attention_type = 'relative' # relative for % of total time and 'absolute' for ra
 # Info to find data
 path = '/Users/carolinepioger/Desktop' # change to yours :)
 file = '/pretest vincent' # to adapt
-date = '2024-03-28' # download date of first collection
-date_2 = '2024-03-25' # download date of second collection
-date_3 = '2024-04-03'
+dates = ['2024-03-28', '2024-03-25', '2024-04-03']
 
 # Data for analysis 
-df1 = pd.read_csv(path + file + '/EXLEY_ASPS_' + date + '.csv')
-df2 = pd.read_csv(path + file + '/EXLEY_ACPC_' + date + '.csv')
-df3 = pd.read_csv(path + file + '/EXLEY_ASPC_' + date + '.csv')
-df4 = pd.read_csv(path + file + '/EXLEY_ACPS_' + date + '.csv')
-df1_1 = pd.read_csv(path + file + '/EXLEY_ASPS_' + date_2 + '.csv')
-df2_1 = pd.read_csv(path + file + '/EXLEY_ACPC_' + date_2 + '.csv')
-df3_1 = pd.read_csv(path + file + '/EXLEY_ASPC_' + date_2 + '.csv')
-df4_1 = pd.read_csv(path + file + '/EXLEY_ACPS_' + date_2 + '.csv')
-df1_2 = pd.read_csv(path + file + '/EXLEY_ASPS_' + date_3 + '.csv')
-df2_2 = pd.read_csv(path + file + '/EXLEY_ACPC_' + date_3 + '.csv')
-df3_2 = pd.read_csv(path + file + '/EXLEY_ASPC_' + date_3 + '.csv')
-df4_2 = pd.read_csv(path + file + '/EXLEY_ACPS_' + date_3 + '.csv')
+
+dfs = []
+
+for date in dates:
+    df1 = pd.read_csv(path + file + '/EXLEY_ASPS_' + date + '.csv')
+    df2 = pd.read_csv(path + file + '/EXLEY_ACPC_' + date + '.csv')
+    df3 = pd.read_csv(path + file + '/EXLEY_ASPC_' + date + '.csv')
+    df4 = pd.read_csv(path + file + '/EXLEY_ACPS_' + date + '.csv')
+    dfs.extend([df1, df2, df3, df4])
+
+concatenated_df = pd.concat(dfs, ignore_index=True)
+concatenated_df = concatenated_df.drop(concatenated_df[concatenated_df['participant._current_page_name'] != 'prolific'].index)
+data = concatenated_df.sort_values(by=['participant.code'])
 
 # Data to check criterions
-exclu = pd.read_csv(path + file + '/EXLEY_ASSO_' + date + '.csv')
-exclu_1 = pd.read_csv(path + file + '/EXLEY_ASSO_' + date_2 + '.csv')
-exclu_2 = pd.read_csv(path + file + '/EXLEY_ASSO_' + date_3 + '.csv')
-
-data_autre = pd.concat([exclu, exclu_1, exclu_2], ignore_index=True)
+data_autre = pd.concat([pd.read_csv(path + file + '/EXLEY_ASSO_' + date + '.csv') for date in dates], ignore_index=True)
 data_autre = data_autre.drop(data_autre[data_autre['participant._current_page_name'] != 'prolific'].index)
 
 data_autre['choix_calibration'] = data_autre[['player.choice_x_' + str(i) for i in range(1, 17)]].values.tolist()
@@ -62,12 +57,9 @@ data_autre = data_autre.rename(columns={'participant.code':'id', 'session.code':
 data_autre = data_autre.reset_index(drop=True)
 
 # Data for between-subject analysis 
-app_page_1 =  pd.read_csv(path + file + '/StartApp_' + date + '.csv')
-app_page_2 =  pd.read_csv(path + file + '/StartApp_' + date_2 + '.csv')
-app_page_3 =  pd.read_csv(path + file + '/StartApp_' + date_3 + '.csv')
-
-app_page = pd.concat([app_page_1, app_page_2, app_page_3], ignore_index=True)
+app_page = pd.concat([pd.read_csv(path + file + '/StartApp_' + date + '.csv') for date in dates], ignore_index=True)
 app_page = app_page.drop(app_page[app_page['participant._current_page_name'] != 'prolific'].index)
+
 
 app_page = app_page[['participant.code','session.code', 'player.sequence_of_apps']]
 app_page = app_page.rename(columns={'participant.code':'id', 'session.code': 'session', 
@@ -91,11 +83,13 @@ for i in range(len(app_page)):
     app_page['order of cases'][i] = [app_page['first case'][i], app_page['second case'][i], app_page['third case'][i], app_page['fourth case'][i]]
 
 # Data from surveys 
-survey_1 = pd.read_csv(path + file + '/EXLEY_DEMOG_' + date + '.csv')
-survey_2 = pd.read_csv(path + file + '/EXLEY_DEMOG_' + date_2 + '.csv')
-survey_3 = pd.read_csv(path + file + '/EXLEY_DEMOG_' + date_3 + '.csv')
+survey = pd.concat([pd.read_csv(path + file + '/EXLEY_DEMOG_' + date + '.csv') for date in dates], ignore_index=True)
 
-survey = pd.concat([survey_1, survey_2, survey_3], ignore_index=True)
+# survey_1 = pd.read_csv(path + file + '/EXLEY_DEMOG_' + date + '.csv')
+# survey_2 = pd.read_csv(path + file + '/EXLEY_DEMOG_' + date_2 + '.csv')
+# survey_3 = pd.read_csv(path + file + '/EXLEY_DEMOG_' + date_3 + '.csv')
+
+# survey = pd.concat([survey_1, survey_2, survey_3], ignore_index=True)
 survey = survey.drop(survey[survey['participant._current_page_name'] != 'prolific'].index)
 survey = survey[['participant.code','session.code', 'player.PROLIFIC_ID', 'player.AGE', 'player.SEXE', 
                  'player.DISCIPLINE', 'player.NIVEAU_ETUDE'] + ['player.QUEST_' + str(i) for i in range(1, 16)] + 
@@ -117,12 +111,6 @@ survey = survey.reset_index(drop=True)
 # FROM RAW DATA TO CLEAN DATA
 # =============================================================================
 
-
-# Concatenate the datasets (each case of part 3)
-concatenated_df = pd.concat([df1, df2, df3, df4, df1_1, df2_1, df3_1, df4_1, df1_2, df2_2, df3_2, df4_2], ignore_index=True)
-concatenated_df = concatenated_df.drop(concatenated_df[concatenated_df['participant._current_page_name'] != 'prolific'].index)
-data = concatenated_df.sort_values(by=['participant.code'])
-
 # Note that in this database each row gives the data of one table (so there 
 # are multiple rows for each participant). The database is ordered by participant
 
@@ -132,41 +120,24 @@ data['player.choix_overview'] = data[['player.choix' + str(i) for i in range(1, 
 data['player.prob_lottery'] = data[['player.P1', 'player.P2']].values.tolist()
 
 # Keep columns of interest
-columns_to_keep = ['participant.code', # number id associated to each participant
-                   'session.code', # number of session
-                   'player.association_choice', # charity choice from part 1
-                   'player.x1_norm_after_correction', # participant specific X from part 2
-                   'player.TREATMENT',  # case of each table of part 3
-                   'subsession.round_number', # order of presentation of tables within case
-                   'player.x1_outcome_vec_order', # non-zero amount of lottery (option A)
-                   'player.prob_lottery', # number of green and red balls of associated urn
-                   'player.WTP_VEC', # the different values of option B along the rows 
-                   'player.choix_overview', # the choices (As and Bs) made along the rows 
-                   'player.temps_decision', # time it took to complete the entire table (and click on next button) in seconds
-                   'player.temps_regard_urne', # dwell time of watching urn (array of times in ms) 
-                   'player.user_actions', # temporal information (when urn is unmasked and choices are made)
-                   ]
+columns_mapping = {
+    'participant.code': 'id', # number id associated to each participant
+    'session.code': 'session',  # number of session
+    'player.association_choice': 'charity_name', # charity choice from part 1
+    'player.x1_norm_after_correction': 'charity_calibration', # participant specific X from part 2
+    'player.TREATMENT': 'case', # case of each table of part 3
+    'subsession.round_number': 'round_order', # order of presentation of tables within case
+    'player.x1_outcome_vec_order': 'option_A_vector', # non-zero amount of lottery (option A)
+    'player.prob_lottery': 'prob_option_A', # number of green and red balls of associated urn
+    'player.WTP_VEC': 'option_B_vector', # the different values of option B along the rows 
+    'player.choix_overview': 'choices', # the choices (As and Bs) made along the rows 
+    'player.temps_decision': 'total_time_spent_s', # time it took to complete the entire table (and click on next button) in seconds
+    'player.temps_regard_urne': 'watching_urn_ms', # dwell time of watching urn (array of times in ms) 
+    'player.user_actions': 'temporal_information' # temporal information (when urn is unmasked and choices are made)
+}
 
-
-data = data[columns_to_keep]
-
-data = data.rename(columns={'participant.code':'id', # number id associated to each participant
-                                                  'session.code': 'session', # number of session
-                                                  'player.association_choice':'charity_name', # charity choice from part 1
-                                                  'player.x1_norm_after_correction': 'charity_calibration', # participant specific X from part 2
-                                                  'player.TREATMENT':'case', # case of each table of part 3
-                                                  'subsession.round_number' : 'round_order', # order of presentation of tables within case
-                                                  'player.x1_outcome_vec_order': 'option_A_vector', # non-zero amount of lottery (option A)
-                                                  'player.prob_lottery':'prob_option_A', # probability of non-zero amount involved in associated urn
-                                                  'player.WTP_VEC':'option_B_vector', # the different values of option B along the rows 
-                                                  'player.choix_overview':'choices',  # the choices (As and Bs) made along the rows 
-                                                  'player.temps_decision':'total_time_spent_s', # time it took to complete the entire table (and click on next button) in seconds
-                                                  'player.temps_regard_urne':'watching_urn_ms', # dwell time of watching urn (array of times in ms) 
-                                                  'player.user_actions':'temporal_information', # temporal information (when urn is unmasked and choices are made)
-                                                  })
-
+data = data.rename(columns=columns_mapping)
 data = data.reset_index(drop=True)
-
 
 # Reconstruct option_A_vector, prob_option_A and option_B_vector without issues (string to float)
 

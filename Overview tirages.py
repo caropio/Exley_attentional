@@ -15,7 +15,7 @@ import pandas as pd
 path = '/Users/carolinepioger/Desktop' # change to yours :)
 file = '/pretest vincent' # to adapt
 
-dates = ['2024-03-28', '2024-03-25', '2024-04-03']  # List of download dates
+dates = ['2024-03-28', '2024-03-25', '2024-04-03']  # list of download dates
 
 assoc_sum = pd.concat([pd.read_csv(path + file + '/EXLEY_ASSO_' + date + '.csv') for date in dates], ignore_index=True)
 assoc_sum = assoc_sum.drop(assoc_sum[assoc_sum['participant._current_page_name'] != 'prolific'].index)
