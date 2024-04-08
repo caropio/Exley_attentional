@@ -22,7 +22,7 @@ by_ind = 0 # Put 0 if no display of individual plots and 1 if display
 attention_type = 'relative' # relative for % of total time and 'absolute' for raw time
 
 # Info to find data
-path = '/Users/carolinepioger/Downloads' # change to yours :)
+path = '/Users/carolinepioger/Desktop' # change to yours :)
 file = '/pretest vincent' # to adapt
 date = '2024-03-28' # download date of first collection
 date_2 = '2024-03-25' # download date of second collection
