@@ -19,7 +19,7 @@ import statsmodels.formula.api as smf
 censure = 0 # Put 0 if include censored participants in analysis and 1 if we exclude them 
 MSP_excl = 1 # Put 0 if include MSP calib in analysis and 1 if we exclude them 
 by_ind = 0 # Put 0 if no display of individual plots and 1 if display 
-attention_type = 'relative' # relative for % of total time and 'absolute' for raw time
+attention_type = 'absolute' # relative for % of total time and 'absolute' for raw time
 
 # Info to find data
 path = '/Users/carolinepioger/Desktop' # change to yours :)
@@ -47,12 +47,14 @@ data_autre = data_autre.drop(data_autre[data_autre['participant._current_page_na
 
 data_autre['choix_calibration'] = data_autre[['player.choice_x_' + str(i) for i in range(1, 17)]].values.tolist()
 data_autre['choix_buffer'] = data_autre[['player.choice_y_' + str(i) for i in range(1, 17)]].values.tolist()
-data_autre = data_autre[['participant.code','session.code', 'player.PROLIFIC_ID', 'player.association_choice', 
-                         'player.x1_norm_after_correction', 'choix_calibration', 'choix_buffer']]
-data_autre = data_autre.rename(columns={'participant.code':'id', 'session.code': 'session', 
-                                        'player.PROLIFIC_ID' : 'prolific', 'player.association_choice' : 'charity_name', 
-                                        'player.x1_norm_after_correction': 'charity_calibration', 
-                                        'choix_calibration' : 'calibration_choices', 'choix_buffer':'buffer_choices'})
+columns_mapping = { 'participant.code': 'id', 
+ 'session.code': 'session', 
+ 'player.PROLIFIC_ID': 'prolific', 
+ 'player.association_choice': 'charity_name', 
+ 'player.x1_norm_after_correction': 'charity_calibration', 
+ 'choix_calibration': 'calibration_choices', 
+ 'choix_buffer': 'buffer_choices'}
+data_autre = data_autre.rename(columns=columns_mapping)[list(columns_mapping.values())]
 
 data_autre = data_autre.reset_index(drop=True)
 
@@ -84,24 +86,29 @@ for i in range(len(app_page)):
 
 # Data from surveys 
 survey = pd.concat([pd.read_csv(path + file + '/EXLEY_DEMOG_' + date + '.csv') for date in dates], ignore_index=True)
-
-# survey_1 = pd.read_csv(path + file + '/EXLEY_DEMOG_' + date + '.csv')
-# survey_2 = pd.read_csv(path + file + '/EXLEY_DEMOG_' + date_2 + '.csv')
-# survey_3 = pd.read_csv(path + file + '/EXLEY_DEMOG_' + date_3 + '.csv')
-
-# survey = pd.concat([survey_1, survey_2, survey_3], ignore_index=True)
 survey = survey.drop(survey[survey['participant._current_page_name'] != 'prolific'].index)
-survey = survey[['participant.code','session.code', 'player.PROLIFIC_ID', 'player.AGE', 'player.SEXE', 
-                 'player.DISCIPLINE', 'player.NIVEAU_ETUDE'] + ['player.QUEST_' + str(i) for i in range(1, 16)] + 
-                 ['player.CHARITY_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]]
-survey = survey.rename(columns={'participant.code':'id', 'session.code': 'session', 'player.PROLIFIC_ID' : 'prolific', 
-                                'player.AGE': 'Demog_AGE', 'player.SEXE' : 'Demog_Sex', 'player.DISCIPLINE' : 'Demog_Field', 
-                                'player.NIVEAU_ETUDE' : 'Demog_High_Ed_Lev'})
+
+columns_mapping = {
+    'participant.code': 'id',
+    'session.code': 'session',
+    'player.PROLIFIC_ID': 'prolific',
+    'player.AGE': 'Demog_AGE',
+    'player.SEXE': 'Demog_Sex',
+    'player.DISCIPLINE': 'Demog_Field',
+    'player.NIVEAU_ETUDE': 'Demog_High_Ed_Lev'
+}
+
 for i in range(1, 16):
-    survey = survey.rename(columns={'player.QUEST_' + str(i): 'NEP_' + str(i)})
-    
+    columns_mapping[f'player.QUEST_{i}'] = f'NEP_{i}'
+
 for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']:
-    survey = survey.rename(columns={'player.CHARITY_' + str(j): 'Charity_' + str(j)})    
+    columns_mapping[f'player.CHARITY_{j}'] = f'Charity_{j}'
+
+survey = survey.rename(columns=columns_mapping)[
+    ['id', 'session', 'prolific', 'Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + 
+    [f'NEP_{i}' for i in range(1, 16)] + 
+    [f'Charity_{j}' for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]
+][list(columns_mapping.values())]   
                           
 survey = survey.reset_index(drop=True)
 
@@ -113,7 +120,6 @@ survey = survey.reset_index(drop=True)
 
 # Note that in this database each row gives the data of one table (so there 
 # are multiple rows for each participant). The database is ordered by participant
-
 
 # Transform the 21 columns of choices into one summing up the choices 
 data['player.choix_overview'] = data[['player.choix' + str(i) for i in range(1, 22)]].values.tolist()
@@ -136,7 +142,7 @@ columns_mapping = {
     'player.user_actions': 'temporal_information' # temporal information (when urn is unmasked and choices are made)
 }
 
-data = data.rename(columns=columns_mapping)
+data = data.rename(columns=columns_mapping)[list(columns_mapping.values())]
 data = data.reset_index(drop=True)
 
 # Reconstruct option_A_vector, prob_option_A and option_B_vector without issues (string to float)
@@ -306,13 +312,24 @@ data = data[column_order]
 # Add attention data of each lottery (according to either relative or absolute) 
 data['watching_urn_ms_corrected'] = data['watching_urn_ms'].apply(lambda arr: np.array([x for x in arr if x > 300])) # we drop values lower or equal to 300ms 
 
+dwell_time_prop = [np.sum(data['watching_urn_ms_corrected'][i])/(data['total_time_spent_s'][i]*1000) for i in range(len(data))]
+dwell_time_relative = [x * 100 for x in dwell_time_prop] # to get percentage
+dwell_time_absolute = [np.sum(data['watching_urn_ms_corrected'][i])/1000 for i in range(len(data))]
+data.insert(data.columns.get_loc('watching_urn_ms_corrected') + 1, 'dwell_time_relative', dwell_time_relative)
+data.insert(data.columns.get_loc('dwell_time_relative') + 1, 'dwell_time_absolute', dwell_time_absolute)
+
 if attention_type == 'relative':
-    dwell_time_prop = [np.sum(data['watching_urn_ms_corrected'][i])/(data['total_time_spent_s'][i]*1000) for i in range(len(data))]
-    dwell_time = [x * 100 for x in dwell_time_prop] # to get percentage
-elif attention_type == 'absolute':
-    dwell_time = [np.sum(data['watching_urn_ms_corrected'][i])/1000 for i in range(len(data))]
+    data.insert(data.columns.get_loc('watching_urn_ms_corrected') + 1, 'dwell_time', dwell_time_relative)
+elif attention_type == 'absolute':  
+    data.insert(data.columns.get_loc('watching_urn_ms_corrected') + 1, 'dwell_time', dwell_time_absolute)
+
+# if attention_type == 'relative':
+#     dwell_time_prop = [np.sum(data['watching_urn_ms_corrected'][i])/(data['total_time_spent_s'][i]*1000) for i in range(len(data))]
+#     dwell_time = [x * 100 for x in dwell_time_prop] # to get percentage
+# elif attention_type == 'absolute':
+#     dwell_time = [np.sum(data['watching_urn_ms_corrected'][i])/1000 for i in range(len(data))]
     
-data.insert(data.columns.get_loc('watching_urn_ms_corrected') + 1, 'dwell_time', dwell_time)
+# data.insert(data.columns.get_loc('watching_urn_ms_corrected') + 1, 'dwell_time', dwell_time)
 
 data['frequency'] = [len(data['watching_urn_ms_corrected'][i]) for i in range(len(data))]
 column_order_2 = list(data.columns)
@@ -816,7 +833,15 @@ print(mdf_5.summary())
 
 
 
+# plot dwell time 
 
+for i in [ASPS_between, ACPC_between, ACPS_between, ASPC_between]:
+    attention_case = i
+    bins = np.linspace(0, 50, 50)
+    plt.hist([attention_case['dwell_time_absolute'], attention_case['dwell_time_relative'], attention_case['total_time_spent_s']], bins, label = ['absolute', 'relative', 'total'])
+    plt.legend()
+    plt.title('(Between-subj) ' +str(attention_case['case'].iloc[0][:4]))
+    plt.show()
 
 
 #### EXPLORATOIRE??? 
