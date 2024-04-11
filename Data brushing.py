@@ -837,6 +837,7 @@ print(mdf_3.summary())
 ###### ATTENTION AS PREDICTOR
 data_for_analysis_between['case_id']=[['ASPS', 'ACPC','ASPC', 'ACPS']. index(data_for_analysis_between['case'][i]) for i in range(len(data_for_analysis_between))]
 
+# GOGOGOGO 
 md_4 = smf.mixedlm("valuation ~ charity*dwell_time + tradeoff*dwell_time + interaction*dwell_time", data_for_analysis, groups=data_for_analysis["number"])
 mdf_4 = md_4.fit()
 print(mdf_4.summary())
@@ -852,6 +853,24 @@ print(mdf_6.summary())
 md_7 = smf.mixedlm("valuation ~ dwell_time", ASPC_between, groups=ASPC_between["prob_option_A"])
 mdf_7 = md_7.fit()
 print(mdf_7.summary())
+
+
+data_for_prediction = data_for_analysis
+# self_lottery_differences = pd.Dataframe(data_for_prediction[['id', 'number'])
+self_lottery = pd.concat([ASPS, ACPS], ignore_index = True)
+charity_lottery = pd.concat([ACPC, ASPC], ignore_index=True)
+# val_diff_df = data_for_analysis.pivot(index='number', columns='prob_option_A', values='valuation')
+
+self_lottery_differences = pd.DataFrame(columns=['number', 'prob_option_A', 'valuation_ASPS-ACPS', 'dwell_time_ASPS-ACPS'])
+
+for i in range(1, self_lottery['number'].nunique()+1):
+    individual = self_lottery.loc[self_lottery['number'] == i, ['case', 'prob_option_A', 'valuation', 'dwell_time']] 
+    individual_difference = individual.pivot(index='prob_option_A', columns='case', values=['valuation', 'dwell_time'])
+    individual_difference['valuation_ASPS-ACPS'] = individual_difference['valuation']['ASPS'] - individual_difference['valuation']['ACPS']
+    individual_difference['dwell_time_ASPS-ACPS'] = individual_difference['dwell_time']['ASPS'] - individual_difference['dwell_time']['ACPS']
+    individual_difference['number'] = i
+    self_lottery_differences = pd.concat([self_lottery_differences, individual_difference[['number', 'prob_option_A', 'valuation_ASPS-ACPS', 'dwell_time_ASPS-ACPS']]], ignore_index=True)
+
 
 
 # data_for_analysis_between_attention = data_for_analysis_between
