@@ -401,10 +401,10 @@ ACPC = data_for_plot[(data_for_plot['charity'] == 1) & (data_for_plot['tradeoff'
 ASPC = data_for_plot[(data_for_plot['charity'] == 1) & (data_for_plot['tradeoff'] == 1)]
 ACPS = data_for_plot[(data_for_plot['charity'] == 0) & (data_for_plot['tradeoff'] == 1)]
 
-average_valuation_ASPS = ASPS.groupby('prob_option_A')['valuation'].mean()
-average_valuation_ACPC = ACPC.groupby('prob_option_A')['valuation'].mean()
-average_valuation_ACPS = ACPS.groupby('prob_option_A')['valuation'].mean()
-average_valuation_ASPC = ASPC.groupby('prob_option_A')['valuation'].mean()
+average_valuation_ASPS = ASPS.groupby('prob_option_A')['valuation'].median()
+average_valuation_ACPC = ACPC.groupby('prob_option_A')['valuation'].median()
+average_valuation_ACPS = ACPS.groupby('prob_option_A')['valuation'].median()
+average_valuation_ASPC = ASPC.groupby('prob_option_A')['valuation'].median()
 
 data_for_plot_2 = data_for_plot
 data_for_plot_2['first case'] = [data_for_plot_2['order of cases'][i][0] for i in range(len(data_for_plot_2))]
@@ -428,7 +428,7 @@ plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
 plt.xlabel('Probability P of Non-Zero Payment')
 plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('Results for No Tradeoff Context ' + str(['with', 'without'][censure]) + ' censored partic')
+plt.title('(Median) Results for No Tradeoff Context ' + str(['with', 'without'][censure]) + ' censored partic')
 plt.grid(True)
 plt.legend()
 
@@ -446,7 +446,7 @@ plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
 plt.xlabel('Probability P of Non-Zero Payment')
 plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('Results for Tradeoff Context ' + str(['with', 'without'][censure]) + ' censored partic')
+plt.title('(Median) Results for Tradeoff Context ' + str(['with', 'without'][censure]) + ' censored partic')
 plt.grid(True)
 plt.legend()
 
@@ -464,7 +464,7 @@ plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
 plt.xlabel('Probability P of Non-Zero Payment')
 plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('Results for Self Lottery Valuation ' + str(['with', 'without'][censure]) + ' censored partic')
+plt.title('(Median) Results for Self Lottery Valuation ' + str(['with', 'without'][censure]) + ' censored partic')
 plt.grid(True)
 plt.legend()
 
@@ -482,7 +482,7 @@ plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
 plt.xlabel('Probability P of Non-Zero Payment')
 plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('Results for Charity Lottery Valuation ' + str(['with', 'without'][censure]) + ' censored partic')
+plt.title('(Median) Results for Charity Lottery Valuation ' + str(['with', 'without'][censure]) + ' censored partic')
 plt.grid(True)
 plt.legend()
 
@@ -759,7 +759,19 @@ model = sm.OLS(y, X).fit(cov_type='cluster', cov_kwds={'groups': data_for_analys
 print(model.summary())
 
 
-md = smf.mixedlm("valuation ~ charity + tradeoff + interaction", data_for_analysis, groups=data_for_analysis["prob_option_A"])
+
+
+# control_variables_2 = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + 
+#                  ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
+# X_2 = data_for_analysis[['charity', 'tradeoff', 'interaction'] + list(dummy_ind.columns)]
+# X_2 = pd.concat([X_2, data_for_analysis[control_variables_2]], axis=1)
+# X_2 = sm.add_constant(X_2, has_constant='add') # add a first column full of ones to account for intercept of regression
+
+# model_X2 = sm.OLS(y, X_2).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis['number']}) # cluster at individual level
+# print(model_X2.summary())
+
+
+md = smf.mixedlm("valuation ~ charity + tradeoff + interaction", data_for_analysis, groups=data_for_analysis["number"])
 mdf = md.fit()
 print(mdf.summary())
 
@@ -773,7 +785,7 @@ model_2 = sm.OLS(y_2, X).fit(cov_type='cluster', cov_kwds={'groups': data_for_an
 print(model_2.summary())
 
 
-md_2 = smf.mixedlm("dwell_time ~ charity + tradeoff + interaction", data_for_analysis, groups=data_for_analysis["case_order"])
+md_2 = smf.mixedlm("dwell_time ~ charity + tradeoff + interaction", data_for_analysis, groups=data_for_analysis["number"])
 mdf_2 = md_2.fit()
 print(mdf_2.summary())
 
@@ -796,26 +808,51 @@ X_between = pd.concat([X_between, data_for_analysis_between[control_variables]],
 X_between = sm.add_constant(X_between, has_constant='add') # add a first column full of ones to account for intercept of regression 
 y_between = data_for_analysis_between['dwell_time']
 
-model_3 = sm.OLS(y_between, X_between).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis_between['number']}) # cluster at individual level
+model_3 = sm.OLS(y_between, X_between).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis_between['prob_option_A']}) 
 
 print(model_3.summary())
 
+# no controls
+X_between_2 = data_for_analysis_between[['charity', 'tradeoff', 'interaction'] + list(dummy_prob.columns)]
+X_between_2 = sm.add_constant(X_between_2, has_constant='add') 
+model_3_2 = sm.OLS(y_between, X_between_2).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis_between['prob_option_A']}) 
+print(model_3_2.summary())
 
-md_3 = smf.mixedlm("dwell_time ~ charity + tradeoff + interaction", data_for_analysis_between, groups=data_for_analysis_between["number"])
+# explo controls
+
+# control_variables_2 = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + 
+#                   ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
+# X_between_3 = data_for_analysis_between[['charity', 'tradeoff', 'interaction'] + list(dummy_prob.columns)]
+# X_between_3 = pd.concat([X_between_3, data_for_analysis_between[control_variables_2]], axis=1) # add controls
+# X_between_3 = sm.add_constant(X_between_3, has_constant='add') 
+# model_3_3 = sm.OLS(y_between, X_between_3).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis_between['number']}) # cluster at individual level
+# print(model_3_3.summary())
+
+md_3 = smf.mixedlm("dwell_time ~ charity + tradeoff + interaction", data_for_analysis_between, groups=data_for_analysis_between["prob_option_A"])
 mdf_3 = md_3.fit()
 print(mdf_3.summary())
 
 
 
 ###### ATTENTION AS PREDICTOR
+data_for_analysis_between['case_id']=[['ASPS', 'ACPC','ASPC', 'ACPS']. index(data_for_analysis_between['case'][i]) for i in range(len(data_for_analysis_between))]
 
 md_4 = smf.mixedlm("valuation ~ charity*dwell_time + tradeoff*dwell_time + interaction*dwell_time", data_for_analysis, groups=data_for_analysis["number"])
 mdf_4 = md_4.fit()
 print(mdf_4.summary())
 
-md_5 = smf.mixedlm("valuation ~ charity*dwell_time + tradeoff*dwell_time + interaction*dwell_time", data_for_analysis_between, groups=data_for_analysis_between["prob_option_A"])
+md_5 = smf.mixedlm("valuation ~ charity*dwell_time + tradeoff*dwell_time + interaction*dwell_time", data_for_analysis_between, groups=data_for_analysis_between["case_id"])
 mdf_5 = md_5.fit()
 print(mdf_5.summary())
+
+md_6 = smf.mixedlm("valuation ~ dwell_time*case_id", data_for_analysis_between, groups=data_for_analysis_between["case_id"])
+mdf_6 = md_6.fit()
+print(mdf_6.summary())
+
+md_7 = smf.mixedlm("valuation ~ dwell_time", ASPC_between, groups=ASPC_between["prob_option_A"])
+mdf_7 = md_7.fit()
+print(mdf_7.summary())
+
 
 # data_for_analysis_between_attention = data_for_analysis_between
 
