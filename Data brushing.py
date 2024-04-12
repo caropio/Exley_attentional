@@ -263,8 +263,10 @@ column_order_2.insert(column_order_2.index('charity_calibration') + 1, column_or
 data_autre = data_autre[column_order_2]
 
 data = data.merge(data_autre[['id','buffer_X']], how='left', on='id')
+data = data.merge(data_autre[['id','censored_calibration']], how='left', on='id')
 column_order_3 = list(data.columns)
 column_order_3.insert(column_order_3.index('charity_calibration') + 1, column_order_3.pop(column_order_3.index('buffer_X')))
+column_order_3.insert(column_order_3.index('buffer_X') + 1, column_order_3.pop(column_order_3.index('censored_calibration')))
 data = data[column_order_3]
 
 for i in range(len(data_autre)):
@@ -920,6 +922,30 @@ md_charity = smf.mixedlm("valuation_ACPC_ASPC ~ dwell_time_ACPC_ASPC", charity_l
 mdf_charity = md_charity.fit()
 print(mdf_charity.summary())
 
+
+plt.scatter(self_lottery_differences['prob_option_A'], self_lottery_differences['valuation_ASPS_ACPS'], c='red', label='self')
+plt.scatter(charity_lottery_differences['prob_option_A'], charity_lottery_differences['valuation_ACPC_ASPC'], c='green', label='charity')
+
+plt.xlabel('Prob')
+plt.ylabel('Valuation diff')
+plt.title('(Within-subj) Diff Valuation')
+plt.grid(True)
+plt.legend()
+plt.show()
+
+self_lottery_differences_grouped = self_lottery_differences.groupby('prob_option_A')['valuation_ASPS_ACPS'].median()
+charity_lottery_differences_grouped = charity_lottery_differences.groupby('prob_option_A')['valuation_ACPC_ASPC'].median()
+
+plt.scatter(self_lottery_differences_grouped.index, self_lottery_differences_grouped, c='red', label='self')
+plt.scatter(charity_lottery_differences_grouped.index, charity_lottery_differences_grouped, c='green', label='charity')
+
+plt.xlabel('Prob')
+plt.ylabel('Valuation diff')
+plt.title('(Within-subj) Diff Valuation')
+plt.grid(True)
+plt.legend()
+plt.show()
+
 # data_for_analysis_between_attention = data_for_analysis_between
 
 # data_for_analysis_between_attention['charity_atten'] = data_for_analysis_between_attention['charity'] * data_for_analysis_between_attention['dwell_time']
@@ -945,6 +971,17 @@ for i in [ASPS_between, ACPC_between, ACPS_between, ASPC_between]:
     plt.legend()
     plt.title('(Between-subj) ' +str(attention_case['case'].iloc[0][:4]))
     plt.show()
+
+for i in [ASPS, ACPC, ACPS, ASPC]:
+    attention_case = i
+    bins = np.linspace(0, 50, 50)
+    plt.hist([attention_case['dwell_time_absolute'], attention_case['dwell_time_relative'], attention_case['total_time_spent_s']], bins, label = ['absolute', 'relative', 'total'])
+    plt.legend()
+    plt.title('(Within-subj) ' +str(attention_case['case'].iloc[0][:4]))
+    plt.show()
+
+
+dwell_ind = data_for_analysis.loc[data_for_analysis['number'] == 1, ['case', 'prob_option_A', 'valuation', 'dwell_time_relative', 'dwell_time_absolute']] 
 
 
 #### EXPLORATOIRE??? 
