@@ -412,18 +412,15 @@ control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Le
                  ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
 
 # Create the design matrix and dependent variable
-# X = data_for_analysis[['charity', 'tradeoff', 'interaction'] + list(dummy_ind.columns) + list(dummy_prob.columns)]
-X = data_for_analysis[['charity', 'tradeoff', 'interaction'] + list(dummy_ind.columns)]
+X = data_for_analysis[['charity', 'tradeoff', 'interaction'] + list(dummy_ind.columns) + list(dummy_prob.columns)]
+# X = data_for_analysis[['charity', 'tradeoff', 'interaction'] + list(dummy_ind.columns)]
 X = pd.concat([X, data_for_analysis[control_variables]], axis=1)
 X = sm.add_constant(X, has_constant='add') # add a first column full of ones to account for intercept of regression
 y = data_for_analysis['valuation']
 
 # Fit the regression model using Ordinary Least Squares
-# model = sm.OLS(y, X).fit()
-# model = model.get_robustcov_results(cov_type='cluster', groups=data['number'])
 model = sm.OLS(y, X).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis['number']}) # cluster at individual level
 print(model.summary())
-
 
 
 
@@ -436,18 +433,16 @@ print(model.summary())
 # model_X2 = sm.OLS(y, X_2).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis['number']}) # cluster at individual level
 # print(model_X2.summary())
 
-
 md = smf.mixedlm("valuation ~ charity + tradeoff + interaction", data_for_analysis, groups=data_for_analysis["number"])
 mdf = md.fit()
 print(mdf.summary())
+
 
 ######## ATTENTION REGRESSION (WITHIN)
 
 # Same process but now dwell_time as dependent variable
 y_2 = data_for_analysis['dwell_time']
 model_2 = sm.OLS(y_2, X).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis['number']}) # cluster at individual level
-
-
 print(model_2.summary())
 
 
@@ -521,9 +516,11 @@ mdf_7 = md_7.fit()
 print(mdf_7.summary())
 
 
-# DIFFERENCES 
+# DIFFERENCES of valuations and dwell time 
 self_lottery = pd.concat([ASPS, ACPS], ignore_index = True)
+self_lottery['valuation'] = self_lottery['valuation']*100 # to get percentage
 charity_lottery = pd.concat([ACPC, ASPC], ignore_index=True)
+charity_lottery['valuation'] = charity_lottery['valuation']*100 # to get percentage
 
 self_lottery_differences = pd.DataFrame(columns=['number', 'prob_option_A', 'valuation_ASPS_ACPS', 'dwell_time_ASPS_ACPS'])
 
@@ -584,7 +581,7 @@ print(mdf_self.summary())
 
 md_charity = smf.mixedlm("valuation_ACPC_ASPC ~ dwell_time_ACPC_ASPC", charity_lottery_differences, groups=charity_lottery_differences["prob_option_A"])
 mdf_charity = md_charity.fit()
-print(mdf_charity.summary())
+print(mdf_self.summary())
 
 
 plt.scatter(self_lottery_differences['prob_option_A'], self_lottery_differences['valuation_ASPS_ACPS'], c='red', label='self')
