@@ -11,13 +11,11 @@ import pandas as pd
 import numpy as np
 import ast 
 
-censure = 0 # Put 0 if include censored participants in analysis and 1 if we exclude them 
 MSP_excl = 1 # Put 0 if include MSP calib in analysis and 1 if we exclude them 
 attention_type = 'absolute' # relative for % of total time and 'absolute' for raw time
 
 # Info to find data
-path = '/Users/carolinepioger/Desktop' # change to yours :)
-file = '/pretest vincent' # to adapt
+path = '/Users/carolinepioger/Desktop/pretest vincent' # change to yours :)
 dates = ['2024-03-28', '2024-03-25', '2024-04-03']
 
 # Data for analysis 
@@ -25,10 +23,10 @@ dates = ['2024-03-28', '2024-03-25', '2024-04-03']
 dfs = []
 
 for date in dates:
-    df1 = pd.read_csv(path + file + '/EXLEY_ASPS_' + date + '.csv')
-    df2 = pd.read_csv(path + file + '/EXLEY_ACPC_' + date + '.csv')
-    df3 = pd.read_csv(path + file + '/EXLEY_ASPC_' + date + '.csv')
-    df4 = pd.read_csv(path + file + '/EXLEY_ACPS_' + date + '.csv')
+    df1 = pd.read_csv(path + '/EXLEY_ASPS_' + date + '.csv')
+    df2 = pd.read_csv(path + '/EXLEY_ACPC_' + date + '.csv')
+    df3 = pd.read_csv(path + '/EXLEY_ASPC_' + date + '.csv')
+    df4 = pd.read_csv(path + '/EXLEY_ACPS_' + date + '.csv')
     dfs.extend([df1, df2, df3, df4])
 
 concatenated_df = pd.concat(dfs, ignore_index=True)
@@ -36,7 +34,7 @@ concatenated_df = concatenated_df.drop(concatenated_df[concatenated_df['particip
 data = concatenated_df.sort_values(by=['participant.code'])
 
 # Data to check criterions
-data_autre = pd.concat([pd.read_csv(path + file + '/EXLEY_ASSO_' + date + '.csv') for date in dates], ignore_index=True)
+data_autre = pd.concat([pd.read_csv(path + '/EXLEY_ASSO_' + date + '.csv') for date in dates], ignore_index=True)
 data_autre = data_autre.drop(data_autre[data_autre['participant._current_page_name'] != 'prolific'].index)
 
 data_autre['choix_calibration'] = data_autre[['player.choice_x_' + str(i) for i in range(1, 17)]].values.tolist()
@@ -53,7 +51,7 @@ data_autre = data_autre.rename(columns=columns_mapping)[list(columns_mapping.val
 data_autre = data_autre.reset_index(drop=True)
 
 # Data for between-subject analysis 
-app_page = pd.concat([pd.read_csv(path + file + '/StartApp_' + date + '.csv') for date in dates], ignore_index=True)
+app_page = pd.concat([pd.read_csv(path + '/StartApp_' + date + '.csv') for date in dates], ignore_index=True)
 app_page = app_page.drop(app_page[app_page['participant._current_page_name'] != 'prolific'].index)
 
 
@@ -79,7 +77,7 @@ for i in range(len(app_page)):
     app_page['order of cases'][i] = [app_page['first case'][i], app_page['second case'][i], app_page['third case'][i], app_page['fourth case'][i]]
 
 # Data from surveys 
-survey = pd.concat([pd.read_csv(path + file + '/EXLEY_DEMOG_' + date + '.csv') for date in dates], ignore_index=True)
+survey = pd.concat([pd.read_csv(path + '/EXLEY_DEMOG_' + date + '.csv') for date in dates], ignore_index=True)
 survey = survey.drop(survey[survey['participant._current_page_name'] != 'prolific'].index)
 
 columns_mapping = {
@@ -198,11 +196,11 @@ def upper_switchpoint(array):
     
     return switch_indices # num du choix après switch
 
-#for part 3
+# for part 3
 switchpoint_values = [upper_switchpoint(data['choices'][i]) for i in range(len(data))]
 data.insert(data.columns.get_loc('choices') + 1, 'switchpoint', switchpoint_values)
 
-#for part 2
+# for part 2
 switchpoint_values_calib = [upper_switchpoint(data_autre['calibration_choices'][i]) for i in range(len(data_autre))]
 switchpoint_values_buffer = [upper_switchpoint(data_autre['buffer_choices'][i]) for i in range(len(data_autre))]
 data_autre.insert(data_autre.columns.get_loc('calibration_choices') + 1, 'switchpoint_calib', switchpoint_values_calib)
@@ -319,13 +317,6 @@ if attention_type == 'relative':
 elif attention_type == 'absolute':  
     data.insert(data.columns.get_loc('watching_urn_ms_corrected') + 1, 'dwell_time', dwell_time_absolute)
 
-# if attention_type == 'relative':
-#     dwell_time_prop = [np.sum(data['watching_urn_ms_corrected'][i])/(data['total_time_spent_s'][i]*1000) for i in range(len(data))]
-#     dwell_time = [x * 100 for x in dwell_time_prop] # to get percentage
-# elif attention_type == 'absolute':
-#     dwell_time = [np.sum(data['watching_urn_ms_corrected'][i])/1000 for i in range(len(data))]
-    
-# data.insert(data.columns.get_loc('watching_urn_ms_corrected') + 1, 'dwell_time', dwell_time)
 
 data['frequency'] = [len(data['watching_urn_ms_corrected'][i]) for i in range(len(data))]
 column_order_2 = list(data.columns)
@@ -336,16 +327,7 @@ column_order_2.insert(column_order_2.index('dwell_time') + 1, column_order_2.pop
 data = data[column_order_2]
 
 
-# Remove (or not) participants with censored values in part 2
-
-exclude_participants = data_autre.loc[data_autre['censored_calibration'] == 1, 'id'] 
-
-if censure == 1: 
-    data = data.drop(data[data['id'].isin(exclude_participants) == True].index)
-else: 
-    data = data
-
-# Remove particiapnts with MSP in part 2
+# Remove participants with MSP in part 2
 
 exclude_participants_2 = data_autre.loc[data_autre['censored_calibration'] == 'MSP', 'id'] 
 
@@ -362,11 +344,11 @@ data.insert(id_column_index + 1, 'number', data.pop('number'))
     
 
 # Save the concatenated dataset
-data_path = path + file + '/dataset.csv'
+data_path = path + '/dataset.csv'
 data.to_csv(data_path, index=False)
-data_path_2 = path + file + '/criterion info data.csv'
+data_path_2 = path + '/criterion info data.csv'
 data_autre.to_csv(data_path_2, index=False)
-data_path_3 = path + file + '/survey data.csv'
+data_path_3 = path + '/survey data.csv'
 survey.to_csv(data_path_3, index=False)
 
 data_path

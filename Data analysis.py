@@ -14,16 +14,16 @@ import matplotlib.cm as cm
 import statsmodels.formula.api as smf
 import ast 
 
+censure = 1 # Put 0 if include censored participants in analysis and 1 if we exclude them 
 by_ind = 0 # Put 0 if no display of individual plots and 1 if display 
 attention_type = 'absolute' # relative for % of total time and 'absolute' for raw time
 
-path = '/Users/carolinepioger/Desktop' # change to yours :)
-file = '/pretest vincent' # to adapt
+path = '/Users/carolinepioger/Desktop/pretest vincent' # change to yours :)
 
 # Get dataframes
-data = pd.read_csv(path + file + '/dataset.csv' )
-data_autre = pd.read_csv(path + file + '/criterion info data.csv')
-survey = pd.read_csv(path + file + '/survey data.csv')
+data = pd.read_csv(path + '/dataset.csv' )
+data_autre = pd.read_csv(path + '/criterion info data.csv')
+survey = pd.read_csv(path + '/survey data.csv')
 
 # %%
 # =============================================================================
@@ -31,9 +31,20 @@ survey = pd.read_csv(path + file + '/survey data.csv')
 # =============================================================================
 
 data_for_plot = data
+
+# Remove (or not) participants with censored values in part 2
+exclude_participants = data_autre.loc[data_autre['censored_calibration'] == 1, 'id'] 
+
+if censure == 1: 
+    data_for_plot = data_for_plot.drop(data_for_plot[data_for_plot['id'].isin(exclude_participants) == True].index)
+else: 
+    data_for_plot = data_for_plot
+
+# Convert order of cases in string 
 for i in range(len(data_for_plot)):
     data_for_plot['order of cases'][i] = ast.literal_eval(data_for_plot['order of cases'][i])
 
+# Get charity and tradeoff dummies
 data_for_plot['charity'] = np.nan # indicator for whether the lottery is for the charity 
 data_for_plot['tradeoff'] = np.nan # indicator for whether we are in tradeoff context
 

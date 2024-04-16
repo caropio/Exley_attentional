@@ -12,15 +12,14 @@ import pandas as pd
 
 
 # Info to find data
-path = '/Users/carolinepioger/Desktop' # change to yours :)
-file = '/pretest vincent' # to adapt
+path = '/Users/carolinepioger/Desktop/pretest vincent' # change to yours :)
 
 dates = ['2024-03-28', '2024-03-25', '2024-04-03']  # list of download dates
 
-assoc_sum = pd.concat([pd.read_csv(path + file + '/EXLEY_ASSO_' + date + '.csv') for date in dates], ignore_index=True)
+assoc_sum = pd.concat([pd.read_csv(path + '/EXLEY_ASSO_' + date + '.csv') for date in dates], ignore_index=True)
 assoc_sum = assoc_sum.drop(assoc_sum[assoc_sum['participant._current_page_name'] != 'prolific'].index)
 
-outcome_data = pd.concat([pd.read_csv(path + file + '/EXLEY_RESULTAT_' + date + '.csv') for date in dates], ignore_index=True)
+outcome_data = pd.concat([pd.read_csv(path + '/EXLEY_RESULTAT_' + date + '.csv') for date in dates], ignore_index=True)
 outcome_data = outcome_data.drop(outcome_data[outcome_data['participant._current_page_name'] != 'prolific'].index)
 
 assoc = pd.DataFrame()
@@ -48,7 +47,7 @@ outcome_data['total spent'] = [outcome_data['total self'][i] + outcome_data['tot
 outcome_data = outcome_data.merge(assoc, on='id', how='left')
 
 # Save the concatenated dataset
-data_path = path + file + '/resultats_overview.csv'
+data_path = path + '/resultats_overview.csv'
 outcome_data.to_csv(data_path, index=False)
 
 data_path
