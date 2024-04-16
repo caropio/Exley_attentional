@@ -496,24 +496,28 @@ print(mdf_3.summary())
 
 
 ###### ATTENTION AS PREDICTOR
-data_for_analysis_between['case_id']=[['ASPS', 'ACPC','ASPC', 'ACPS']. index(data_for_analysis_between['case'][i]) for i in range(len(data_for_analysis_between))]
+# data_for_analysis_between['case_id']=[['ASPS', 'ACPC','ASPC', 'ACPS']. index(data_for_analysis_between['case'][i]) for i in range(len(data_for_analysis_between))]
 
-# GOGOGOGO 
-md_4 = smf.mixedlm("valuation ~ charity*dwell_time + tradeoff*dwell_time + interaction*dwell_time", data_for_analysis, groups=data_for_analysis["number"])
-mdf_4 = md_4.fit()
-print(mdf_4.summary())
+# # GOGOGOGO 
+# md_4 = smf.mixedlm("valuation ~ charity*dwell_time + tradeoff*dwell_time + interaction*dwell_time", data_for_analysis, groups=data_for_analysis["number"])
+# mdf_4 = md_4.fit()
+# print(mdf_4.summary())
 
-md_5 = smf.mixedlm("valuation ~ charity*dwell_time + tradeoff*dwell_time + interaction*dwell_time", data_for_analysis_between, groups=data_for_analysis_between["case_id"])
-mdf_5 = md_5.fit()
-print(mdf_5.summary())
+# md_5 = smf.mixedlm("valuation ~ charity*dwell_time + tradeoff*dwell_time + interaction*dwell_time", data_for_analysis_between, groups=data_for_analysis_between["case_id"])
+# mdf_5 = md_5.fit()
+# print(mdf_5.summary())
 
-md_6 = smf.mixedlm("valuation ~ dwell_time*case_id", data_for_analysis_between, groups=data_for_analysis_between["case_id"])
-mdf_6 = md_6.fit()
-print(mdf_6.summary())
+# md_6 = smf.mixedlm("valuation ~ dwell_time*case_id", data_for_analysis_between, groups=data_for_analysis_between["case_id"])
+# mdf_6 = md_6.fit()
+# print(mdf_6.summary())
 
-md_7 = smf.mixedlm("valuation ~ dwell_time", ASPC_between, groups=ASPC_between["prob_option_A"])
-mdf_7 = md_7.fit()
-print(mdf_7.summary())
+# md_7 = smf.mixedlm("valuation ~ dwell_time", ASPC_between, groups=ASPC_between["prob_option_A"])
+# mdf_7 = md_7.fit()
+# print(mdf_7.summary())
+
+md_8 = smf.mixedlm("valuation ~ dwell_time", data_for_analysis, groups=data_for_analysis["number"])
+mdf_8 = md_8.fit()
+print(mdf_8.summary())
 
 
 # DIFFERENCES of valuations and dwell time 
@@ -546,8 +550,42 @@ for i in range(1, charity_lottery['number'].nunique()+1):
     individual_difference.columns = individual_difference.columns.droplevel(1)
     charity_lottery_differences = pd.concat([charity_lottery_differences, individual_difference[['number', 'prob_option_A', 'valuation_ACPC_ASPC', 'dwell_time_ACPC_ASPC']]], ignore_index=True)
 
+md_self = smf.mixedlm("valuation_ASPS_ACPS ~ dwell_time_ASPS_ACPS", self_lottery_differences, groups=self_lottery_differences["number"])
+mdf_self = md_self.fit()
+print(mdf_self.summary())
+
+md_charity = smf.mixedlm("valuation_ACPC_ASPC ~ dwell_time_ACPC_ASPC", charity_lottery_differences, groups=charity_lottery_differences["number"])
+mdf_charity = md_charity.fit()
+print(mdf_charity.summary())
+
+# analysis
+dummy_ind = pd.get_dummies(self_lottery_differences['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
+dummy_prob = pd.get_dummies(self_lottery_differences['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
+self_lottery_differences = pd.concat([self_lottery_differences, dummy_ind, dummy_prob], axis=1)
+# self_lottery_differences = self_lottery_differences.merge(survey, on='number', how='left')
+
+X_pred_self = self_lottery_differences[['dwell_time_ASPS_ACPS'] + list(dummy_ind.columns) + list(dummy_prob.columns)]
+# X_pred_self = pd.concat([X_pred_self, X_pred_self[control_variables]], axis=1)
+X_pred_self = sm.add_constant(X_pred_self, has_constant='add') # add a first column full of ones to account for intercept of regression
+y_pred_self = self_lottery_differences['valuation_ASPS_ACPS']
+model_pred_self = sm.OLS(y_pred_self, X_pred_self).fit(cov_type='cluster', cov_kwds={'groups': self_lottery_differences['number']}) # cluster at individual level
+print(model_pred_self.summary())
 
 
+dummy_ind = pd.get_dummies(charity_lottery_differences['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
+dummy_prob = pd.get_dummies(charity_lottery_differences['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
+charity_lottery_differences = pd.concat([charity_lottery_differences, dummy_ind, dummy_prob], axis=1)
+# charity_lottery_differences = charity_lottery_differences.merge(survey, on='number', how='left')
+
+X_pred_charity = charity_lottery_differences[['dwell_time_ACPC_ASPC'] + list(dummy_ind.columns) + list(dummy_prob.columns)]
+# X_pred_charity = pd.concat([X_pred_charity, X_pred_charity[control_variables]], axis=1)
+X_pred_charity = sm.add_constant(X_pred_charity, has_constant='add') # add a first column full of ones to account for intercept of regression
+y_pred_charity = charity_lottery_differences['valuation_ACPC_ASPC']
+model_pred_charity = sm.OLS(y_pred_charity, X_pred_charity).fit(cov_type='cluster', cov_kwds={'groups': charity_lottery_differences['number']}) # cluster at individual level
+print(model_pred_charity.summary())
+
+
+## PLOTS 
 individuals = self_lottery_differences['number'].unique()
 colors = cm.rainbow(np.linspace(0, 1, len(individuals)))
 individual_color_map = dict(zip(individuals, colors))
@@ -575,13 +613,6 @@ plt.title('(Within-subj) Diff CHARITY Valuation x Dwell time (' +str(attention_t
 plt.grid(True)
 plt.show()
 
-md_self = smf.mixedlm("valuation_ASPS_ACPS ~ dwell_time_ASPS_ACPS", self_lottery_differences, groups=self_lottery_differences["prob_option_A"])
-mdf_self = md_self.fit()
-print(mdf_self.summary())
-
-md_charity = smf.mixedlm("valuation_ACPC_ASPC ~ dwell_time_ACPC_ASPC", charity_lottery_differences, groups=charity_lottery_differences["prob_option_A"])
-mdf_charity = md_charity.fit()
-print(mdf_self.summary())
 
 
 plt.scatter(self_lottery_differences['prob_option_A'], self_lottery_differences['valuation_ASPS_ACPS'], c='red', label='self')
