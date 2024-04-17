@@ -25,12 +25,12 @@ data = pd.read_csv(path + '/dataset.csv' )
 
 
 pilot_sample = range(1, data['number'].nunique()+1) 
-sample_size = range(2,10)
+sample_size = range(2,100)
 power_needed = 0.8
 alpha = 0.05
 power_calculated = np.zeros((len(sample_size),2))
 
-iteration_number = 100
+iteration_number = 1000
 loop = 0
 
 for sample in sample_size: 
@@ -42,18 +42,34 @@ for sample in sample_size:
             subj_data = data.loc[data['number'] == subj, ['number', 'prob_option_A', 'valuation', 'charity', 'tradeoff', 'interaction']]
             data_drawn.append(subj_data)
         data_drawn = pd.concat(data_drawn)
-        test = smf.mixedlm("valuation ~ charity + tradeoff + interaction", data_drawn, groups=data_drawn["number"])
-        test = test.fit()
-        summary = test.summary()
-        coef_tradeoff, coef_interaction = summary.tables[1]['P>|z|'][['tradeoff', 'interaction']]
-        coef_tradeoff = ast.literal_eval(coef_tradeoff)
-        coef_interaction = ast.literal_eval(coef_interaction)
-        p_values[inter] = [coef_tradeoff,coef_interaction]
+        
+        try:
+            test = smf.mixedlm("valuation ~ charity + tradeoff + interaction", data_drawn, groups=data_drawn["number"])
+            test = test.fit()
+            summary = test.summary()
+            coef_tradeoff, coef_interaction = summary.tables[1]['P>|z|'][['tradeoff', 'interaction']]
+            coef_tradeoff = ast.literal_eval(coef_tradeoff)
+            coef_interaction = ast.literal_eval(coef_interaction)
+            p_values[inter] = [coef_tradeoff,coef_interaction]
+        except np.linalg.LinAlgError:
+            print()
+            print("Singular matrix encountered.")
+            print()
+            p_values[inter] = [1,1]
+            
     
     power_calculated[loop, 0] = np.mean(p_values[:,0] < alpha)
     power_calculated[loop, 1] = np.mean(p_values[:,1] < alpha)
     
     loop += 1
+    
+    print()
+    print()
+    print()
+    print("Sample " + str(sample) + " DONE")
+    print()
+    print()
+    print()
 
 
 
