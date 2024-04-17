@@ -341,7 +341,27 @@ data = data.reset_index(drop=True)
 data['number'] = data.groupby('id').ngroup() + 1
 id_column_index = data.columns.get_loc('id')
 data.insert(id_column_index + 1, 'number', data.pop('number'))
-    
+
+# Get charity and tradeoff dummies
+data['charity'] = np.nan # indicator for whether the lottery is for the charity 
+data['tradeoff'] = np.nan # indicator for whether we are in tradeoff context
+
+for i in range(len(data)):
+    if data['case'][i] == 'ASPS':
+        data['charity'][i] = 0
+        data['tradeoff'][i] = 0
+    elif data['case'][i] == 'ASPC':
+        data['charity'][i] = 1
+        data['tradeoff'][i] = 1
+    elif data['case'][i] == 'ACPC':
+        data['charity'][i] = 1
+        data['tradeoff'][i] = 0
+    elif data['case'][i] == 'ACPS': 
+        data['charity'][i] = 0
+        data['tradeoff'][i] = 1
+
+data['valuation'] = data['valuation']*100 # to get percentage
+data['interaction'] = data['charity'] * data['tradeoff'] 
 
 # Save the concatenated dataset
 data_path = path + '/dataset.csv'

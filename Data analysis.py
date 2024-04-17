@@ -25,11 +25,6 @@ data = pd.read_csv(path + '/dataset.csv' )
 data_autre = pd.read_csv(path + '/criterion info data.csv')
 survey = pd.read_csv(path + '/survey data.csv')
 
-# %%
-# =============================================================================
-# VISUALISE DATA 
-# =============================================================================
-
 data_for_plot = data
 
 # Remove (or not) participants with censored values in part 2
@@ -44,23 +39,12 @@ else:
 for i in range(len(data_for_plot)):
     data_for_plot['order of cases'][i] = ast.literal_eval(data_for_plot['order of cases'][i])
 
-# Get charity and tradeoff dummies
-data_for_plot['charity'] = np.nan # indicator for whether the lottery is for the charity 
-data_for_plot['tradeoff'] = np.nan # indicator for whether we are in tradeoff context
+# %%
+# =============================================================================
+# VISUALISE DATA 
+# =============================================================================
 
-for i in range(len(data_for_plot)):
-    if data_for_plot['case'][i] == 'ASPS':
-        data_for_plot['charity'][i] = 0
-        data_for_plot['tradeoff'][i] = 0
-    elif data_for_plot['case'][i] == 'ASPC':
-        data_for_plot['charity'][i] = 1
-        data_for_plot['tradeoff'][i] = 1
-    elif data_for_plot['case'][i] == 'ACPC':
-        data_for_plot['charity'][i] = 1
-        data_for_plot['tradeoff'][i] = 0
-    elif data_for_plot['case'][i] == 'ACPS': 
-        data_for_plot['charity'][i] = 0
-        data_for_plot['tradeoff'][i] = 1
+# Get different cases
 
 ASPS = data_for_plot[(data_for_plot['charity'] == 0) & (data_for_plot['tradeoff'] == 0)]
 ACPC = data_for_plot[(data_for_plot['charity'] == 1) & (data_for_plot['tradeoff'] == 0)]
@@ -84,8 +68,8 @@ ACPS_between = data_for_plot_2[(data_for_plot_2['charity'] == 0) & (data_for_plo
 
 # Plot No Tradeoff Context (Replication Exley)
 
-plt.plot(average_valuation_ASPS.index, average_valuation_ASPS * 100, label='ASPS', color='blue', marker='o', linestyle='-')
-plt.plot(average_valuation_ACPC.index, average_valuation_ACPC * 100, label='ACPC', color='red', marker='o', linestyle='-')
+plt.plot(average_valuation_ASPS.index, average_valuation_ASPS, label='ASPS', color='blue', marker='o', linestyle='-')
+plt.plot(average_valuation_ACPC.index, average_valuation_ACPC, label='ACPC', color='red', marker='o', linestyle='-')
 
 
 x_fit = np.linspace(0, 1, num = 10)
@@ -102,8 +86,8 @@ plt.show()
 
 # Plot Tradeoff Context (Replication Exley)
 
-plt.plot(average_valuation_ACPS.index, average_valuation_ACPS * 100, label='ACPS', color='blue', marker='o', linestyle='-')
-plt.plot(average_valuation_ASPC.index, average_valuation_ASPC * 100, label='ASPC', color='red', marker='o', linestyle='-')
+plt.plot(average_valuation_ACPS.index, average_valuation_ACPS, label='ACPS', color='blue', marker='o', linestyle='-')
+plt.plot(average_valuation_ASPC.index, average_valuation_ASPC, label='ASPC', color='red', marker='o', linestyle='-')
 
 
 x_fit = np.linspace(0, 1, num = 10)
@@ -120,8 +104,8 @@ plt.show()
 
 # Plot Self Lottery Valuation
 
-plt.plot(average_valuation_ASPS.index, average_valuation_ASPS * 100, label='ASPS', color='green', marker='o', linestyle='-')
-plt.plot(average_valuation_ACPS.index, average_valuation_ACPS * 100, label='ACPS', color='orange', marker='o', linestyle='-')
+plt.plot(average_valuation_ASPS.index, average_valuation_ASPS, label='ASPS', color='green', marker='o', linestyle='-')
+plt.plot(average_valuation_ACPS.index, average_valuation_ACPS, label='ACPS', color='orange', marker='o', linestyle='-')
 
 
 x_fit = np.linspace(0, 1, num = 10)
@@ -138,8 +122,8 @@ plt.show()
 
 # Plot Charity Lottery Valuation
 
-plt.plot(average_valuation_ASPC.index, average_valuation_ASPC * 100, label='ASPC', color='green', marker='o', linestyle='-')
-plt.plot(average_valuation_ACPC.index, average_valuation_ACPC * 100, label='ACPC', color='orange', marker='o', linestyle='-')
+plt.plot(average_valuation_ASPC.index, average_valuation_ASPC, label='ASPC', color='green', marker='o', linestyle='-')
+plt.plot(average_valuation_ACPC.index, average_valuation_ACPC, label='ACPC', color='orange', marker='o', linestyle='-')
 
 
 x_fit = np.linspace(0, 1, num = 10)
@@ -170,32 +154,32 @@ if by_ind == 1:
         fig, axs = plt.subplots(2, 2)
         fig.suptitle('Individual ' + str(i))
         
-        axs[0, 0].plot(ASPS_ind['prob_option_A'], ASPS_ind['valuation']*100, label='ASPS', color='blue')
-        axs[0, 0].plot(ACPC_ind['prob_option_A'], ACPC_ind['valuation']*100, label='ACPC', color='red')
+        axs[0, 0].plot(ASPS_ind['prob_option_A'], ASPS_ind['valuation'], label='ASPS', color='blue')
+        axs[0, 0].plot(ACPC_ind['prob_option_A'], ACPC_ind['valuation'], label='ACPC', color='red')
         axs[0, 0].legend()
         axs[0, 0].plot(x_fit, y_fit, color='grey', label='Expected value')
         axs[0, 0].tick_params(left = False, right = False)
         axs[0, 0].grid(True)
         axs[0, 0].set_title('No Tradeoff Context')
         
-        axs[0, 1].plot(ACPS_ind['prob_option_A'], ACPS_ind['valuation']*100,label='ACPS', color='blue')
-        axs[0, 1].plot(ASPC_ind['prob_option_A'], ASPC_ind['valuation']*100, label='ASPC', color='red')
+        axs[0, 1].plot(ACPS_ind['prob_option_A'], ACPS_ind['valuation'],label='ACPS', color='blue')
+        axs[0, 1].plot(ASPC_ind['prob_option_A'], ASPC_ind['valuation'], label='ASPC', color='red')
         axs[0, 1].legend()
         axs[0, 1].plot(x_fit, y_fit, color='grey', label='Expected value')
         axs[0, 1].tick_params(left = False, right = False)
         axs[0, 1].grid(True)
         axs[0, 1].set_title('Tradeoff Context')
         
-        axs[1, 0].plot(ASPS_ind['prob_option_A'], ASPS_ind['valuation']*100, label='ASPS', color='orange')
-        axs[1, 0].plot(ACPS_ind['prob_option_A'], ACPS_ind['valuation']*100, label='ACPS', color='green')
+        axs[1, 0].plot(ASPS_ind['prob_option_A'], ASPS_ind['valuation'], label='ASPS', color='orange')
+        axs[1, 0].plot(ACPS_ind['prob_option_A'], ACPS_ind['valuation'], label='ACPS', color='green')
         axs[1, 0].legend()
         axs[1, 0].plot(x_fit, y_fit, color='grey', label='Expected value')
         axs[1, 0].tick_params(left = False, right = False)
         axs[1, 0].grid(True)
         axs[1, 0].set_title('Self Lottery Valuation')
         
-        axs[1, 1].plot(ACPC_ind['prob_option_A'], ACPC_ind['valuation']*100, label='ACPC', color='orange')
-        axs[1, 1].plot(ASPC_ind['prob_option_A'], ASPC_ind['valuation']*100, label='ASPC', color='green')
+        axs[1, 1].plot(ACPC_ind['prob_option_A'], ACPC_ind['valuation'], label='ACPC', color='orange')
+        axs[1, 1].plot(ASPC_ind['prob_option_A'], ASPC_ind['valuation'], label='ASPC', color='green')
         axs[1, 1].legend()
         axs[1, 1].plot(x_fit, y_fit, color='grey', label='Expected value')
         axs[1, 1].tick_params(left = False, right = False)
@@ -398,9 +382,6 @@ plt.show()
 
 data_for_analysis = pd.concat([ASPS, ACPC, ASPC, ACPS], ignore_index=True)
 
-data_for_analysis['valuation'] = data_for_analysis['valuation']*100 # to get percentage
-data_for_analysis['interaction'] = data_for_analysis['charity'] * data_for_analysis['tradeoff'] 
-
 # Add fixed effects
 dummy_ind = pd.get_dummies(data_for_analysis['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
 dummy_prob = pd.get_dummies(data_for_analysis['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
@@ -454,9 +435,6 @@ print(mdf_2.summary())
 
 # Same as above but only use the first case of each individual 
 data_for_analysis_between = pd.concat([ASPS_between, ACPC_between, ASPC_between, ACPS_between], ignore_index=True)
-
-data_for_analysis_between['valuation'] = data_for_analysis_between['valuation']*100 # to get percentage
-data_for_analysis_between['interaction'] = data_for_analysis_between['charity'] * data_for_analysis_between['tradeoff'] 
 
 # Add fixed effects
 dummy_prob = pd.get_dummies(data_for_analysis_between['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
@@ -522,9 +500,7 @@ print(mdf_8.summary())
 
 # DIFFERENCES of valuations and dwell time 
 self_lottery = pd.concat([ASPS, ACPS], ignore_index = True)
-self_lottery['valuation'] = self_lottery['valuation']*100 # to get percentage
 charity_lottery = pd.concat([ACPC, ASPC], ignore_index=True)
-charity_lottery['valuation'] = charity_lottery['valuation']*100 # to get percentage
 
 self_lottery_differences = pd.DataFrame(columns=['number', 'prob_option_A', 'valuation_ASPS_ACPS', 'dwell_time_ASPS_ACPS'])
 
@@ -656,24 +632,24 @@ plt.show()
 
 # plot dwell time 
 
-for i in [ASPS_between, ACPC_between, ACPS_between, ASPC_between]:
-    attention_case = i
-    bins = np.linspace(0, 50, 50)
-    plt.hist([attention_case['dwell_time_absolute'], attention_case['dwell_time_relative'], attention_case['total_time_spent_s']], bins, label = ['absolute', 'relative', 'total'])
-    plt.legend()
-    plt.title('(Between-subj) ' +str(attention_case['case'].iloc[0][:4]))
-    plt.show()
+# for i in [ASPS_between, ACPC_between, ACPS_between, ASPC_between]:
+#     attention_case = i
+#     bins = np.linspace(0, 50, 50)
+#     plt.hist([attention_case['dwell_time_absolute'], attention_case['dwell_time_relative'], attention_case['total_time_spent_s']], bins, label = ['absolute', 'relative', 'total'])
+#     plt.legend()
+#     plt.title('(Between-subj) ' +str(attention_case['case'].iloc[0][:4]))
+#     plt.show()
 
-for i in [ASPS, ACPC, ACPS, ASPC]:
-    attention_case = i
-    bins = np.linspace(0, 50, 50)
-    plt.hist([attention_case['dwell_time_absolute'], attention_case['dwell_time_relative'], attention_case['total_time_spent_s']], bins, label = ['absolute', 'relative', 'total'])
-    plt.legend()
-    plt.title('(Within-subj) ' +str(attention_case['case'].iloc[0][:4]))
-    plt.show()
+# for i in [ASPS, ACPC, ACPS, ASPC]:
+#     attention_case = i
+#     bins = np.linspace(0, 50, 50)
+#     plt.hist([attention_case['dwell_time_absolute'], attention_case['dwell_time_relative'], attention_case['total_time_spent_s']], bins, label = ['absolute', 'relative', 'total'])
+#     plt.legend()
+#     plt.title('(Within-subj) ' +str(attention_case['case'].iloc[0][:4]))
+#     plt.show()
 
 
-dwell_ind = data_for_analysis.loc[data_for_analysis['number'] == 1, ['case', 'prob_option_A', 'valuation', 'dwell_time_relative', 'dwell_time_absolute']] 
+# dwell_ind = data_for_analysis.loc[data_for_analysis['number'] == 1, ['case', 'prob_option_A', 'valuation', 'dwell_time_relative', 'dwell_time_absolute']] 
 
 
 #### EXPLORATOIRE??? 
