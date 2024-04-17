@@ -34,7 +34,6 @@ iteration_number = 100
 loop = 0
 
 for sample in sample_size: 
-    loop += 1
     p_values = np.zeros((iteration_number, 2))
     for inter in range(1, iteration_number):
         subjects_drawn = np.random.choice(range(1,data['number'].nunique()+1), sample)
@@ -51,8 +50,10 @@ for sample in sample_size:
         coef_interaction = ast.literal_eval(coef_interaction)
         p_values[inter] = [coef_tradeoff,coef_interaction]
     
-    power_calculated[loop - 1, 0] = np.mean(p_values[:,0] < alpha)
-    power_calculated[loop - 1, 1] = np.mean(p_values[:,1] < alpha)
+    power_calculated[loop, 0] = np.mean(p_values[:,0] < alpha)
+    power_calculated[loop, 1] = np.mean(p_values[:,1] < alpha)
+    
+    loop += 1
 
 
 
