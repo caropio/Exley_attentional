@@ -26,11 +26,11 @@ data = pd.read_csv(path + '/dataset.csv' )
 
 pilot_sample = range(1, data['number'].nunique()+1) 
 sample_size = range(2,100)
-power_needed = 0.8
+power_needed = 0.9
 alpha = 0.05
 power_calculated = np.zeros((len(sample_size),2))
 
-iteration_number = 1000
+iteration_number = 500
 loop = 0
 
 for sample in sample_size: 
@@ -57,6 +57,13 @@ for sample in sample_size:
             print()
             p_values[inter] = [1,1]
             
+        print()
+        print()
+        print()
+        print("Iteration " + str(inter) + " DONE")
+        print()
+        print()
+        print()
     
     power_calculated[loop, 0] = np.mean(p_values[:,0] < alpha)
     power_calculated[loop, 1] = np.mean(p_values[:,1] < alpha)

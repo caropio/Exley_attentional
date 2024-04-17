@@ -51,10 +51,10 @@ ACPC = data_for_plot[(data_for_plot['charity'] == 1) & (data_for_plot['tradeoff'
 ASPC = data_for_plot[(data_for_plot['charity'] == 1) & (data_for_plot['tradeoff'] == 1)]
 ACPS = data_for_plot[(data_for_plot['charity'] == 0) & (data_for_plot['tradeoff'] == 1)]
 
-average_valuation_ASPS = ASPS.groupby('prob_option_A')['valuation'].median()
-average_valuation_ACPC = ACPC.groupby('prob_option_A')['valuation'].median()
-average_valuation_ACPS = ACPS.groupby('prob_option_A')['valuation'].median()
-average_valuation_ASPC = ASPC.groupby('prob_option_A')['valuation'].median()
+average_valuation_ASPS = ASPS.groupby('prob_option_A')['valuation'].mean()
+average_valuation_ACPC = ACPC.groupby('prob_option_A')['valuation'].mean()
+average_valuation_ACPS = ACPS.groupby('prob_option_A')['valuation'].mean()
+average_valuation_ASPC = ASPC.groupby('prob_option_A')['valuation'].mean()
 
 data_for_plot_2 = data_for_plot
 data_for_plot_2['first case'] = [data_for_plot_2['order of cases'][i][0] for i in range(len(data_for_plot_2))]
@@ -78,7 +78,7 @@ plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
 plt.xlabel('Probability P of Non-Zero Payment')
 plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('(Median) Results for No Tradeoff Context')
+plt.title('(Mean) Results for No Tradeoff Context')
 plt.grid(True)
 plt.legend()
 
@@ -96,7 +96,7 @@ plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
 plt.xlabel('Probability P of Non-Zero Payment')
 plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('(Median) Results for Tradeoff Context ')
+plt.title('(Mean) Results for Tradeoff Context ')
 plt.grid(True)
 plt.legend()
 
@@ -114,7 +114,7 @@ plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
 plt.xlabel('Probability P of Non-Zero Payment')
 plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('(Median) Results for Self Lottery Valuation')
+plt.title('(Mean) Results for Self Lottery Valuation')
 plt.grid(True)
 plt.legend()
 
@@ -132,7 +132,7 @@ plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
 plt.xlabel('Probability P of Non-Zero Payment')
 plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('(Median) Results for Charity Lottery Valuation')
+plt.title('(Mean) Results for Charity Lottery Valuation')
 plt.grid(True)
 plt.legend()
 

@@ -303,7 +303,7 @@ column_order.insert(column_order.index('switchpoint') + 1, column_order.pop(colu
 column_order.insert(column_order.index('case') + 1, column_order.pop(column_order.index('case_order')))
 data = data[column_order]
 
-# Add attention data of each lottery (according to either relative or absolute) 
+# Add attention data of each lottery (relative and absolute) - divide by 1000 to go from ms to s
 data['watching_urn_ms_corrected'] = data['watching_urn_ms'].apply(lambda arr: np.array([x for x in arr if x > 300])) # we drop values lower or equal to 300ms 
 
 dwell_time_prop = [np.sum(data['watching_urn_ms_corrected'][i])/(data['total_time_spent_s'][i]*1000) for i in range(len(data))]
