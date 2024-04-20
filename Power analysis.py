@@ -12,6 +12,7 @@ import statsmodels.formula.api as smf
 import ast 
 import matplotlib.pyplot as plt
 import time
+from tqdm import tqdm
 
 censure = 1
 
@@ -36,13 +37,18 @@ else:
 
 
 pilot_sample = range(1, data['number'].nunique()+1) 
-sample_size = range(2,100)
-power_needed = 0.9
+sample_size = range(2,176)
+power_needed = 0.8
 alpha = 0.05
 power_calculated = np.zeros((len(sample_size),2))
 
-iteration_number = 200
+iteration_number = 500
 loop = 0
+
+# H1 1h20 for sample size 100 and 200 iterations 
+# H2 3h for sample size 100 and 200 iterations 
+# H1 XXX for sample size 175 and 500 iterations
+# need for around 150 people fir 90 power and 140 for 80 power ? 
 
 # %%
 # =============================================================================
@@ -110,8 +116,8 @@ plt.xlabel('Sample Size')
 plt.ylabel('Power')
 plt.title('H1 Power analysis')
 plt.legend()
+plt.savefig('H1 Power analysis.png', dpi=1200)
 plt.show()
-
 
 
 # %%
@@ -145,13 +151,13 @@ for sample in sample_size:
             print()
             p_values[inter] = [1,1]
             
-        print()
-        print()
-        print()
-        print("Iteration " + str(inter) + " DONE")
-        print()
-        print()
-        print()
+        # print()
+        # print()
+        # print()
+        # print("Iteration " + str(inter) + " DONE")
+        # print()
+        # print()
+        # print()
     
     power_calculated[loop, 0] = np.mean(p_values[:,0] < alpha)
     power_calculated[loop, 1] = np.mean(p_values[:,1] < alpha)
@@ -181,6 +187,7 @@ plt.xlabel('Sample Size')
 plt.ylabel('Power')
 plt.title('H2 Power analysis')
 plt.legend()
+plt.savefig('H2 Power analysis.png', dpi=1200)
 plt.show()
 
 
@@ -246,4 +253,5 @@ plt.xlabel('Sample Size')
 plt.ylabel('Power')
 plt.title('H3 Power analysis')
 plt.legend()
+plt.savefig('H3 Power analysis.png', dpi=1200)
 plt.show()
