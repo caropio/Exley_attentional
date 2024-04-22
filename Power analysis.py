@@ -47,7 +47,7 @@ loop = 0
 
 # H1 1h20 for sample size 100 and 200 iterations 
 # H2 3h for sample size 100 and 200 iterations 
-# H1 XXX for sample size 175 and 500 iterations
+# H1 9,6h for sample size 175 and 500 iterations
 # need for around 150 people fir 90 power and 140 for 80 power ? 
 
 # %%
@@ -79,7 +79,7 @@ for sample in sample_size:
             print()
             print("Singular matrix encountered.")
             print()
-            p_values[inter] = [1,1]
+            p_values[inter] = [np.nan,np.nan]
             
         print()
         print()
@@ -118,6 +118,10 @@ plt.title('H1 Power analysis')
 plt.legend()
 plt.savefig('H1 Power analysis.png', dpi=1200)
 plt.show()
+
+data_H1 = path + '/power caculated H1.csv'
+power_cal = pd.DataFrame(power_calculated)
+power_cal.to_csv(data_H1, index=False)
 
 
 # %%

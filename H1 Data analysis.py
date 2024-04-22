@@ -29,10 +29,11 @@ survey = pd.read_csv(path + '/survey data.csv')
 data_for_plot = data
 
 # Remove (or not) participants with censored values in part 2
-exclude_participants = data_autre.loc[data_autre['censored_calibration'] == 1, 'id'] 
+exclude_participants = data_for_plot.loc[data_for_plot['censored_calibration'] == 1, 'id'] 
 
 if censure == 1: 
     data_for_plot = data_for_plot.drop(data_for_plot[data_for_plot['id'].isin(exclude_participants) == True].index)
+    data_for_plot = data_for_plot.reset_index(drop=True)
 else: 
     data_for_plot = data_for_plot
 
@@ -40,14 +41,6 @@ else:
 for i in range(len(data_for_plot)):
     data_for_plot['order of cases'][i] = ast.literal_eval(data_for_plot['order of cases'][i])
     
-
-# %%
-# =============================================================================
-# VISUALISE DATA 
-# =============================================================================
-
-
-
 # Get different cases
 
 ASPS = data_for_plot[(data_for_plot['charity'] == 0) & (data_for_plot['tradeoff'] == 0)]
@@ -55,10 +48,15 @@ ACPC = data_for_plot[(data_for_plot['charity'] == 1) & (data_for_plot['tradeoff'
 ASPC = data_for_plot[(data_for_plot['charity'] == 1) & (data_for_plot['tradeoff'] == 1)]
 ACPS = data_for_plot[(data_for_plot['charity'] == 0) & (data_for_plot['tradeoff'] == 1)]
 
-average_valuation_ASPS = ASPS.groupby('prob_option_A')['valuation'].median()
-average_valuation_ACPC = ACPC.groupby('prob_option_A')['valuation'].median()
-average_valuation_ACPS = ACPS.groupby('prob_option_A')['valuation'].median()
-average_valuation_ASPC = ASPC.groupby('prob_option_A')['valuation'].median()
+valuation_ASPS = ASPS.groupby('prob_option_A')['valuation']
+valuation_ACPC = ACPC.groupby('prob_option_A')['valuation']
+valuation_ACPS = ACPS.groupby('prob_option_A')['valuation']
+valuation_ASPC = ASPC.groupby('prob_option_A')['valuation']
+
+median_valuation_ASPS = valuation_ASPS.median()
+median_valuation_ACPC = valuation_ACPC.median()
+median_valuation_ACPS = valuation_ACPS.median()
+median_valuation_ASPC = valuation_ASPC.median()
 
 data_for_plot_2 = data_for_plot
 data_for_plot_2['first case'] = [data_for_plot_2['order of cases'][i][0] for i in range(len(data_for_plot_2))]
@@ -70,82 +68,150 @@ ACPC_between = data_for_plot_2[(data_for_plot_2['charity'] == 1) & (data_for_plo
 ASPC_between = data_for_plot_2[(data_for_plot_2['charity'] == 1) & (data_for_plot_2['tradeoff'] == 1)]
 ACPS_between = data_for_plot_2[(data_for_plot_2['charity'] == 0) & (data_for_plot_2['tradeoff'] == 1)]
 
+########### Plot ditribution of participant-specific X values 
+plt.hist(data_autre['charity_calibration'], bins=20) 
+plt.xlabel('Participant-specific X')
+plt.ylabel('Frequency')
+plt.title('Distribution of X')
+plt.show()
+
+# %%
+# =============================================================================
+# VISUALISE DATA 
+# =============================================================================
+
 # Plot No Tradeoff Context (Replication Exley)
 
-plt.plot(average_valuation_ASPS.index, average_valuation_ASPS, label='ASPS', color='blue', marker='o', linestyle='-')
-plt.plot(average_valuation_ACPC.index, average_valuation_ACPC, label='ACPC', color='red', marker='o', linestyle='-')
-
+plt.plot(valuation_ASPS.mean().index, valuation_ASPS.mean(), label='YSPS', color='blue', marker='o', linestyle='-')
+plt.plot(valuation_ACPC.mean().index, valuation_ACPC.mean(), label='YCPC', color='red', marker='o', linestyle='-')
 
 x_fit = np.linspace(0, 1, num = 10)
 y_fit = np.linspace(0, 100, num = 10)
-plt.plot(x_fit, y_fit, color='grey', label='Expected value')
+plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
+# plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
-plt.xlabel('Probability P of Non-Zero Payment')
-plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('(median) Results for No Tradeoff Context')
+plt.xlabel('Probabilité P du résultat non nul')
+plt.ylabel('Valuations moyennes en %')
+plt.title('Résultats dans le contexte sans compromis (PILOT)')
+# plt.xlabel('Probability P of Non-Zero Payment')
+# plt.ylabel('Valuation (median) as % of Riskless Lottery')
+# plt.title('Results for Tradeoff Context ')
 plt.grid(True)
 plt.legend()
-
+plt.savefig('No Tradeoff H1 PILOT.png', dpi=1200)
 plt.show()
 
 # Plot Tradeoff Context (Replication Exley)
 
-plt.plot(average_valuation_ACPS.index, average_valuation_ACPS, label='ACPS', color='blue', marker='o', linestyle='-')
-plt.plot(average_valuation_ASPC.index, average_valuation_ASPC, label='ASPC', color='red', marker='o', linestyle='-')
+plt.plot(valuation_ACPS.mean().index, valuation_ACPS.mean(), label='YCPS', color='blue', marker='o', linestyle='-')
+plt.plot(valuation_ASPC.mean().index, valuation_ASPC.mean(), label='YSPC', color='red', marker='o', linestyle='-')
 
 
 x_fit = np.linspace(0, 1, num = 10)
 y_fit = np.linspace(0, 100, num = 10)
-plt.plot(x_fit, y_fit, color='grey', label='Expected value')
+plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
+# plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
-plt.xlabel('Probability P of Non-Zero Payment')
-plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('(median) Results for Tradeoff Context ')
+plt.xlabel('Probabilité P du résultat non nul')
+plt.ylabel('Valuations moyennes en %')
+plt.title('Résultats dans le contexte avec compromis (PILOT)')
+# plt.xlabel('Probability P of Non-Zero Payment')
+# plt.ylabel('Valuation as % of Riskless Lottery')
+# plt.title('(median) Results for Tradeoff Context ')
 plt.grid(True)
 plt.legend()
-
+plt.savefig('Tradeoff H1 PILOT.png', dpi=1200)
 plt.show()
 
 # Plot Self Lottery Valuation
 
-plt.plot(average_valuation_ASPS.index, average_valuation_ASPS, label='ASPS', color='green', marker='o', linestyle='-')
-plt.plot(average_valuation_ACPS.index, average_valuation_ACPS, label='ACPS', color='orange', marker='o', linestyle='-')
+plt.plot(valuation_ASPS.mean().index, valuation_ASPS.mean(), label='YSPS', color='green', marker='o', linestyle='-')
+plt.plot(valuation_ACPS.mean().index, valuation_ACPS.mean(), label='YCPS', color='orange', marker='o', linestyle='-')
 
 
 x_fit = np.linspace(0, 1, num = 10)
 y_fit = np.linspace(0, 100, num = 10)
-plt.plot(x_fit, y_fit, color='grey', label='Expected value')
+plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
+# plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
-plt.xlabel('Probability P of Non-Zero Payment')
-plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('(median) Results for Self Lottery Valuation')
+plt.xlabel('Probabilité P du résultat non nul')
+plt.ylabel('Valuations moyennes en %')
+plt.title('Résultats pour la loterie pour soi (PILOT)')
+# plt.xlabel('Probability P of Non-Zero Payment')
+# plt.ylabel('Valuation as % of Riskless Lottery')
+# plt.title('(median) Results for Self Lottery Valuation')
 plt.grid(True)
 plt.legend()
-
+plt.savefig('Self Lottery H1 PILOT.png', dpi=1200)
 plt.show()
 
 # Plot Charity Lottery Valuation
 
-plt.plot(average_valuation_ASPC.index, average_valuation_ASPC, label='ASPC', color='green', marker='o', linestyle='-')
-plt.plot(average_valuation_ACPC.index, average_valuation_ACPC, label='ACPC', color='orange', marker='o', linestyle='-')
+plt.plot(valuation_ASPC.mean().index, valuation_ASPC.mean(), label='YSPC', color='green', marker='o', linestyle='-')
+plt.plot(valuation_ACPC.mean().index, valuation_ACPC.mean(), label='YCPC', color='orange', marker='o', linestyle='-')
 
 
 x_fit = np.linspace(0, 1, num = 10)
 y_fit = np.linspace(0, 100, num = 10)
-plt.plot(x_fit, y_fit, color='grey', label='Expected value')
+plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
+# plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
-plt.xlabel('Probability P of Non-Zero Payment')
-plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('(median) Results for Charity Lottery Valuation')
+plt.xlabel('Probabilité P du résultat non nul')
+plt.ylabel('Valuations moyennes en %')
+plt.title('Résultats pour la loterie pour la charité (PILOT)')
+# plt.xlabel('Probability P of Non-Zero Payment')
+# plt.ylabel('Valuation as % of Riskless Lottery')
+# plt.title('(median) Results for Charity Lottery Valuation')
 plt.grid(True)
 plt.legend()
+plt.savefig('Charity Lottery H1 PILOT.png', dpi=1200)
+plt.show()
 
+# Plot all Valuations
+
+plt.plot(valuation_ASPC.mean().index, valuation_ASPS.mean(), label='YSPC', color='blue', marker='o', linestyle='-')
+plt.plot(valuation_ACPC.mean().index, valuation_ACPS.mean(), label='YCPC', color='red', marker='o', linestyle='-')
+plt.plot(valuation_ASPC.mean().index, valuation_ACPC.mean(), label='YSPC', color='green', marker='o', linestyle='-')
+plt.plot(valuation_ACPC.mean().index, valuation_ASPC.mean(), label='YCPC', color='orange', marker='o', linestyle='-')
+
+x_fit = np.linspace(0, 1, num = 10)
+y_fit = np.linspace(0, 100, num = 10)
+plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
+# plt.plot(x_fit, y_fit, color='grey', label='Expected value')
+
+plt.xlabel('Probabilité P du résultat non nul')
+plt.ylabel('Valuations moyennes en %')
+plt.title('Résultats pour toutes les loteries (PILOT)')
+# plt.xlabel('Probability P of Non-Zero Payment')
+# plt.ylabel('Valuation as % of Riskless Lottery')
+# plt.title('(median) Results for Charity Lottery Valuation')
+plt.grid(True)
+plt.legend()
+plt.savefig('All Lottery H1 PILOT.png', dpi=1200)
+plt.show()
+
+# Valuation without differentiation of probabilities
+
+mean_valuation_ASPS = valuation_ASPS.mean()
+mean_valuation_ACPC = valuation_ACPC.mean()
+mean_valuation_ACPS = valuation_ACPS.mean()
+mean_valuation_ASPC = valuation_ASPC.mean()
+
+mean_valuations = [mean_valuation_ASPS.mean(), mean_valuation_ACPS.mean(), mean_valuation_ACPC.mean(), mean_valuation_ASPC.mean()]
+# error_valuation = [np.std(mean_valuation_ASPS), np.std(mean_valuation_ACPS), 
+#                  np.std(mean_valuation_ACPC), np.std(mean_valuation_ASPC)]
+
+plt.bar(['YSPS', 'YCPS', 'YCPC', 'YSPC'], mean_valuations, color = ['blue', 'red', 'green', 'orange']) 
+plt.xlabel('Cas')
+plt.ylabel('Moyenne de Valuations en %')
+plt.title('Valuation par cas, probabilités confondues (PILOT)')
+plt.savefig('Bar all Lottery H1 PILOT.png', dpi=1200)
 plt.show()
 
 # Plot Valuation for each participant ### TO REMOVE FOR REAL DATA 
 
 if by_ind == 1: 
-    for i in range(1, data['number'].nunique()+1):
+    for i in data_for_plot['number'].unique():
         ASPS_ind = ASPS.loc[ASPS['number'] == i, ['prob_option_A', 'valuation']] 
         ASPS_ind = ASPS_ind.sort_values(by=['prob_option_A'])
         ACPC_ind = ACPC.loc[ACPC['number'] == i, ['prob_option_A', 'valuation']] 
@@ -201,13 +267,6 @@ else:
 # =============================================================================
 # ANALYSE DATA 
 # =============================================================================
-
-########### Plot ditribution of participant-specific X values 
-plt.hist(data_autre['charity_calibration'], bins=20) 
-plt.xlabel('Participant-specific X')
-plt.ylabel('Frequency')
-plt.title('Distribution of X')
-plt.show()
 
 ######## EXLEY REGRESSION 
 
