@@ -19,6 +19,7 @@ censure = 1
 path = '/Users/carolinepioger/Desktop/pretest vincent' # change to yours :)
 
 data = pd.read_csv(path + '/dataset.csv' )
+data_exley = pd.read_stata('/Users/carolinepioger/Downloads/Supplementary/Data/valuation_level.dta')
 
 # Remove (or not) participants with censored values in part 2
 exclude_participants = data.loc[data['censored_calibration'] == 1, 'id'] 
