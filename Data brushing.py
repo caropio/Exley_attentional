@@ -341,6 +341,12 @@ data = data.reset_index(drop=True)
 data['number'] = data.groupby('id').ngroup() + 1
 id_column_index = data.columns.get_loc('id')
 data.insert(id_column_index + 1, 'number', data.pop('number'))
+data_autre = data_autre.merge(data[['id', 'number']], how='left', on='id')
+data_autre= data_autre.drop_duplicates(subset=['id'])
+column_order_3 = list(data_autre.columns)
+column_order_3.insert(column_order_3.index('id') + 1, column_order_3.pop(column_order_3.index('number')))
+data_autre = data_autre[column_order_3]
+
 
 # Get charity and tradeoff dummies
 data['charity'] = np.nan # indicator for whether the lottery is for the charity 

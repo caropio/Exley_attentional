@@ -68,6 +68,40 @@ ACPC_between = data_for_plot_2[(data_for_plot_2['charity'] == 1) & (data_for_plo
 ASPC_between = data_for_plot_2[(data_for_plot_2['charity'] == 1) & (data_for_plot_2['tradeoff'] == 1)]
 ACPS_between = data_for_plot_2[(data_for_plot_2['charity'] == 0) & (data_for_plot_2['tradeoff'] == 1)]
 
+# Difference data
+self_lottery = pd.concat([ASPS, ACPS], ignore_index = True)
+charity_lottery = pd.concat([ACPC, ASPC], ignore_index=True)
+
+self_lottery_differences = pd.DataFrame(columns=['number', 'prob_option_A'])
+
+for i in self_lottery['number'].unique():
+    individual = self_lottery.loc[self_lottery['number'] == i, ['case', 'prob_option_A', 'valuation']] 
+    individual_difference = individual.pivot(index='prob_option_A', columns='case', values='valuation')
+    individual_difference['valuation_ACPS_ASPS'] = individual_difference['ACPS'] - individual_difference['ASPS']
+    individual_difference['number'] = i
+    individual_difference.reset_index(inplace=True)
+    # individual_difference.columns = individual_difference.columns.droplevel(1)
+    self_lottery_differences = pd.concat([self_lottery_differences, individual_difference[['number', 'prob_option_A', 'valuation_ACPS_ASPS']]], ignore_index=True)
+
+charity_lottery_differences = pd.DataFrame(columns=['number', 'prob_option_A'])
+
+for i in charity_lottery['number'].unique():
+    individual = charity_lottery.loc[charity_lottery['number'] == i, ['case', 'prob_option_A', 'valuation']] 
+    individual_difference = individual.pivot(index='prob_option_A', columns='case', values='valuation')
+    individual_difference['valuation_ASPC_ACPC'] = individual_difference['ASPC'] - individual_difference['ACPC']
+    individual_difference['number'] = i
+    individual_difference.reset_index(inplace=True)
+    # individual_difference.columns = individual_difference.columns.droplevel(1)
+    charity_lottery_differences = pd.concat([charity_lottery_differences, individual_difference[['number', 'prob_option_A', 'valuation_ASPC_ACPC']]], ignore_index=True)
+
+# MEANS 
+mean_valuation_ASPS = valuation_ASPS.mean()
+mean_valuation_ACPC = valuation_ACPC.mean()
+mean_valuation_ACPS = valuation_ACPS.mean()
+mean_valuation_ASPC = valuation_ASPC.mean()
+
+mean_valuations = [mean_valuation_ASPS.mean(), mean_valuation_ACPS.mean(), mean_valuation_ACPC.mean(), mean_valuation_ASPC.mean()]
+
 ########### Plot ditribution of participant-specific X values 
 plt.hist(data_autre['charity_calibration'], bins=20) 
 plt.xlabel('Participant-specific X')
@@ -173,7 +207,6 @@ plt.plot(valuation_ASPC.mean().index, valuation_ASPS.mean(), label='YSPC', color
 plt.plot(valuation_ACPC.mean().index, valuation_ACPS.mean(), label='YCPC', color='red', marker='o', linestyle='-')
 plt.plot(valuation_ASPC.mean().index, valuation_ACPC.mean(), label='YSPC', color='green', marker='o', linestyle='-')
 plt.plot(valuation_ACPC.mean().index, valuation_ASPC.mean(), label='YCPC', color='orange', marker='o', linestyle='-')
-
 x_fit = np.linspace(0, 1, num = 10)
 y_fit = np.linspace(0, 100, num = 10)
 plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
@@ -192,21 +225,32 @@ plt.show()
 
 # Valuation without differentiation of probabilities
 
-mean_valuation_ASPS = valuation_ASPS.mean()
-mean_valuation_ACPC = valuation_ACPC.mean()
-mean_valuation_ACPS = valuation_ACPS.mean()
-mean_valuation_ASPC = valuation_ASPC.mean()
-
-mean_valuations = [mean_valuation_ASPS.mean(), mean_valuation_ACPS.mean(), mean_valuation_ACPC.mean(), mean_valuation_ASPC.mean()]
-# error_valuation = [np.std(mean_valuation_ASPS), np.std(mean_valuation_ACPS), 
-#                  np.std(mean_valuation_ACPC), np.std(mean_valuation_ASPC)]
+error_valuation = [np.std(ASPS['valuation']), np.std(ACPS['valuation']), 
+                  np.std(ACPC['valuation']), np.std(ASPC['valuation'])]
 
 plt.bar(['YSPS', 'YCPS', 'YCPC', 'YSPC'], mean_valuations, color = ['blue', 'red', 'green', 'orange']) 
+plt.errorbar(['YSPS', 'YCPS', 'YCPC', 'YSPC'], mean_valuations, error_valuation, ecolor = 'black', fmt='none')
 plt.xlabel('Cas')
 plt.ylabel('Moyenne de Valuations en %')
 plt.title('Valuation par cas, probabilités confondues (PILOT)')
 plt.savefig('Bar all Lottery H1 PILOT.png', dpi=1200)
 plt.show()
+
+
+# Plot the difference of valuation 
+
+plt.bar(['Self (YCPS-YSPS)', 'Charity (YSPC-YCPC)'], 
+        [self_lottery_differences['valuation_ACPS_ASPS'].mean(), charity_lottery_differences['valuation_ASPC_ACPC'].mean()], 
+        color = ['lightskyblue', 'lightgreen']) 
+plt.errorbar(['Self (YCPS-YSPS)', 'Charity (YSPC-YCPC)'], 
+              [self_lottery_differences['valuation_ACPS_ASPS'].mean(), charity_lottery_differences['valuation_ASPC_ACPC'].mean()], 
+              [np.std(self_lottery_differences['valuation_ACPS_ASPS']), np.std(charity_lottery_differences['valuation_ASPC_ACPC'])], ecolor = 'black', fmt='none')
+plt.xlabel('Type de loterie')
+plt.ylabel('Difference de valuations (avec - sans compro) en %')
+plt.title('Difference de valuation, probabilités confondues (PILOT)')
+plt.savefig('Bar diff type Lottery H1 PILOT.png', dpi=1200)
+plt.show()
+ 
 
 # Plot Valuation for each participant ### TO REMOVE FOR REAL DATA 
 
@@ -240,8 +284,8 @@ if by_ind == 1:
         axs[0, 1].grid(True)
         axs[0, 1].set_title('Tradeoff Context')
         
-        axs[1, 0].plot(ASPS_ind['prob_option_A'], ASPS_ind['valuation'], label='ASPS', color='orange')
-        axs[1, 0].plot(ACPS_ind['prob_option_A'], ACPS_ind['valuation'], label='ACPS', color='green')
+        axs[1, 0].plot(ASPS_ind['prob_option_A'], ASPS_ind['valuation'], label='ASPS', color='green')
+        axs[1, 0].plot(ACPS_ind['prob_option_A'], ACPS_ind['valuation'], label='ACPS', color='orange')
         axs[1, 0].legend()
         axs[1, 0].plot(x_fit, y_fit, color='grey', label='Expected value')
         axs[1, 0].tick_params(left = False, right = False)
