@@ -18,6 +18,7 @@ import ast
 censure = 1 # Put 0 if include censored participants in analysis and 1 if we exclude them 
 by_ind = 0 # Put 0 if no display of individual plots and 1 if display 
 attention_type = 'relative' # relative for % of total time and 'absolute' for raw time
+outliers = 1 # Put 0 if include outliers in analysis and 1 if we exclude them 
 
 path = '/Users/carolinepioger/Desktop/pretest vincent' # change to yours :)
 
@@ -29,10 +30,11 @@ survey = pd.read_csv(path + '/survey data.csv')
 data_for_plot = data
 
 # Remove (or not) participants with censored values in part 2
-exclude_participants = data_autre.loc[data_autre['censored_calibration'] == 1, 'id'] 
+exclude_participants = data_for_plot.loc[data_for_plot['censored_calibration'] == 1, 'id'] 
 
 if censure == 1: 
     data_for_plot = data_for_plot.drop(data_for_plot[data_for_plot['id'].isin(exclude_participants) == True].index)
+    data_for_plot = data_for_plot.reset_index(drop=True)
 else: 
     data_for_plot = data_for_plot
 
@@ -40,10 +42,18 @@ else:
 for i in range(len(data_for_plot)):
     data_for_plot['order of cases'][i] = ast.literal_eval(data_for_plot['order of cases'][i])
 
-# %%
-# =============================================================================
-# VISUALISE DATA 
-# =============================================================================
+# Remove outliers? 
+
+dwell_mean = data_for_plot['dwell_time'].mean()
+dwell_std = np.std(data_for_plot['dwell_time'])
+
+outliers_data = data_for_plot[(data_for_plot['dwell_time'] < dwell_mean - 4 * dwell_std)
+                         | (data_for_plot['dwell_time'] > dwell_mean + 4 * dwell_std)]
+if outliers ==1:
+    data_for_plot = data_for_plot.drop(outliers_data.index)
+    data_for_plot = data_for_plot.reset_index(drop=True)
+else: 
+    pass 
 
 
 # Get different cases
@@ -53,10 +63,18 @@ ACPC = data_for_plot[(data_for_plot['charity'] == 1) & (data_for_plot['tradeoff'
 ASPC = data_for_plot[(data_for_plot['charity'] == 1) & (data_for_plot['tradeoff'] == 1)]
 ACPS = data_for_plot[(data_for_plot['charity'] == 0) & (data_for_plot['tradeoff'] == 1)]
 
-average_valuation_ASPS = ASPS.groupby('prob_option_A')['valuation'].median()
-average_valuation_ACPC = ACPC.groupby('prob_option_A')['valuation'].median()
-average_valuation_ACPS = ACPS.groupby('prob_option_A')['valuation'].median()
-average_valuation_ASPC = ASPC.groupby('prob_option_A')['valuation'].median()
+attention_ASPS = ASPS.groupby('prob_option_A')['dwell_time']
+attention_ACPC = ACPC.groupby('prob_option_A')['dwell_time']
+attention_ACPS = ACPS.groupby('prob_option_A')['dwell_time']
+attention_ASPC = ASPC.groupby('prob_option_A')['dwell_time']
+
+mean_attention_ASPS = attention_ASPS.mean()
+mean_attention_ACPC = attention_ACPC.mean()
+mean_attention_ACPS = attention_ACPS.mean()
+mean_attention_ASPC = attention_ASPC.mean()
+
+mean_attentions = [mean_attention_ASPS.mean(), mean_attention_ACPS.mean(), 
+                   mean_attention_ACPC.mean(), mean_attention_ASPC.mean()]
 
 data_for_plot_2 = data_for_plot
 data_for_plot_2['first case'] = [data_for_plot_2['order of cases'][i][0] for i in range(len(data_for_plot_2))]
@@ -69,8 +87,34 @@ ASPC_between = data_for_plot_2[(data_for_plot_2['charity'] == 1) & (data_for_plo
 ACPS_between = data_for_plot_2[(data_for_plot_2['charity'] == 0) & (data_for_plot_2['tradeoff'] == 1)]
 
 
+# %%
+# =============================================================================
+# VISUALISE DATA 
+# =============================================================================
 
 # Plot Attention (WITHIN-SUBJECT)
+
+# Plot all attention, without differentiating probabilities
+
+error_attention = [np.std(ASPS['dwell_time']), np.std(ACPS['dwell_time']), 
+                  np.std(ACPC['dwell_time']), np.std(ASPC['dwell_time'])]
+
+plt.bar(['ASPS', 'ACPS', 'ACPC', 'ASPC'], mean_attentions, color = ['blue', 'red', 'green', 'orange']) 
+plt.errorbar(['ASPS', 'ACPS', 'ACPC', 'ASPC'], mean_attentions, error_attention, ecolor = 'black', fmt='none')
+plt.xlabel('Cas')
+plt.ylabel('Moyenne Attention en s')
+plt.title('Attention par cas, probabilités confondues (PILOT)')
+plt.savefig('Bar all Lottery H2 PILOT.png', dpi=1200)
+plt.show()
+
+# Histo attention 
+
+
+plt.hist(data_for_plot['dwell_time'], bins=50)
+plt.xlabel('Frequence')
+plt.ylabel('Attention en s')
+plt.title('Histo attention')
+plt.show()
 
 average_attention_ASPS = ASPS.groupby('prob_option_A')['dwell_time'].median()
 average_attention_ACPC = ACPC.groupby('prob_option_A')['dwell_time'].median()
@@ -104,7 +148,7 @@ plt.show()
 
 
 if by_ind == 1: 
-    for i in range(1, data['number'].nunique()+1):
+    for i in range(1, data_for_plot['number'].nunique()+1):
         ASPS_att_ind = ASPS.loc[ASPS['number'] == i, ['prob_option_A', 'dwell_time']] 
         ASPS_att_ind = ASPS_att_ind.sort_values(by=['prob_option_A'])
         ACPC_att_ind = ACPC.loc[ACPC['number'] == i, ['prob_option_A', 'dwell_time']] 

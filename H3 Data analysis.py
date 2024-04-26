@@ -188,35 +188,64 @@ print(mdf_8.summary())
 self_lottery = pd.concat([ASPS, ACPS], ignore_index = True)
 charity_lottery = pd.concat([ACPC, ASPC], ignore_index=True)
 
-self_lottery_differences = pd.DataFrame(columns=['number', 'prob_option_A', 'valuation_ASPS_ACPS', 'dwell_time_ASPS_ACPS'])
+self_lottery_differences = pd.DataFrame(columns=['number', 'prob_option_A'])
 
-for i in range(1, self_lottery['number'].nunique()+1):
+for i in self_lottery['number'].unique():
     individual = self_lottery.loc[self_lottery['number'] == i, ['case', 'prob_option_A', 'valuation', 'dwell_time']] 
     individual_difference = individual.pivot(index='prob_option_A', columns='case', values=['valuation', 'dwell_time'])
-    individual_difference['valuation_ASPS_ACPS'] = individual_difference['valuation']['ASPS'] - individual_difference['valuation']['ACPS']
-    individual_difference['dwell_time_ASPS_ACPS'] = individual_difference['dwell_time']['ASPS'] - individual_difference['dwell_time']['ACPS']
+    individual_difference['valuation_ACPS_ASPS'] = individual_difference['valuation']['ACPS'] - individual_difference['valuation']['ASPS']
+    individual_difference['dwell_time_ACPS_ASPS'] = individual_difference['dwell_time']['ACPS'] - individual_difference['dwell_time']['ASPS']
     individual_difference['number'] = i
     individual_difference.reset_index(inplace=True)
     individual_difference.columns = individual_difference.columns.droplevel(1)
-    self_lottery_differences = pd.concat([self_lottery_differences, individual_difference[['number', 'prob_option_A', 'valuation_ASPS_ACPS', 'dwell_time_ASPS_ACPS']]], ignore_index=True)
+    self_lottery_differences = pd.concat([self_lottery_differences, individual_difference[['number', 'prob_option_A', 'valuation_ACPS_ASPS', 'dwell_time_ACPS_ASPS']]], ignore_index=True)
 
-charity_lottery_differences = pd.DataFrame(columns=['number', 'prob_option_A', 'valuation_ACPC_ASPC', 'dwell_time_ACPC_ASPC'])
+charity_lottery_differences = pd.DataFrame(columns=['number', 'prob_option_A'])
 
-for i in range(1, charity_lottery['number'].nunique()+1):
+for i in charity_lottery['number'].unique():
     individual = charity_lottery.loc[charity_lottery['number'] == i, ['case', 'prob_option_A', 'valuation', 'dwell_time']] 
     individual_difference = individual.pivot(index='prob_option_A', columns='case', values=['valuation', 'dwell_time'])
-    individual_difference['valuation_ACPC_ASPC'] = individual_difference['valuation']['ACPC'] - individual_difference['valuation']['ASPC']
-    individual_difference['dwell_time_ACPC_ASPC'] = individual_difference['dwell_time']['ACPC'] - individual_difference['dwell_time']['ASPC']
+    individual_difference['valuation_ASPC_ACPC'] = individual_difference['valuation']['ASPC'] - individual_difference['valuation']['ACPC']
+    individual_difference['dwell_time_ASPC_ACPC'] = individual_difference['dwell_time']['ASPC'] - individual_difference['dwell_time']['ACPC']
     individual_difference['number'] = i
     individual_difference.reset_index(inplace=True)
     individual_difference.columns = individual_difference.columns.droplevel(1)
-    charity_lottery_differences = pd.concat([charity_lottery_differences, individual_difference[['number', 'prob_option_A', 'valuation_ACPC_ASPC', 'dwell_time_ACPC_ASPC']]], ignore_index=True)
+    charity_lottery_differences = pd.concat([charity_lottery_differences, individual_difference[['number', 'prob_option_A', 'valuation_ASPC_ACPC', 'dwell_time_ASPC_ACPC']]], ignore_index=True)
 
-md_self = smf.mixedlm("valuation_ASPS_ACPS ~ dwell_time_ASPS_ACPS", self_lottery_differences, groups=self_lottery_differences["number"])
+
+
+# self_lottery = pd.concat([ASPS, ACPS], ignore_index = True)
+# charity_lottery = pd.concat([ACPC, ASPC], ignore_index=True)
+
+# self_lottery_differences = pd.DataFrame(columns=['number', 'prob_option_A', 'valuation_ASPS_ACPS', 'dwell_time_ASPS_ACPS'])
+
+# for i in data_for_plot['number'].unique():
+#     individual = self_lottery.loc[self_lottery['number'] == i, ['case', 'prob_option_A', 'valuation', 'dwell_time']] 
+#     individual_difference = individual.pivot(index='prob_option_A', columns='case', values=['valuation', 'dwell_time'])
+#     individual_difference['valuation_ASPS_ACPS'] = individual_difference['valuation']['ASPS'] - individual_difference['valuation']['ACPS']
+#     individual_difference['dwell_time_ASPS_ACPS'] = individual_difference['dwell_time']['ASPS'] - individual_difference['dwell_time']['ACPS']
+#     individual_difference['number'] = i
+#     individual_difference.reset_index(inplace=True)
+#     individual_difference.columns = individual_difference.columns.droplevel(1)
+#     self_lottery_differences = pd.concat([self_lottery_differences, individual_difference[['number', 'prob_option_A', 'valuation_ASPS_ACPS', 'dwell_time_ASPS_ACPS']]], ignore_index=True)
+
+# charity_lottery_differences = pd.DataFrame(columns=['number', 'prob_option_A', 'valuation_ACPC_ASPC', 'dwell_time_ACPC_ASPC'])
+
+# for i in data_for_plot['number'].unique():
+#     individual = charity_lottery.loc[charity_lottery['number'] == i, ['case', 'prob_option_A', 'valuation', 'dwell_time']] 
+#     individual_difference = individual.pivot(index='prob_option_A', columns='case', values=['valuation', 'dwell_time'])
+#     individual_difference['valuation_ACPC_ASPC'] = individual_difference['valuation']['ACPC'] - individual_difference['valuation']['ASPC']
+#     individual_difference['dwell_time_ACPC_ASPC'] = individual_difference['dwell_time']['ACPC'] - individual_difference['dwell_time']['ASPC']
+#     individual_difference['number'] = i
+#     individual_difference.reset_index(inplace=True)
+#     individual_difference.columns = individual_difference.columns.droplevel(1)
+#     charity_lottery_differences = pd.concat([charity_lottery_differences, individual_difference[['number', 'prob_option_A', 'valuation_ACPC_ASPC', 'dwell_time_ACPC_ASPC']]], ignore_index=True)
+
+md_self = smf.mixedlm("valuation_ACPS_ASPS ~ dwell_time_ACPS_ASPS", self_lottery_differences, groups=self_lottery_differences["number"])
 mdf_self = md_self.fit()
 print(mdf_self.summary())
 
-md_charity = smf.mixedlm("valuation_ACPC_ASPC ~ dwell_time_ACPC_ASPC", charity_lottery_differences, groups=charity_lottery_differences["number"])
+md_charity = smf.mixedlm("valuation_ASPC_ACPC ~ dwell_time_ASPC_ACPC", charity_lottery_differences, groups=charity_lottery_differences["number"])
 mdf_charity = md_charity.fit()
 print(mdf_charity.summary())
 

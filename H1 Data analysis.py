@@ -17,7 +17,7 @@ import ast
 
 censure = 1 # Put 0 if include censored participants in analysis and 1 if we exclude them 
 by_ind = 0 # Put 0 if no display of individual plots and 1 if display 
-attention_type = 'relative' # relative for % of total time and 'absolute' for raw time
+attention_type = 'absolute' # relative for % of total time and 'absolute' for raw time
 
 path = '/Users/carolinepioger/Desktop/pretest vincent' # change to yours :)
 
@@ -49,24 +49,17 @@ ASPC = data_for_plot[(data_for_plot['charity'] == 1) & (data_for_plot['tradeoff'
 ACPS = data_for_plot[(data_for_plot['charity'] == 0) & (data_for_plot['tradeoff'] == 1)]
 
 valuation_ASPS = ASPS.groupby('prob_option_A')['valuation']
-valuation_ACPC = ACPC.groupby('prob_option_A')['valuation']
 valuation_ACPS = ACPS.groupby('prob_option_A')['valuation']
+valuation_ACPC = ACPC.groupby('prob_option_A')['valuation']
 valuation_ASPC = ASPC.groupby('prob_option_A')['valuation']
 
+valuations_all = [valuation_ASPS, valuation_ACPS, valuation_ACPC, valuation_ASPC]
+
 median_valuation_ASPS = valuation_ASPS.median()
-median_valuation_ACPC = valuation_ACPC.median()
 median_valuation_ACPS = valuation_ACPS.median()
+median_valuation_ACPC = valuation_ACPC.median()
 median_valuation_ASPC = valuation_ASPC.median()
 
-data_for_plot_2 = data_for_plot
-data_for_plot_2['first case'] = [data_for_plot_2['order of cases'][i][0] for i in range(len(data_for_plot_2))]
-not_first_case = data_for_plot_2.loc[data_for_plot_2['first case'] != data_for_plot_2['case']] 
-data_for_plot_2 = data_for_plot_2.drop(not_first_case.index)
-
-ASPS_between = data_for_plot_2[(data_for_plot_2['charity'] == 0) & (data_for_plot_2['tradeoff'] == 0)]
-ACPC_between = data_for_plot_2[(data_for_plot_2['charity'] == 1) & (data_for_plot_2['tradeoff'] == 0)]
-ASPC_between = data_for_plot_2[(data_for_plot_2['charity'] == 1) & (data_for_plot_2['tradeoff'] == 1)]
-ACPS_between = data_for_plot_2[(data_for_plot_2['charity'] == 0) & (data_for_plot_2['tradeoff'] == 1)]
 
 # Difference data
 self_lottery = pd.concat([ASPS, ACPS], ignore_index = True)
@@ -202,11 +195,24 @@ plt.savefig('Charity Lottery H1 PILOT.png', dpi=1200)
 plt.show()
 
 # Plot all Valuations
+offset = 0.015
 
-plt.plot(valuation_ASPC.mean().index, valuation_ASPS.mean(), label='YSPC', color='blue', marker='o', linestyle='-')
-plt.plot(valuation_ACPC.mean().index, valuation_ACPS.mean(), label='YCPC', color='red', marker='o', linestyle='-')
-plt.plot(valuation_ASPC.mean().index, valuation_ACPC.mean(), label='YSPC', color='green', marker='o', linestyle='-')
-plt.plot(valuation_ACPC.mean().index, valuation_ASPC.mean(), label='YCPC', color='orange', marker='o', linestyle='-')
+errors_per_prob = [valuation_ASPS.std(), valuation_ACPS.std(), valuation_ACPC.std(), valuation_ASPC.std()]
+errors_per_prob_mean = [errors_per_prob[i].mean() for i in range(len(errors_per_prob))]
+overall_errors = np.mean(errors_per_prob_mean)
+
+plt.errorbar(valuation_ASPS.mean().index - offset, valuation_ASPS.mean(), valuation_ASPS.std(), ecolor = 'black', fmt='none', alpha=0.7)
+plt.plot(valuation_ASPS.mean().index - offset, valuation_ASPS.mean(), label='$Y^{S}(P^{S})$', color='blue', marker='o', linestyle='-')
+
+plt.errorbar(valuation_ACPS.mean().index - offset/2, valuation_ACPS.mean(), valuation_ACPS.std(), ecolor = 'black', fmt='none', alpha=0.7)
+plt.plot(valuation_ACPS.mean().index - offset/2, valuation_ACPS.mean(), label='$Y^{C}(P^{S})$', color='dodgerblue', marker='o', linestyle='-')
+
+plt.errorbar(valuation_ACPC.mean().index + offset/2, valuation_ACPC.mean(), valuation_ACPC.std(), ecolor = 'black', fmt='none', alpha=0.7)
+plt.plot(valuation_ACPC.mean().index + offset/2, valuation_ACPC.mean(), label='$Y^{C}(P^{C})$', color='green', marker='o', linestyle='-')
+
+plt.errorbar(valuation_ASPC.mean().index + offset, valuation_ASPC.mean(), valuation_ASPC.std(), ecolor = 'black', fmt='none', alpha=0.7)
+plt.plot(valuation_ASPC.mean().index + offset, valuation_ASPC.mean(), label='$Y^{S}(P^{C})$', color='limegreen', marker='o', linestyle='-')
+
 x_fit = np.linspace(0, 1, num = 10)
 y_fit = np.linspace(0, 100, num = 10)
 plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
@@ -214,7 +220,7 @@ plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
 
 plt.xlabel('Probabilité P du résultat non nul')
 plt.ylabel('Valuations moyennes en %')
-plt.title('Résultats pour toutes les loteries (PILOT)')
+plt.title('Résultats pour toutes les loteries (pilote)')
 # plt.xlabel('Probability P of Non-Zero Payment')
 # plt.ylabel('Valuation as % of Riskless Lottery')
 # plt.title('(median) Results for Charity Lottery Valuation')
@@ -228,26 +234,27 @@ plt.show()
 error_valuation = [np.std(ASPS['valuation']), np.std(ACPS['valuation']), 
                   np.std(ACPC['valuation']), np.std(ASPC['valuation'])]
 
-plt.bar(['YSPS', 'YCPS', 'YCPC', 'YSPC'], mean_valuations, color = ['blue', 'red', 'green', 'orange']) 
-plt.errorbar(['YSPS', 'YCPS', 'YCPC', 'YSPC'], mean_valuations, error_valuation, ecolor = 'black', fmt='none')
+plt.bar(['$Y^{S}(P^{S})$', '$Y^{C}(P^{S})$', '$Y^{C}(P^{C})$', '$Y^{S}(P^{C})$'], mean_valuations, color = ['blue', 'dodgerblue', 'green', 'limegreen']) 
+plt.errorbar(['$Y^{S}(P^{S})$', '$Y^{C}(P^{S})$', '$Y^{C}(P^{C})$', '$Y^{S}(P^{C})$'], mean_valuations, error_valuation, ecolor = 'black', fmt='none', alpha=0.7)
 plt.xlabel('Cas')
 plt.ylabel('Moyenne de Valuations en %')
-plt.title('Valuation par cas, probabilités confondues (PILOT)')
+plt.title('Valuation par cas, probabilités confondues (pilote)')
 plt.savefig('Bar all Lottery H1 PILOT.png', dpi=1200)
 plt.show()
 
 
 # Plot the difference of valuation 
 
-plt.bar(['Self (YCPS-YSPS)', 'Charity (YSPC-YCPC)'], 
+plt.bar(['Self ($Y^{C}(P^{S})-Y^{S}(P^{S})$)', 'Charity ($Y^{S}(P^{C})-Y^{C}(P^{C})$)'], 
         [self_lottery_differences['valuation_ACPS_ASPS'].mean(), charity_lottery_differences['valuation_ASPC_ACPC'].mean()], 
         color = ['lightskyblue', 'lightgreen']) 
-plt.errorbar(['Self (YCPS-YSPS)', 'Charity (YSPC-YCPC)'], 
+plt.errorbar(['Self ($Y^{C}(P^{S})-Y^{S}(P^{S})$)', 'Charity ($Y^{S}(P^{C})-Y^{C}(P^{C})$)'], 
               [self_lottery_differences['valuation_ACPS_ASPS'].mean(), charity_lottery_differences['valuation_ASPC_ACPC'].mean()], 
-              [np.std(self_lottery_differences['valuation_ACPS_ASPS']), np.std(charity_lottery_differences['valuation_ASPC_ACPC'])], ecolor = 'black', fmt='none')
+              [np.std(self_lottery_differences['valuation_ACPS_ASPS']), np.std(charity_lottery_differences['valuation_ASPC_ACPC'])], ecolor = 'black', fmt='none', alpha=0.7)
+plt.axhline(y=0, color='grey', linestyle='--')
 plt.xlabel('Type de loterie')
 plt.ylabel('Difference de valuations (avec - sans compro) en %')
-plt.title('Difference de valuation, probabilités confondues (PILOT)')
+plt.title('Difference de valuation, probabilités confondues (pilote)')
 plt.savefig('Bar diff type Lottery H1 PILOT.png', dpi=1200)
 plt.show()
  
@@ -305,6 +312,20 @@ if by_ind == 1:
         plt.show()
 else:
     pass
+
+# Categorisation 
+
+EDRP = np.array[]
+
+for i in data_for_plot['number'].unique():
+    self_diff = self_lottery_differences.loc[self_lottery_differences['number'] == i,['valuation_ACPS_ASPS']].mean()
+    charity_diff = charity_lottery_differences.loc[charity_lottery_differences['number'] == i,['valuation_ASPC_ACPC']].mean()
+
+    if 
+    
+
+self_lottery_differences['valuation_ACPS_ASPS'].mean()
+charity_lottery_differences['valuation_ASPC_ACPC'].mean()
 
 
 # %%
