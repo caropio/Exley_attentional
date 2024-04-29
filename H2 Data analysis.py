@@ -47,8 +47,20 @@ for i in range(len(data_for_plot)):
 dwell_mean = data_for_plot['dwell_time'].mean()
 dwell_std = np.std(data_for_plot['dwell_time'])
 
-outliers_data = data_for_plot[(data_for_plot['dwell_time'] < dwell_mean - 4 * dwell_std)
-                         | (data_for_plot['dwell_time'] > dwell_mean + 4 * dwell_std)]
+outliers_data = data_for_plot[(data_for_plot['dwell_time'] < dwell_mean - 3 * dwell_std)
+                         | (data_for_plot['dwell_time'] > dwell_mean + 3 * dwell_std)]
+
+dwell_mean_total = data_for_plot['total_time_spent_s'].mean()
+dwell_std_total = np.std(data_for_plot['total_time_spent_s'])
+outliers_data_total = data_for_plot[(data_for_plot['total_time_spent_s'] < dwell_mean_total - 3 * dwell_std_total)
+                         | (data_for_plot['total_time_spent_s'] > dwell_mean_total + 3 * dwell_std_total)]
+
+dwell_mean_relative = data_for_plot['dwell_time_relative'].mean()
+dwell_std_relative = np.std(data_for_plot['dwell_time_relative'])
+outliers_data_relative = data_for_plot[(data_for_plot['dwell_time_relative'] < dwell_mean_relative - 3 * dwell_std_relative)
+                         | (data_for_plot['dwell_time_relative'] > dwell_mean_relative + 3 * dwell_std_relative)]
+
+
 if outliers ==1:
     data_for_plot = data_for_plot.drop(outliers_data.index)
     data_for_plot = data_for_plot.reset_index(drop=True)
@@ -86,6 +98,34 @@ ACPC_between = data_for_plot_2[(data_for_plot_2['charity'] == 1) & (data_for_plo
 ASPC_between = data_for_plot_2[(data_for_plot_2['charity'] == 1) & (data_for_plot_2['tradeoff'] == 1)]
 ACPS_between = data_for_plot_2[(data_for_plot_2['charity'] == 0) & (data_for_plot_2['tradeoff'] == 1)]
 
+# Get differences
+
+self_lottery_attention = pd.concat([ASPS, ACPS], ignore_index = True)
+charity_lottery_attention = pd.concat([ACPC, ASPC], ignore_index=True)
+
+self_lottery_differences_attention = pd.DataFrame(columns=['number', 'prob_option_A'])
+
+for i in self_lottery_attention['number'].unique():
+    individual = self_lottery_attention.loc[self_lottery_attention['number'] == i, ['case', 'prob_option_A', 'dwell_time']] 
+    individual_difference = individual.pivot(index='prob_option_A', columns='case', values='dwell_time')
+    individual_difference['dwell_time_ACPS_ASPS'] = individual_difference['ACPS'] - individual_difference['ASPS']
+    individual_difference['number'] = i
+    individual_difference.reset_index(inplace=True)
+    # individual_difference.columns = individual_difference.columns.droplevel(1)
+    self_lottery_differences_attention = pd.concat([self_lottery_differences_attention, individual_difference[['number', 'prob_option_A', 'dwell_time_ACPS_ASPS']]], ignore_index=True)
+
+charity_lottery_differences_attention = pd.DataFrame(columns=['number', 'prob_option_A'])
+
+for i in charity_lottery_attention['number'].unique():
+    individual = charity_lottery_attention.loc[charity_lottery_attention['number'] == i, ['case', 'prob_option_A', 'dwell_time']] 
+    individual_difference = individual.pivot(index='prob_option_A', columns='case', values='dwell_time')
+    individual_difference['dwell_time_ASPC_ACPC'] = individual_difference['ASPC'] - individual_difference['ACPC']
+    individual_difference['number'] = i
+    individual_difference.reset_index(inplace=True)
+    # individual_difference.columns = individual_difference.columns.droplevel(1)
+    charity_lottery_differences_attention = pd.concat([charity_lottery_differences_attention, individual_difference[['number', 'prob_option_A', 'dwell_time_ASPC_ACPC']]], ignore_index=True)
+
+
 
 # %%
 # =============================================================================
@@ -107,12 +147,59 @@ plt.title('Attention par cas, probabilités confondues (PILOT)')
 plt.savefig('Bar all Lottery H2 PILOT.png', dpi=1200)
 plt.show()
 
+# relative
+
+error_attention_relative = [np.std(ASPS['dwell_time_relative']), np.std(ACPS['dwell_time_relative']), 
+                  np.std(ACPC['dwell_time_relative']), np.std(ASPC['dwell_time_relative'])]
+
+mean_attentions_relative = [ASPS.groupby('prob_option_A')['dwell_time_relative'].mean().mean(), 
+                            ACPS.groupby('prob_option_A')['dwell_time_relative'].mean().mean(),
+                            ACPC.groupby('prob_option_A')['dwell_time_relative'].mean().mean(),
+                            ASPC.groupby('prob_option_A')['dwell_time_relative'].mean().mean()]
+
+plt.bar(['ASPS', 'ACPS', 'ACPC', 'ASPC'], mean_attentions, color = ['blue', 'red', 'green', 'orange']) 
+plt.errorbar(['ASPS', 'ACPS', 'ACPC', 'ASPC'], mean_attentions, error_attention_relative, ecolor = 'black', fmt='none')
+plt.xlabel('Cas')
+plt.ylabel('Moyenne Attention en s (relative)')
+plt.title('Attention par cas, probabilités confondues (PILOT)')
+plt.savefig('Bar all Lottery H2 PILOT.png', dpi=1200)
+plt.show()
+
+# Plot the difference of valuation 
+
+plt.bar(['Self ($Y^{C}(P^{S})-Y^{S}(P^{S})$)', 'Charity ($Y^{S}(P^{C})-Y^{C}(P^{C})$)'], 
+        [self_lottery_differences_attention['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention['dwell_time_ASPC_ACPC'].mean()], 
+        color = ['lightskyblue', 'lightgreen']) 
+plt.errorbar(['Self ($Y^{C}(P^{S})-Y^{S}(P^{S})$)', 'Charity ($Y^{S}(P^{C})-Y^{C}(P^{C})$)'], 
+              [self_lottery_differences_attention['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention['dwell_time_ASPC_ACPC'].mean()], 
+              [np.std(self_lottery_differences_attention['dwell_time_ACPS_ASPS']), np.std(charity_lottery_differences_attention['dwell_time_ASPC_ACPC'])], ecolor = 'black', fmt='none', alpha=0.7)
+plt.axhline(y=0, color='grey', linestyle='--')
+plt.xlabel('Type de loterie')
+plt.ylabel('Difference attention (avec - sans compro) en %')
+plt.title('Difference attention, probabilités confondues (pilote)')
+plt.savefig('Bar diff type Lottery H2 PILOT.png', dpi=1200)
+plt.show()
+ 
+
+
 # Histo attention 
 
 
 plt.hist(data_for_plot['dwell_time'], bins=50)
-plt.xlabel('Frequence')
-plt.ylabel('Attention en s')
+plt.xlabel('Attention en s')
+plt.ylabel('Frequence')
+plt.title('Histo attention')
+plt.show()
+
+plt.hist(data_for_plot['dwell_time_relative'], bins=50)
+plt.xlabel('Attention en s')
+plt.ylabel('Frequence')
+plt.title('Histo attention')
+plt.show()
+
+plt.hist(data_for_plot['total_time_spent_s'], bins=50)
+plt.xlabel('Attention en s')
+plt.ylabel('Frequence')
 plt.title('Histo attention')
 plt.show()
 

@@ -201,16 +201,16 @@ errors_per_prob = [valuation_ASPS.std(), valuation_ACPS.std(), valuation_ACPC.st
 errors_per_prob_mean = [errors_per_prob[i].mean() for i in range(len(errors_per_prob))]
 overall_errors = np.mean(errors_per_prob_mean)
 
-plt.errorbar(valuation_ASPS.mean().index - offset, valuation_ASPS.mean(), valuation_ASPS.std(), ecolor = 'black', fmt='none', alpha=0.7)
+plt.errorbar(valuation_ASPS.mean().index - offset, valuation_ASPS.mean(), valuation_ASPS.std(), ecolor = 'black', fmt='none', alpha=0.5)
 plt.plot(valuation_ASPS.mean().index - offset, valuation_ASPS.mean(), label='$Y^{S}(P^{S})$', color='blue', marker='o', linestyle='-')
 
-plt.errorbar(valuation_ACPS.mean().index - offset/2, valuation_ACPS.mean(), valuation_ACPS.std(), ecolor = 'black', fmt='none', alpha=0.7)
+plt.errorbar(valuation_ACPS.mean().index - offset/2, valuation_ACPS.mean(), valuation_ACPS.std(), ecolor = 'black', fmt='none', alpha=0.5)
 plt.plot(valuation_ACPS.mean().index - offset/2, valuation_ACPS.mean(), label='$Y^{C}(P^{S})$', color='dodgerblue', marker='o', linestyle='-')
 
-plt.errorbar(valuation_ACPC.mean().index + offset/2, valuation_ACPC.mean(), valuation_ACPC.std(), ecolor = 'black', fmt='none', alpha=0.7)
+plt.errorbar(valuation_ACPC.mean().index + offset/2, valuation_ACPC.mean(), valuation_ACPC.std(), ecolor = 'black', fmt='none', alpha=0.5)
 plt.plot(valuation_ACPC.mean().index + offset/2, valuation_ACPC.mean(), label='$Y^{C}(P^{C})$', color='green', marker='o', linestyle='-')
 
-plt.errorbar(valuation_ASPC.mean().index + offset, valuation_ASPC.mean(), valuation_ASPC.std(), ecolor = 'black', fmt='none', alpha=0.7)
+plt.errorbar(valuation_ASPC.mean().index + offset, valuation_ASPC.mean(), valuation_ASPC.std(), ecolor = 'black', fmt='none', alpha=0.5)
 plt.plot(valuation_ASPC.mean().index + offset, valuation_ASPC.mean(), label='$Y^{S}(P^{C})$', color='limegreen', marker='o', linestyle='-')
 
 x_fit = np.linspace(0, 1, num = 10)
@@ -315,17 +315,19 @@ else:
 
 # Categorisation 
 
-EDRP = np.array[]
+EDRP_self = []
+EDRP_charity = []
 
 for i in data_for_plot['number'].unique():
     self_diff = self_lottery_differences.loc[self_lottery_differences['number'] == i,['valuation_ACPS_ASPS']].mean()
     charity_diff = charity_lottery_differences.loc[charity_lottery_differences['number'] == i,['valuation_ASPC_ACPC']].mean()
 
-    if 
+    if self_diff.item() > 0 :
+        EDRP_self.append(i)
+    if charity_diff.item() <0:
+        EDRP_charity.append(i)
     
-
-self_lottery_differences['valuation_ACPS_ASPS'].mean()
-charity_lottery_differences['valuation_ASPC_ACPC'].mean()
+# EDRP_total = np.same(EDRP_self, EDRP_charity)
 
 
 # %%

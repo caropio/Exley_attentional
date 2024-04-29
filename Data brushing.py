@@ -45,7 +45,8 @@ columns_mapping = { 'participant.code': 'id',
  'player.association_choice': 'charity_name', 
  'player.x1_norm_after_correction': 'charity_calibration', 
  'choix_calibration': 'calibration_choices', 
- 'choix_buffer': 'buffer_choices'}
+ 'choix_buffer': 'buffer_choices', 
+ 'player.corrected': 'exclusion_B_to_A'}
 data_autre = data_autre.rename(columns=columns_mapping)[list(columns_mapping.values())]
 
 data_autre = data_autre.reset_index(drop=True)
@@ -304,7 +305,7 @@ column_order.insert(column_order.index('case') + 1, column_order.pop(column_orde
 data = data[column_order]
 
 # Add attention data of each lottery (relative and absolute) - divide by 1000 to go from ms to s
-data['watching_urn_ms_corrected'] = data['watching_urn_ms'].apply(lambda arr: np.array([x for x in arr if x > 300])) # we drop values lower or equal to 300ms 
+data['watching_urn_ms_corrected'] = data['watching_urn_ms'].apply(lambda arr: np.array([x for x in arr if x > 200])) # we drop values lower or equal to 300ms 
 
 dwell_time_prop = [np.sum(data['watching_urn_ms_corrected'][i])/(data['total_time_spent_s'][i]*1000) for i in range(len(data))]
 dwell_time_relative = [x * 100 for x in dwell_time_prop] # to get percentage
