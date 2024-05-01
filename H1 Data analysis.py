@@ -19,7 +19,7 @@ censure = 1 # Put 0 if include censored participants in analysis and 1 if we exc
 by_ind = 0 # Put 0 if no display of individual plots and 1 if display 
 attention_type = 'absolute' # relative for % of total time and 'absolute' for raw time
 
-path = '/Users/carolinepioger/Desktop/pretest vincent' # change to yours :)
+path = '/Users/carolinepioger/Desktop/ALL collection' # change to yours :)
 
 # Get dataframes
 data = pd.read_csv(path + '/dataset.csv' )
@@ -119,13 +119,13 @@ plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
 
 plt.xlabel('Probabilité P du résultat non nul')
 plt.ylabel('Valuations moyennes en %')
-plt.title('Résultats dans le contexte sans compromis (PILOT)')
+plt.title('Résultats dans le contexte sans compromis')
 # plt.xlabel('Probability P of Non-Zero Payment')
 # plt.ylabel('Valuation (median) as % of Riskless Lottery')
 # plt.title('Results for Tradeoff Context ')
 plt.grid(True)
 plt.legend()
-plt.savefig('No Tradeoff H1 PILOT.png', dpi=1200)
+plt.savefig('No Tradeoff H1.png', dpi=1200)
 plt.show()
 
 # Plot Tradeoff Context (Replication Exley)
@@ -141,13 +141,13 @@ plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
 
 plt.xlabel('Probabilité P du résultat non nul')
 plt.ylabel('Valuations moyennes en %')
-plt.title('Résultats dans le contexte avec compromis (PILOT)')
+plt.title('Résultats dans le contexte avec compromis')
 # plt.xlabel('Probability P of Non-Zero Payment')
 # plt.ylabel('Valuation as % of Riskless Lottery')
 # plt.title('(median) Results for Tradeoff Context ')
 plt.grid(True)
 plt.legend()
-plt.savefig('Tradeoff H1 PILOT.png', dpi=1200)
+plt.savefig('Tradeoff H1.png', dpi=1200)
 plt.show()
 
 # Plot Self Lottery Valuation
@@ -163,13 +163,13 @@ plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
 
 plt.xlabel('Probabilité P du résultat non nul')
 plt.ylabel('Valuations moyennes en %')
-plt.title('Résultats pour la loterie pour soi (PILOT)')
+plt.title('Résultats pour la loterie pour soi')
 # plt.xlabel('Probability P of Non-Zero Payment')
 # plt.ylabel('Valuation as % of Riskless Lottery')
 # plt.title('(median) Results for Self Lottery Valuation')
 plt.grid(True)
 plt.legend()
-plt.savefig('Self Lottery H1 PILOT.png', dpi=1200)
+plt.savefig('Self Lottery H1.png', dpi=1200)
 plt.show()
 
 # Plot Charity Lottery Valuation
@@ -185,13 +185,13 @@ plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
 
 plt.xlabel('Probabilité P du résultat non nul')
 plt.ylabel('Valuations moyennes en %')
-plt.title('Résultats pour la loterie pour la charité (PILOT)')
+plt.title('Résultats pour la loterie pour la charité')
 # plt.xlabel('Probability P of Non-Zero Payment')
 # plt.ylabel('Valuation as % of Riskless Lottery')
 # plt.title('(median) Results for Charity Lottery Valuation')
 plt.grid(True)
 plt.legend()
-plt.savefig('Charity Lottery H1 PILOT.png', dpi=1200)
+plt.savefig('Charity Lottery H1.png', dpi=1200)
 plt.show()
 
 # Plot all Valuations
@@ -220,13 +220,13 @@ plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
 
 plt.xlabel('Probabilité P du résultat non nul')
 plt.ylabel('Valuations moyennes en %')
-plt.title('Résultats pour toutes les loteries (pilote)')
+plt.title('Résultats pour toutes les loteries')
 # plt.xlabel('Probability P of Non-Zero Payment')
 # plt.ylabel('Valuation as % of Riskless Lottery')
 # plt.title('(median) Results for Charity Lottery Valuation')
 plt.grid(True)
 plt.legend()
-plt.savefig('All Lottery H1 PILOT.png', dpi=1200)
+plt.savefig('All Lottery H1.png', dpi=1200)
 plt.show()
 
 # Valuation without differentiation of probabilities
@@ -238,8 +238,8 @@ plt.bar(['$Y^{S}(P^{S})$', '$Y^{C}(P^{S})$', '$Y^{C}(P^{C})$', '$Y^{S}(P^{C})$']
 plt.errorbar(['$Y^{S}(P^{S})$', '$Y^{C}(P^{S})$', '$Y^{C}(P^{C})$', '$Y^{S}(P^{C})$'], mean_valuations, error_valuation, ecolor = 'black', fmt='none', alpha=0.7)
 plt.xlabel('Cas')
 plt.ylabel('Moyenne de Valuations en %')
-plt.title('Valuation par cas, probabilités confondues (pilote)')
-plt.savefig('Bar all Lottery H1 PILOT.png', dpi=1200)
+plt.title('Valuation par cas, probabilités confondues')
+plt.savefig('Bar all Lottery H1.png', dpi=1200)
 plt.show()
 
 
@@ -254,8 +254,8 @@ plt.errorbar(['Self ($Y^{C}(P^{S})-Y^{S}(P^{S})$)', 'Charity ($Y^{S}(P^{C})-Y^{C
 plt.axhline(y=0, color='grey', linestyle='--')
 plt.xlabel('Type de loterie')
 plt.ylabel('Difference de valuations (avec - sans compro) en %')
-plt.title('Difference de valuation, probabilités confondues (pilote)')
-plt.savefig('Bar diff type Lottery H1 PILOT.png', dpi=1200)
+plt.title('Difference de valuation, probabilités confondues')
+plt.savefig('Bar diff type Lottery H1.png', dpi=1200)
 plt.show()
  
 

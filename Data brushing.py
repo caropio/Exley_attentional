@@ -15,8 +15,9 @@ MSP_excl = 1 # Put 0 if include MSP calib in analysis and 1 if we exclude them
 attention_type = 'absolute' # relative for % of total time and 'absolute' for raw time
 
 # Info to find data
-path = '/Users/carolinepioger/Desktop/pretest vincent' # change to yours :)
-dates = ['2024-03-28', '2024-03-25', '2024-04-03']
+path = '/Users/carolinepioger/Desktop/ALL collection' # change to yours :)
+# dates = ['2024-03-28', '2024-03-25', '2024-04-03']
+dates = ['2024-04-29','2024-04-30']
 
 # Data for analysis 
 
