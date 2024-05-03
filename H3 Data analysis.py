@@ -16,35 +16,60 @@ import statsmodels.formula.api as smf
 import ast 
 
 censure = 1 # Put 0 if include censored participants in analysis and 1 if we exclude them 
+MSP_excl = 1 # Put 0 if include MSP calib in analysis and 1 if we exclude them 
 by_ind = 0 # Put 0 if no display of individual plots and 1 if display 
-attention_type = 'relative' # relative for % of total time and 'absolute' for raw time
+attention_type = 'absolute' # relative for % of total time and 'absolute' for raw time
 
-path = '/Users/carolinepioger/Desktop/pretest vincent' # change to yours :)
+path = '/Users/carolinepioger/Desktop/ALL collection' # change to yours :)
 
 # Get dataframes
 data = pd.read_csv(path + '/dataset.csv' )
 data_autre = pd.read_csv(path + '/criterion info data.csv')
 survey = pd.read_csv(path + '/survey data.csv')
 
-data_for_plot = data
+
+for i in range(len(data_autre)):
+    if data_autre['censored_calibration'][i] == 'MSP':
+        pass
+    elif isinstance(data_autre['censored_calibration'][i], str):
+        data_autre['censored_calibration'][i] = ast.literal_eval(data_autre['censored_calibration'][i])
+
+########
+# data_autre['censored_calibration'].value_counts()
+########
+data_autre_principal = data_autre.loc[data_autre['censored_calibration'] == 0]
+data_autre_principal = data_autre_principal.reset_index(drop=True)
+ 
+data_autre_censored = data_autre.loc[data_autre['censored_calibration'] == 1] 
+data_autre_censored = data_autre_censored.reset_index(drop=True)
+
 
 # Remove (or not) participants with censored values in part 2
 exclude_participants = data_autre.loc[data_autre['censored_calibration'] == 1, 'id'] 
 
 if censure == 1: 
-    data_for_plot = data_for_plot.drop(data_for_plot[data_for_plot['id'].isin(exclude_participants) == True].index)
+    data = data.drop(data[data['id'].isin(exclude_participants) == True].index)
+    data = data.reset_index(drop=True)
 else: 
-    data_for_plot = data_for_plot
+    data = data
+
+
+# Remove participants with mutliple switchoint (MSP) in part 2
+
+exclude_participants_2 = data_autre.loc[data_autre['censored_calibration'] == 'MSP', 'id'] 
+
+if MSP_excl == 1: 
+    data = data.drop(data[data['id'].isin(exclude_participants_2) == True].index)
+    data = data.reset_index(drop=True)
+else: 
+    data = data
+
+data_for_plot = data
 
 # Convert order of cases in string 
 for i in range(len(data_for_plot)):
     data_for_plot['order of cases'][i] = ast.literal_eval(data_for_plot['order of cases'][i])
-
-# %%
-# =============================================================================
-# VISUALISE DATA 
-# =============================================================================
-
+    
 
 # Get different cases
 
@@ -53,20 +78,93 @@ ACPC = data_for_plot[(data_for_plot['charity'] == 1) & (data_for_plot['tradeoff'
 ASPC = data_for_plot[(data_for_plot['charity'] == 1) & (data_for_plot['tradeoff'] == 1)]
 ACPS = data_for_plot[(data_for_plot['charity'] == 0) & (data_for_plot['tradeoff'] == 1)]
 
-average_valuation_ASPS = ASPS.groupby('prob_option_A')['valuation'].median()
-average_valuation_ACPC = ACPC.groupby('prob_option_A')['valuation'].median()
-average_valuation_ACPS = ACPS.groupby('prob_option_A')['valuation'].median()
-average_valuation_ASPC = ASPC.groupby('prob_option_A')['valuation'].median()
 
-data_for_plot_2 = data_for_plot
-data_for_plot_2['first case'] = [data_for_plot_2['order of cases'][i][0] for i in range(len(data_for_plot_2))]
-not_first_case = data_for_plot_2.loc[data_for_plot_2['first case'] != data_for_plot_2['case']] 
-data_for_plot_2 = data_for_plot_2.drop(not_first_case.index)
+# Difference data
+self_lottery = pd.concat([ASPS, ACPS], ignore_index = True)
+charity_lottery = pd.concat([ACPC, ASPC], ignore_index=True)
 
-ASPS_between = data_for_plot_2[(data_for_plot_2['charity'] == 0) & (data_for_plot_2['tradeoff'] == 0)]
-ACPC_between = data_for_plot_2[(data_for_plot_2['charity'] == 1) & (data_for_plot_2['tradeoff'] == 0)]
-ASPC_between = data_for_plot_2[(data_for_plot_2['charity'] == 1) & (data_for_plot_2['tradeoff'] == 1)]
-ACPS_between = data_for_plot_2[(data_for_plot_2['charity'] == 0) & (data_for_plot_2['tradeoff'] == 1)]
+self_lottery_differences = pd.DataFrame(columns=['number', 'prob_option_A'])
+
+for i in self_lottery['number'].unique():
+    individual = self_lottery.loc[self_lottery['number'] == i, ['case', 'prob_option_A', 'valuation']] 
+    individual_difference = individual.pivot(index='prob_option_A', columns='case', values='valuation')
+    individual_difference['valuation_ACPS_ASPS'] = individual_difference['ACPS'] - individual_difference['ASPS']
+    individual_difference['number'] = i
+    individual_difference.reset_index(inplace=True)
+    # individual_difference.columns = individual_difference.columns.droplevel(1)
+    self_lottery_differences = pd.concat([self_lottery_differences, individual_difference[['number', 'prob_option_A', 'valuation_ACPS_ASPS']]], ignore_index=True)
+
+charity_lottery_differences = pd.DataFrame(columns=['number', 'prob_option_A'])
+
+for i in charity_lottery['number'].unique():
+    individual = charity_lottery.loc[charity_lottery['number'] == i, ['case', 'prob_option_A', 'valuation']] 
+    individual_difference = individual.pivot(index='prob_option_A', columns='case', values='valuation')
+    individual_difference['valuation_ASPC_ACPC'] = individual_difference['ASPC'] - individual_difference['ACPC']
+    individual_difference['number'] = i
+    individual_difference.reset_index(inplace=True)
+    # individual_difference.columns = individual_difference.columns.droplevel(1)
+    charity_lottery_differences = pd.concat([charity_lottery_differences, individual_difference[['number', 'prob_option_A', 'valuation_ASPC_ACPC']]], ignore_index=True)
+
+
+
+EDRP_self = []
+EDRP_charity = []
+
+altruistic_self = []
+altruistic_charity = []
+
+for i in data_for_plot['number'].unique():
+    self_diff = self_lottery_differences.loc[self_lottery_differences['number'] == i,['valuation_ACPS_ASPS']].mean()
+    charity_diff = charity_lottery_differences.loc[charity_lottery_differences['number'] == i,['valuation_ASPC_ACPC']].mean()
+
+    if self_diff.item() > 0 :
+        EDRP_self.append(i)
+    elif self_diff.item() < 0 :
+        altruistic_self.append(i)
+    if charity_diff.item() < 0:
+        EDRP_charity.append(i)
+    if charity_diff.item() > 0:
+        altruistic_charity.append(i)
+    
+EDRP_total = np.intersect1d(EDRP_self, EDRP_charity)
+
+altruistic_total = np.intersect1d(altruistic_self, altruistic_charity)
+
+plt.bar(['ERDP_self', 'ERDP_charity'], [len(EDRP_self), len(EDRP_charity)], color = ['lightskyblue', 'lightgreen']) 
+plt.bar(['ERDP_self', 'ERDP_charity'], [len(EDRP_total), len(EDRP_total)], color = ['lightcoral', 'lightcoral']) 
+plt.show()
+
+X_EDRP_total = data_autre_principal[data_autre_principal['number'].isin(EDRP_total)]
+
+
+
+# %%
+# =============================================================================
+# VISUALISE DATA 
+# =============================================================================
+
+
+# # Get different cases
+
+# ASPS = data_for_plot[(data_for_plot['charity'] == 0) & (data_for_plot['tradeoff'] == 0)]
+# ACPC = data_for_plot[(data_for_plot['charity'] == 1) & (data_for_plot['tradeoff'] == 0)]
+# ASPC = data_for_plot[(data_for_plot['charity'] == 1) & (data_for_plot['tradeoff'] == 1)]
+# ACPS = data_for_plot[(data_for_plot['charity'] == 0) & (data_for_plot['tradeoff'] == 1)]
+
+# average_valuation_ASPS = ASPS.groupby('prob_option_A')['valuation'].median()
+# average_valuation_ACPC = ACPC.groupby('prob_option_A')['valuation'].median()
+# average_valuation_ACPS = ACPS.groupby('prob_option_A')['valuation'].median()
+# average_valuation_ASPC = ASPC.groupby('prob_option_A')['valuation'].median()
+
+# data_for_plot_2 = data_for_plot
+# data_for_plot_2['first case'] = [data_for_plot_2['order of cases'][i][0] for i in range(len(data_for_plot_2))]
+# not_first_case = data_for_plot_2.loc[data_for_plot_2['first case'] != data_for_plot_2['case']] 
+# data_for_plot_2 = data_for_plot_2.drop(not_first_case.index)
+
+# ASPS_between = data_for_plot_2[(data_for_plot_2['charity'] == 0) & (data_for_plot_2['tradeoff'] == 0)]
+# ACPC_between = data_for_plot_2[(data_for_plot_2['charity'] == 1) & (data_for_plot_2['tradeoff'] == 0)]
+# ASPC_between = data_for_plot_2[(data_for_plot_2['charity'] == 1) & (data_for_plot_2['tradeoff'] == 1)]
+# ACPS_between = data_for_plot_2[(data_for_plot_2['charity'] == 0) & (data_for_plot_2['tradeoff'] == 1)]
 
 
 

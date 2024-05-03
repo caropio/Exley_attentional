@@ -11,13 +11,12 @@ import pandas as pd
 import numpy as np
 import ast 
 
-MSP_excl = 1 # Put 0 if include MSP calib in analysis and 1 if we exclude them 
 attention_type = 'absolute' # relative for % of total time and 'absolute' for raw time
 
 # Info to find data
 path = '/Users/carolinepioger/Desktop/ALL collection' # change to yours :)
 # dates = ['2024-03-28', '2024-03-25', '2024-04-03']
-dates = ['2024-04-29','2024-04-30']
+dates = ['2024-04-29','2024-04-30','2024-05-02']
 
 # Data for analysis 
 
@@ -329,17 +328,6 @@ column_order_2.insert(column_order_2.index('dwell_time') + 1, column_order_2.pop
 data = data[column_order_2]
 
 
-# Remove participants with MSP in part 2
-
-exclude_participants_2 = data_autre.loc[data_autre['censored_calibration'] == 'MSP', 'id'] 
-
-if MSP_excl == 1: 
-    data = data.drop(data[data['id'].isin(exclude_participants_2) == True].index)
-else: 
-    data = data
-
-data = data.reset_index(drop=True)
-
 data['number'] = data.groupby('id').ngroup() + 1
 id_column_index = data.columns.get_loc('id')
 data.insert(id_column_index + 1, 'number', data.pop('number'))
@@ -380,5 +368,38 @@ data_path_3 = path + '/survey data.csv'
 survey.to_csv(data_path_3, index=False)
 
 data_path
+
+
+
+
+# %%
+# =============================================================================
+# SOCIO-DEMOGRAPGIC INFORMATION
+# =============================================================================
+
+# ALL
+print('ALL SUBJECTS')
+print('The mean age is ' + str(survey['Demog_AGE'].mean()))
+print('There is ' + str(round(100*len(survey[survey['Demog_Sex']==1])/(len(survey[survey['Demog_Sex']==1])+
+                                                             len(survey[survey['Demog_Sex']==2])), 1))
+                        + ' % of women')
+print('The mean highest education level is ' + 
+      str(['A level', 'Bsci', 'Msci', 'Phd', 'RNS'][round(survey['Demog_High_Ed_Lev'].mean())-1]))
+
+print()
+
+# Principal analyses
+
+data_autre_principal = data_autre.loc[data_autre['censored_calibration'] == 0] 
+survey_principal = pd.merge(data_autre_principal[['id']], survey, on='id', how='inner')
+
+print('Principal analyses SUBJECTS')
+print('The mean age is ' + str(survey_principal['Demog_AGE'].mean()))
+print('There is ' + str(round(100*len(survey_principal[survey_principal['Demog_Sex']==1])/(len(survey_principal[survey_principal['Demog_Sex']==1])+
+                                                             len(survey_principal[survey_principal['Demog_Sex']==2])), 1))
+                        + ' % of women')
+print('The mean highest education level is ' + 
+      str(['A level', 'Bsci', 'Msci', 'Phd', 'RNS'][round(survey_principal['Demog_High_Ed_Lev'].mean())-1]))
+
 
 

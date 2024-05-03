@@ -16,6 +16,7 @@ import statsmodels.formula.api as smf
 import ast 
 
 censure = 1 # Put 0 if include censored participants in analysis and 1 if we exclude them 
+MSP_excl = 1 # Put 0 if include MSP calib in analysis and 1 if we exclude them 
 by_ind = 0 # Put 0 if no display of individual plots and 1 if display 
 attention_type = 'absolute' # relative for % of total time and 'absolute' for raw time
 
@@ -26,16 +27,44 @@ data = pd.read_csv(path + '/dataset.csv' )
 data_autre = pd.read_csv(path + '/criterion info data.csv')
 survey = pd.read_csv(path + '/survey data.csv')
 
-data_for_plot = data
+
+for i in range(len(data_autre)):
+    if data_autre['censored_calibration'][i] == 'MSP':
+        pass
+    elif isinstance(data_autre['censored_calibration'][i], str):
+        data_autre['censored_calibration'][i] = ast.literal_eval(data_autre['censored_calibration'][i])
+
+########
+# data_autre['censored_calibration'].value_counts()
+########
+data_autre_principal = data_autre.loc[data_autre['censored_calibration'] == 0]
+data_autre_principal = data_autre_principal.reset_index(drop=True)
+ 
+data_autre_censored = data_autre.loc[data_autre['censored_calibration'] == 1] 
+data_autre_censored = data_autre_censored.reset_index(drop=True)
+
 
 # Remove (or not) participants with censored values in part 2
-exclude_participants = data_for_plot.loc[data_for_plot['censored_calibration'] == 1, 'id'] 
+exclude_participants = data_autre.loc[data_autre['censored_calibration'] == 1, 'id'] 
 
 if censure == 1: 
-    data_for_plot = data_for_plot.drop(data_for_plot[data_for_plot['id'].isin(exclude_participants) == True].index)
-    data_for_plot = data_for_plot.reset_index(drop=True)
+    data = data.drop(data[data['id'].isin(exclude_participants) == True].index)
+    data = data.reset_index(drop=True)
 else: 
-    data_for_plot = data_for_plot
+    data = data
+
+
+# Remove participants with mutliple switchoint (MSP) in part 2
+
+exclude_participants_2 = data_autre.loc[data_autre['censored_calibration'] == 'MSP', 'id'] 
+
+if MSP_excl == 1: 
+    data = data.drop(data[data['id'].isin(exclude_participants_2) == True].index)
+    data = data.reset_index(drop=True)
+else: 
+    data = data
+
+data_for_plot = data
 
 # Convert order of cases in string 
 for i in range(len(data_for_plot)):
@@ -95,12 +124,43 @@ mean_valuation_ASPC = valuation_ASPC.mean()
 
 mean_valuations = [mean_valuation_ASPS.mean(), mean_valuation_ACPS.mean(), mean_valuation_ACPC.mean(), mean_valuation_ASPC.mean()]
 
-########### Plot ditribution of participant-specific X values 
-plt.hist(data_autre['charity_calibration'], bins=20) 
-plt.xlabel('Participant-specific X')
-plt.ylabel('Frequency')
-plt.title('Distribution of X')
+
+
+# %%
+# =============================================================================
+# Categorisation Excuse-driven risk preferences
+# =============================================================================
+
+EDRP_self = []
+EDRP_charity = []
+
+altruistic_self = []
+altruistic_charity = []
+
+for i in data_for_plot['number'].unique():
+    self_diff = self_lottery_differences.loc[self_lottery_differences['number'] == i,['valuation_ACPS_ASPS']].mean()
+    charity_diff = charity_lottery_differences.loc[charity_lottery_differences['number'] == i,['valuation_ASPC_ACPC']].mean()
+
+    if self_diff.item() > 0 :
+        EDRP_self.append(i)
+    elif self_diff.item() < 0 :
+        altruistic_self.append(i)
+    if charity_diff.item() < 0:
+        EDRP_charity.append(i)
+    if charity_diff.item() > 0:
+        altruistic_charity.append(i)
+    
+EDRP_total = np.intersect1d(EDRP_self, EDRP_charity)
+
+altruistic_total = np.intersect1d(altruistic_self, altruistic_charity)
+
+plt.bar(['ERDP_self', 'ERDP_charity'], [len(EDRP_self), len(EDRP_charity)], color = ['lightskyblue', 'lightgreen']) 
+plt.bar(['ERDP_self', 'ERDP_charity'], [len(EDRP_total), len(EDRP_total)], color = ['lightcoral', 'lightcoral']) 
 plt.show()
+
+X_EDRP_total = data_autre_principal[data_autre_principal['number'].isin(EDRP_total)]
+
+
 
 # %%
 # =============================================================================
@@ -117,12 +177,12 @@ y_fit = np.linspace(0, 100, num = 10)
 plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
 # plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
-plt.xlabel('Probabilité P du résultat non nul')
-plt.ylabel('Valuations moyennes en %')
-plt.title('Résultats dans le contexte sans compromis')
-# plt.xlabel('Probability P of Non-Zero Payment')
-# plt.ylabel('Valuation (median) as % of Riskless Lottery')
-# plt.title('Results for Tradeoff Context ')
+# plt.xlabel('Probabilité P du résultat non nul')
+# plt.ylabel('Valuations moyennes en %')
+# plt.title('Résultats dans le contexte sans compromis')
+plt.xlabel('Probability P of Non-Zero Payment')
+plt.ylabel('Valuation (median) as % of Riskless Lottery')
+plt.title('Results for Tradeoff Context ')
 plt.grid(True)
 plt.legend()
 plt.savefig('No Tradeoff H1.png', dpi=1200)
@@ -139,12 +199,12 @@ y_fit = np.linspace(0, 100, num = 10)
 plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
 # plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
-plt.xlabel('Probabilité P du résultat non nul')
-plt.ylabel('Valuations moyennes en %')
-plt.title('Résultats dans le contexte avec compromis')
-# plt.xlabel('Probability P of Non-Zero Payment')
-# plt.ylabel('Valuation as % of Riskless Lottery')
-# plt.title('(median) Results for Tradeoff Context ')
+# plt.xlabel('Probabilité P du résultat non nul')
+# plt.ylabel('Valuations moyennes en %')
+# plt.title('Résultats dans le contexte avec compromis')
+plt.xlabel('Probability P of Non-Zero Payment')
+plt.ylabel('Valuation as % of Riskless Lottery')
+plt.title('(median) Results for Tradeoff Context')
 plt.grid(True)
 plt.legend()
 plt.savefig('Tradeoff H1.png', dpi=1200)
@@ -161,12 +221,12 @@ y_fit = np.linspace(0, 100, num = 10)
 plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
 # plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
-plt.xlabel('Probabilité P du résultat non nul')
-plt.ylabel('Valuations moyennes en %')
-plt.title('Résultats pour la loterie pour soi')
-# plt.xlabel('Probability P of Non-Zero Payment')
-# plt.ylabel('Valuation as % of Riskless Lottery')
-# plt.title('(median) Results for Self Lottery Valuation')
+# plt.xlabel('Probabilité P du résultat non nul')
+# plt.ylabel('Valuations moyennes en %')
+# plt.title('Résultats pour la loterie pour soi')
+plt.xlabel('Probability P of Non-Zero Payment')
+plt.ylabel('Valuation as % of Riskless Lottery')
+plt.title('(median) Results for Self Lottery Valuation')
 plt.grid(True)
 plt.legend()
 plt.savefig('Self Lottery H1.png', dpi=1200)
@@ -183,12 +243,12 @@ y_fit = np.linspace(0, 100, num = 10)
 plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
 # plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
-plt.xlabel('Probabilité P du résultat non nul')
-plt.ylabel('Valuations moyennes en %')
-plt.title('Résultats pour la loterie pour la charité')
-# plt.xlabel('Probability P of Non-Zero Payment')
-# plt.ylabel('Valuation as % of Riskless Lottery')
-# plt.title('(median) Results for Charity Lottery Valuation')
+# plt.xlabel('Probabilité P du résultat non nul')
+# plt.ylabel('Valuations moyennes en %')
+# plt.title('Résultats pour la loterie pour la charité')
+plt.xlabel('Probability P of Non-Zero Payment')
+plt.ylabel('Valuation as % of Riskless Lottery')
+plt.title('(median) Results for Charity Lottery Valuation')
 plt.grid(True)
 plt.legend()
 plt.savefig('Charity Lottery H1.png', dpi=1200)
@@ -218,12 +278,12 @@ y_fit = np.linspace(0, 100, num = 10)
 plt.plot(x_fit, y_fit, color='grey', label='Valeur attendue')
 # plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
-plt.xlabel('Probabilité P du résultat non nul')
-plt.ylabel('Valuations moyennes en %')
-plt.title('Résultats pour toutes les loteries')
-# plt.xlabel('Probability P of Non-Zero Payment')
-# plt.ylabel('Valuation as % of Riskless Lottery')
-# plt.title('(median) Results for Charity Lottery Valuation')
+# plt.xlabel('Probabilité P du résultat non nul')
+# plt.ylabel('Valuations moyennes en %')
+# plt.title('Résultats pour toutes les loteries')
+plt.xlabel('Probability P of Non-Zero Payment')
+plt.ylabel('Valuation as % of Riskless Lottery')
+plt.title('(median) Results for Charity Lottery Valuation')
 plt.grid(True)
 plt.legend()
 plt.savefig('All Lottery H1.png', dpi=1200)
@@ -256,6 +316,15 @@ plt.xlabel('Type de loterie')
 plt.ylabel('Difference de valuations (avec - sans compro) en %')
 plt.title('Difference de valuation, probabilités confondues')
 plt.savefig('Bar diff type Lottery H1.png', dpi=1200)
+plt.show()
+
+
+plt.hist([self_lottery_differences['valuation_ACPS_ASPS'], charity_lottery_differences['valuation_ASPC_ACPC']], 
+        color = ['lightskyblue', 'lightgreen'], label = ['Self lottery', 'Charity lottery']) 
+plt.xlabel('Difference in lottery valuation (trad - no trad)')
+plt.ylabel('Frequency')
+plt.title('Difference in valuation, probabilités confondues')
+plt.legend()
 plt.show()
  
 
@@ -313,22 +382,33 @@ if by_ind == 1:
 else:
     pass
 
-# Categorisation 
 
-EDRP_self = []
-EDRP_charity = []
+# %%
+# =============================================================================
+# Participant-specific X values
+# =============================================================================
 
-for i in data_for_plot['number'].unique():
-    self_diff = self_lottery_differences.loc[self_lottery_differences['number'] == i,['valuation_ACPS_ASPS']].mean()
-    charity_diff = charity_lottery_differences.loc[charity_lottery_differences['number'] == i,['valuation_ASPC_ACPC']].mean()
 
-    if self_diff.item() > 0 :
-        EDRP_self.append(i)
-    if charity_diff.item() <0:
-        EDRP_charity.append(i)
-    
-# EDRP_total = np.same(EDRP_self, EDRP_charity)
+########### Plot ditribution of participant-specific X values 
 
+plt.hist(data_autre['charity_calibration'], bins=20) 
+plt.xlabel('Participant-specific X')
+plt.ylabel('Frequency')
+plt.title('Distribution of X with censored individuals')
+plt.show()
+
+plt.hist(data_autre_principal['charity_calibration'], bins=15) 
+plt.xlabel('Participant-specific X')
+plt.ylabel('Frequency')
+plt.title('Distribution of X')
+plt.show()
+
+
+plt.hist(X_EDRP_total['charity_calibration'], bins=15) 
+plt.xlabel('Participant-specific X')
+plt.ylabel('Frequency')
+plt.title('Distribution of X for EDRP subjects')
+plt.show()
 
 # %%
 # =============================================================================
@@ -362,6 +442,7 @@ print(model.summary())
 
 
 
+
 # control_variables_2 = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + 
 #                  ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
 # X_2 = data_for_analysis[['charity', 'tradeoff', 'interaction'] + list(dummy_ind.columns)]
@@ -374,5 +455,15 @@ print(model.summary())
 md = smf.mixedlm("valuation ~ charity + tradeoff + interaction", data_for_analysis, groups=data_for_analysis["number"])
 mdf = md.fit()
 print(mdf.summary())    
+
+####################@
+# Analyses with categorical data 
+
+# data_for_categorical = pd.concat([ASPS, ACPC, ASPC, ACPS], ignore_index=True)
+
+# data_for_EDRP = data_for_categorical.loc(data_for_categorical['number'] == i for i in EDRP_total)
+# data_for_altruistic = 
+
+####################
 
 
