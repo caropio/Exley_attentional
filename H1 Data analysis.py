@@ -140,9 +140,8 @@ mean_valuations = [mean_valuation_ASPS.mean(), mean_valuation_ACPS.mean(), mean_
 
 
 # Difference of magnitudes
-column_index = np.where(charity_lottery_differences.columns == 'valuation_ASPC_ACPC')[0][0]
 charity_lottery_differences_negated = charity_lottery_differences.copy()  
-charity_lottery_differences_negated[:, column_index] *= -1  
+charity_lottery_differences_negated['valuation_ASPC_ACPC'] *= -1  
 
 t_statistic_diff, p_value_diff = ttest_ind(self_lottery_differences['valuation_ACPS_ASPS'], charity_lottery_differences_negated['valuation_ASPC_ACPC'])
 print(t_statistic_diff, p_value_diff)
@@ -193,6 +192,19 @@ data_NO_EDRP = data_for_plot[~data_for_plot['number'].isin(data_X_EDRP_total['nu
 
 self_lottery_difference_EDRP = self_lottery_differences[self_lottery_differences['number'].isin(EDRP_total)]
 charity_lottery_differences_EDRP = charity_lottery_differences[charity_lottery_differences['number'].isin(EDRP_total)]
+
+
+
+survey_EDRP = pd.merge(data_X_EDRP_total[['id']], survey, on='id', how='inner')
+
+print('Principal analyses SUBJECTS')
+print('The mean age is ' + str(survey_EDRP['Demog_AGE'].mean()))
+print('There is ' + str(round(100*len(survey_EDRP[survey_EDRP['Demog_Sex']==1])/(len(survey_EDRP[survey_EDRP['Demog_Sex']==1])+
+                                                             len(survey_EDRP[survey_EDRP['Demog_Sex']==2])), 1))
+                        + ' % of women')
+print('The mean highest education level is ' + 
+      str(['A level', 'Bsci', 'Msci', 'Phd', 'RNS'][round(survey_EDRP['Demog_High_Ed_Lev'].mean())-1]))
+
 
 
 # %%

@@ -402,4 +402,3 @@ print('The mean highest education level is ' +
       str(['A level', 'Bsci', 'Msci', 'Phd', 'RNS'][round(survey_principal['Demog_High_Ed_Lev'].mean())-1]))
 
 
-

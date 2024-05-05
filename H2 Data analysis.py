@@ -167,7 +167,8 @@ plt.title('Mean attention per cas order')
 plt.savefig('Attention case order H2.png', dpi=1200)
 plt.show()
 
-plt.bar(['0.05', '0.1', '0.25', '0.5', '0.75', '0.9', '0.95'], attention_per_proba.mean()) 
+plt.bar(['0.05', '0.1', '0.25', '0.5', '0.75', '0.9', '0.95'], attention_per_proba.mean(), 
+        color = ['darkgoldenrod', 'goldenrod', 'gold', 'khaki', 'beige', 'papayawhip', 'peachpuff']) 
 plt.xlabel('Probability')
 plt.ylabel('Mean dwell time in %')
 plt.title('Mean attention per probability')
@@ -512,3 +513,6 @@ md_3 = smf.mixedlm("dwell_time_relative ~ case_order", data_for_analysis, groups
 mdf_3 = md_3.fit()
 print(mdf_3.summary())
 
+md_4 = smf.mixedlm("dwell_time_relative ~ prob_option_A", data_for_analysis, groups=data_for_analysis["number"])
+mdf_4 = md_4.fit()
+print(mdf_4.summary())
