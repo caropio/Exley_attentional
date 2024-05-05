@@ -70,6 +70,32 @@ data_for_plot = data
 for i in range(len(data_for_plot)):
     data_for_plot['order of cases'][i] = ast.literal_eval(data_for_plot['order of cases'][i])
     
+
+# Remove outliers? 
+
+dwell_mean = data_for_plot['dwell_time'].mean()
+dwell_std = np.std(data_for_plot['dwell_time'])
+outliers_data = data_for_plot[(data_for_plot['dwell_time'] < dwell_mean - 3 * dwell_std)
+                         | (data_for_plot['dwell_time'] > dwell_mean + 3 * dwell_std)]
+
+dwell_mean_total = data_for_plot['total_time_spent_s'].mean()
+dwell_std_total = np.std(data_for_plot['total_time_spent_s'])
+outliers_data_total = data_for_plot[(data_for_plot['total_time_spent_s'] < dwell_mean_total - 3 * dwell_std_total)
+                         | (data_for_plot['total_time_spent_s'] > dwell_mean_total + 3 * dwell_std_total)]
+
+dwell_mean_relative = data_for_plot['dwell_time_relative'].mean()
+dwell_std_relative = np.std(data_for_plot['dwell_time_relative'])
+outliers_data_relative = data_for_plot[(data_for_plot['dwell_time_relative'] < dwell_mean_relative - 3 * dwell_std_relative)
+                         | (data_for_plot['dwell_time_relative'] > dwell_mean_relative + 3 * dwell_std_relative)]
+
+
+if outliers ==1:
+    outliers_all = outliers_data.index.tolist() + outliers_data_total.index.tolist() + outliers_data_relative.index.tolist()
+    data_for_plot = data_for_plot.drop(outliers_all)
+    data_for_plot = data_for_plot.reset_index(drop=True)
+else: 
+    pass 
+
 # Get different cases
 
 ASPS = data_for_plot[(data_for_plot['charity'] == 0) & (data_for_plot['tradeoff'] == 0)]
@@ -104,29 +130,6 @@ for i in charity_lottery['number'].unique():
     # individual_difference.columns = individual_difference.columns.droplevel(1)
     charity_lottery_differences = pd.concat([charity_lottery_differences, individual_difference[['number', 'prob_option_A', 'valuation_ASPC_ACPC']]], ignore_index=True)
 
-# Remove outliers? 
-
-dwell_mean = data_for_plot['dwell_time'].mean()
-dwell_std = np.std(data_for_plot['dwell_time'])
-outliers_data = data_for_plot[(data_for_plot['dwell_time'] < dwell_mean - 3 * dwell_std)
-                         | (data_for_plot['dwell_time'] > dwell_mean + 3 * dwell_std)]
-
-dwell_mean_total = data_for_plot['total_time_spent_s'].mean()
-dwell_std_total = np.std(data_for_plot['total_time_spent_s'])
-outliers_data_total = data_for_plot[(data_for_plot['total_time_spent_s'] < dwell_mean_total - 3 * dwell_std_total)
-                         | (data_for_plot['total_time_spent_s'] > dwell_mean_total + 3 * dwell_std_total)]
-
-dwell_mean_relative = data_for_plot['dwell_time_relative'].mean()
-dwell_std_relative = np.std(data_for_plot['dwell_time_relative'])
-outliers_data_relative = data_for_plot[(data_for_plot['dwell_time_relative'] < dwell_mean_relative - 3 * dwell_std_relative)
-                         | (data_for_plot['dwell_time_relative'] > dwell_mean_relative + 3 * dwell_std_relative)]
-
-
-if outliers ==1:
-    data_for_plot = data_for_plot.drop(outliers_data.index)
-    data_for_plot = data_for_plot.reset_index(drop=True)
-else: 
-    pass 
 
 #######
 #### ENLEVER DONNEES ASSOCIEES
@@ -135,30 +138,40 @@ else:
 
 # Get attention values
 
-attention_ASPS = ASPS.groupby('prob_option_A')['dwell_time']
-attention_ACPC = ACPC.groupby('prob_option_A')['dwell_time']
-attention_ACPS = ACPS.groupby('prob_option_A')['dwell_time']
-attention_ASPC = ASPC.groupby('prob_option_A')['dwell_time']
+# attention_ASPS = ASPS.groupby('prob_option_A')['dwell_time']
+# attention_ACPC = ACPC.groupby('prob_option_A')['dwell_time']
+# attention_ACPS = ACPS.groupby('prob_option_A')['dwell_time']
+# attention_ASPC = ASPC.groupby('prob_option_A')['dwell_time']
 
-mean_attention_ASPS = attention_ASPS.mean()
-mean_attention_ACPC = attention_ACPC.mean()
-mean_attention_ACPS = attention_ACPS.mean()
-mean_attention_ASPC = attention_ASPC.mean()
+# mean_attention_ASPS = attention_ASPS.mean()
+# mean_attention_ACPC = attention_ACPC.mean()
+# mean_attention_ACPS = attention_ACPS.mean()
+# mean_attention_ASPC = attention_ASPC.mean()
 
-mean_attentions = [mean_attention_ASPS.mean(), mean_attention_ACPS.mean(), 
-                   mean_attention_ACPC.mean(), mean_attention_ASPC.mean()]
+# mean_attentions = [mean_attention_ASPS.mean(), mean_attention_ACPS.mean(), 
+#                    mean_attention_ACPC.mean(), mean_attention_ASPC.mean()]
 
+attention_per_proba = data_for_plot.groupby('prob_option_A')['dwell_time_relative']
 
 first_case = data_for_plot[data_for_plot['case_order']==1]
 second_case = data_for_plot[data_for_plot['case_order']==2]
 third_case = data_for_plot[data_for_plot['case_order']==3]
 fourth_case = data_for_plot[data_for_plot['case_order']==4]
 
-plt.bar(['first', 'second', 'third', 'case'], [first_case['dwell_time_relative'].mean(), second_case['dwell_time_relative'].mean(), 
-                                               third_case['dwell_time_relative'].mean(), fourth_case['dwell_time_relative'].mean()], color = ['blue', 'red', 'green', 'orange']) 
+plt.bar(['first', 'second', 'third', 'fourth'], [first_case['dwell_time_relative'].mean(), second_case['dwell_time_relative'].mean(), 
+                                               third_case['dwell_time_relative'].mean(), fourth_case['dwell_time_relative'].mean()], 
+        color = ['black', 'dimgray', 'darkgray', 'lightgrey']) 
 plt.xlabel('Case order')
-plt.ylabel('Moyenne Attention en s')
-plt.title('Attention par cas, probabilités confondues')
+plt.ylabel('Mean dwell time in %')
+plt.title('Mean attention per cas order')
+plt.savefig('Attention case order H2.png', dpi=1200)
+plt.show()
+
+plt.bar(['0.05', '0.1', '0.25', '0.5', '0.75', '0.9', '0.95'], attention_per_proba.mean()) 
+plt.xlabel('Probability')
+plt.ylabel('Mean dwell time in %')
+plt.title('Mean attention per probability')
+plt.savefig('Attention probability H2.png', dpi=1200)
 plt.show()
 
 # data_for_plot_2 = data_for_plot
@@ -215,26 +228,41 @@ for i in data_for_plot['number'].unique():
     self_diff = self_lottery_differences.loc[self_lottery_differences['number'] == i,['valuation_ACPS_ASPS']].mean()
     charity_diff = charity_lottery_differences.loc[charity_lottery_differences['number'] == i,['valuation_ASPC_ACPC']].mean()
 
-    if self_diff.item() > 0 :
+    if self_diff.item() > 5 :
         EDRP_self.append(i)
-    elif self_diff.item() < 0 :
+    elif self_diff.item() < - 5 :
         altruistic_self.append(i)
-    if charity_diff.item() < 0:
+    if charity_diff.item() < - 5 :
         EDRP_charity.append(i)
-    if charity_diff.item() > 0:
+    if charity_diff.item() > 5 :
         altruistic_charity.append(i)
     
 EDRP_total = np.intersect1d(EDRP_self, EDRP_charity)
 
 altruistic_total = np.intersect1d(altruistic_self, altruistic_charity)
 
-plt.bar(['ERDP_self', 'ERDP_charity'], [len(EDRP_self), len(EDRP_charity)], color = ['lightskyblue', 'lightgreen']) 
-plt.bar(['ERDP_self', 'ERDP_charity'], [len(EDRP_total), len(EDRP_total)], color = ['lightcoral', 'lightcoral']) 
-plt.show()
 
 X_EDRP_total = data_autre_principal[data_autre_principal['number'].isin(EDRP_total)]
 
 data_X_EDRP_total = data_for_plot[data_for_plot['number'].isin(EDRP_total)]
+
+X_NO_EDRP_total = data_autre_principal[~data_autre_principal['number'].isin(EDRP_total)]
+data_NO_EDRP = data_for_plot[~data_for_plot['number'].isin(data_X_EDRP_total['number'])]
+
+
+
+ASPS_EDRP = data_X_EDRP_total[(data_X_EDRP_total['charity'] == 0) & (data_X_EDRP_total['tradeoff'] == 0)]
+ACPC_EDRP = data_X_EDRP_total[(data_X_EDRP_total['charity'] == 1) & (data_X_EDRP_total['tradeoff'] == 0)]
+ASPC_EDRP = data_X_EDRP_total[(data_X_EDRP_total['charity'] == 1) & (data_X_EDRP_total['tradeoff'] == 1)]
+ACPS_EDRP = data_X_EDRP_total[(data_X_EDRP_total['charity'] == 0) & (data_X_EDRP_total['tradeoff'] == 1)]
+
+
+self_lottery_differences_attention_EDRP = self_lottery_differences_attention[self_lottery_differences_attention['number'].isin(EDRP_total)]
+charity_lottery_differences_attention_EDRP = charity_lottery_differences_attention[charity_lottery_differences_attention['number'].isin(EDRP_total)]
+
+
+self_lottery_differences_attention_altruistic = self_lottery_differences_attention[self_lottery_differences_attention['number'].isin(altruistic_total)]
+charity_lottery_differences_attention_altruistic = charity_lottery_differences_attention[charity_lottery_differences_attention['number'].isin(altruistic_total)]
 
 
 # %%
@@ -246,16 +274,16 @@ data_X_EDRP_total = data_for_plot[data_for_plot['number'].isin(EDRP_total)]
 
 # Plot all attention, without differentiating probabilities
 
-error_attention = [np.std(ASPS['dwell_time']), np.std(ACPS['dwell_time']), 
-                  np.std(ACPC['dwell_time']), np.std(ASPC['dwell_time'])]
+# error_attention = [np.std(ASPS['dwell_time']), np.std(ACPS['dwell_time']), 
+#                   np.std(ACPC['dwell_time']), np.std(ASPC['dwell_time'])]
 
-plt.bar(['ASPS', 'ACPS', 'ACPC', 'ASPC'], mean_attentions, color = ['blue', 'red', 'green', 'orange']) 
-plt.errorbar(['ASPS', 'ACPS', 'ACPC', 'ASPC'], mean_attentions, error_attention, ecolor = 'black', fmt='none')
-plt.xlabel('Cas')
-plt.ylabel('Moyenne Attention en s')
-plt.title('Attention par cas, probabilités confondues')
-plt.savefig('Bar all Lottery H2.png', dpi=1200)
-plt.show()
+# plt.bar(['ASPS', 'ACPS', 'ACPC', 'ASPC'], mean_attentions, color = ['blue', 'red', 'green', 'orange']) 
+# plt.errorbar(['ASPS', 'ACPS', 'ACPC', 'ASPC'], mean_attentions, error_attention, ecolor = 'black', fmt='none')
+# plt.xlabel('Cas')
+# plt.ylabel('Moyenne Attention en s')
+# plt.title('Attention par cas, probabilités confondues')
+# plt.savefig('Bar all Lottery H2.png', dpi=1200)
+# plt.show()
 
 # relative
 
@@ -267,29 +295,76 @@ mean_attentions_relative = [ASPS.groupby('prob_option_A')['dwell_time_relative']
                             ACPC.groupby('prob_option_A')['dwell_time_relative'].mean().mean(),
                             ASPC.groupby('prob_option_A')['dwell_time_relative'].mean().mean()]
 
-plt.bar(['ASPS', 'ACPS', 'ACPC', 'ASPC'], mean_attentions, color = ['blue', 'red', 'green', 'orange']) 
-plt.errorbar(['ASPS', 'ACPS', 'ACPC', 'ASPC'], mean_attentions, error_attention_relative, ecolor = 'black', fmt='none')
+plt.bar(['ASPS', 'ACPS', 'ACPC', 'ASPC'], mean_attentions_relative, color = ['blue', 'red', 'green', 'orange']) 
+plt.errorbar(['ASPS', 'ACPS', 'ACPC', 'ASPC'], mean_attentions_relative, error_attention_relative, ecolor = 'black', fmt='none')
 plt.xlabel('Cas')
 plt.ylabel('Moyenne Attention en s (relative)')
 plt.title('Attention par cas, probabilités confondues')
 plt.savefig('Bar all Lottery H2.png', dpi=1200)
 plt.show()
 
+# EDRP
+error_attention_relative_EDRP = [np.std(ASPS_EDRP['dwell_time_relative']), np.std(ACPS_EDRP['dwell_time_relative']), 
+                  np.std(ACPC_EDRP['dwell_time_relative']), np.std(ASPC_EDRP['dwell_time_relative'])]
+
+mean_attentions_relative_EDRP = [ASPS_EDRP.groupby('prob_option_A')['dwell_time_relative'].mean().mean(), 
+                            ACPS_EDRP.groupby('prob_option_A')['dwell_time_relative'].mean().mean(),
+                            ACPC_EDRP.groupby('prob_option_A')['dwell_time_relative'].mean().mean(),
+                            ASPC_EDRP.groupby('prob_option_A')['dwell_time_relative'].mean().mean()]
+
+plt.bar(['ASPS', 'ACPS', 'ACPC', 'ASPC'], mean_attentions_relative_EDRP, color = ['blue', 'red', 'green', 'orange']) 
+plt.errorbar(['ASPS', 'ACPS', 'ACPC', 'ASPC'], mean_attentions_relative_EDRP, error_attention_relative_EDRP, ecolor = 'black', fmt='none')
+plt.xlabel('Cas')
+plt.ylabel('Moyenne Attention en s (relative)')
+plt.title('EDRP Attention par cas, probabilités confondues')
+plt.savefig('Bar all Lottery EDRP H2.png', dpi=1200)
+plt.show()
+
+
+
 # Plot the difference of attention 
 
-plt.bar(['Self ($Y^{C}(P^{S})-Y^{S}(P^{S})$)', 'Charity ($Y^{S}(P^{C})-Y^{C}(P^{C})$)'], 
+plt.bar(['Self ($A^{C}(P^{S})-A^{S}(P^{S})$)', 'Charity ($A^{S}(P^{C})-A^{C}(P^{C})$)'], 
         [self_lottery_differences_attention['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention['dwell_time_ASPC_ACPC'].mean()], 
         color = ['lightskyblue', 'lightgreen']) 
-# plt.errorbar(['Self ($Y^{C}(P^{S})-Y^{S}(P^{S})$)', 'Charity ($Y^{S}(P^{C})-Y^{C}(P^{C})$)'], 
-#               [self_lottery_differences_attention['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention['dwell_time_ASPC_ACPC'].mean()], 
-#               [np.std(self_lottery_differences_attention['dwell_time_ACPS_ASPS']), np.std(charity_lottery_differences_attention['dwell_time_ASPC_ACPC'])], ecolor = 'black', fmt='none', alpha=0.7)
+plt.errorbar(['Self ($A^{C}(P^{S})-A^{S}(P^{S})$)', 'Charity ($A^{S}(P^{C})-A^{C}(P^{C})$)'], 
+              [self_lottery_differences_attention['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention['dwell_time_ASPC_ACPC'].mean()], 
+              [0.402, 0.602], ecolor = 'black', fmt='none', alpha=0.7)
 plt.axhline(y=0, color='grey', linestyle='--')
-plt.xlabel('Type de loterie')
-plt.ylabel('Difference attention (avec - sans compro) en %')
-plt.title('Difference attention, probabilités confondues')
+plt.xlabel('Lottery type')
+plt.ylabel('Difference in dwell time (trad - no trad) in %')
+plt.title('Difference in dwell time across probabilities H2')
 plt.savefig('Bar diff type Lottery H2.png', dpi=1200)
 plt.show()
  
+# ERDP
+
+plt.bar(['Self ($A^{C}(P^{S})-A^{S}(P^{S})$)', 'Charity ($A^{S}(P^{C})-A^{C}(P^{C})$)'], 
+        [self_lottery_differences_attention_EDRP['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention_EDRP['dwell_time_ASPC_ACPC'].mean()], 
+        color = ['lightskyblue', 'lightgreen']) 
+plt.errorbar(['Self ($A^{C}(P^{S})-A^{S}(P^{S})$)', 'Charity ($A^{S}(P^{C})-A^{C}(P^{C})$)'], 
+              [self_lottery_differences_attention_EDRP['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention_EDRP['dwell_time_ASPC_ACPC'].mean()], 
+              [0.597, 1.028], ecolor = 'black', fmt='none', alpha=0.7)
+# plt.errorbar(['Self ($Y^{C}(P^{S})-Y^{S}(P^{S})$)', 'Charity ($Y^{S}(P^{C})-Y^{C}(P^{C})$)'], 
+#               [self_lottery_differences_attention_EDRP['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention_EDRP['dwell_time_ASPC_ACPC'].mean()], 
+#               [np.std(self_lottery_differences_attention_EDRP['dwell_time_ACPS_ASPS']), np.std(charity_lottery_differences_attention_EDRP['dwell_time_ASPC_ACPC'])], ecolor = 'black', fmt='none', alpha=0.7)
+plt.axhline(y=0, color='grey', linestyle='--')
+plt.xlabel('Lottery type')
+plt.ylabel('Difference in dwell time (trad - no trad) in %')
+plt.title('Difference in dwell time for EDRP subjects H2')
+plt.savefig('Bar diff type Lottery EDRP H2.png', dpi=1200)
+plt.show()
+
+# altruistic 
+
+plt.bar(['Self ($A^{C}(P^{S})-A^{S}(P^{S})$)', 'Charity ($A^{S}(P^{C})-A^{C}(P^{C})$)'], 
+        [self_lottery_differences_attention_altruistic['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention_altruistic['dwell_time_ASPC_ACPC'].mean()], 
+        color = ['lightskyblue', 'lightgreen']) 
+plt.axhline(y=0, color='grey', linestyle='--')
+plt.xlabel('Lottery type')
+plt.ylabel('Difference in dwell time (trad - no trad) in %')
+plt.title('Difference in dwell time for altruistic subjects H2')
+plt.show()
 
 
 # Histo attention 
@@ -344,63 +419,27 @@ plt.grid(True)
 plt.show()
 
 
-if by_ind == 1: 
-    for i in range(1, data_for_plot['number'].nunique()+1):
-        ASPS_att_ind = ASPS.loc[ASPS['number'] == i, ['prob_option_A', 'dwell_time']] 
-        ASPS_att_ind = ASPS_att_ind.sort_values(by=['prob_option_A'])
-        ACPC_att_ind = ACPC.loc[ACPC['number'] == i, ['prob_option_A', 'dwell_time']] 
-        ACPC_att_ind = ACPC_att_ind.sort_values(by=['prob_option_A'])
-        ASPC_att_ind = ASPC.loc[ASPC['number'] == i, ['prob_option_A', 'dwell_time']]
-        ASPC_att_ind = ASPC_att_ind.sort_values(by=['prob_option_A'])
-        ACPS_att_ind = ACPS.loc[ACPS['number'] == i, ['prob_option_A', 'dwell_time']] 
-        ACPS_att_ind = ACPS_att_ind.sort_values(by=['prob_option_A'])
+# if by_ind == 1: 
+#     for i in range(1, data_for_plot['number'].nunique()+1):
+#         ASPS_att_ind = ASPS.loc[ASPS['number'] == i, ['prob_option_A', 'dwell_time']] 
+#         ASPS_att_ind = ASPS_att_ind.sort_values(by=['prob_option_A'])
+#         ACPC_att_ind = ACPC.loc[ACPC['number'] == i, ['prob_option_A', 'dwell_time']] 
+#         ACPC_att_ind = ACPC_att_ind.sort_values(by=['prob_option_A'])
+#         ASPC_att_ind = ASPC.loc[ASPC['number'] == i, ['prob_option_A', 'dwell_time']]
+#         ASPC_att_ind = ASPC_att_ind.sort_values(by=['prob_option_A'])
+#         ACPS_att_ind = ACPS.loc[ACPS['number'] == i, ['prob_option_A', 'dwell_time']] 
+#         ACPS_att_ind = ACPS_att_ind.sort_values(by=['prob_option_A'])
         
-        plt.plot(ASPS_att_ind['prob_option_A'], ASPS_att_ind['dwell_time'], label='ASPS', color='blue', marker='o', linestyle='-')
-        plt.plot(ACPS_att_ind['prob_option_A'], ACPS_att_ind['dwell_time'], label='ACPS', color='red', marker='o', linestyle='-')
-        plt.plot(ASPC_att_ind['prob_option_A'], ASPC_att_ind['dwell_time'], label='ASPC', color='orange', marker='o', linestyle='-')
-        plt.plot(ACPC_att_ind['prob_option_A'], ACPC_att_ind['dwell_time'], label='ACPC', color='green', marker='o', linestyle='-')
-        plt.title('Individual (' +str(attention_type) +') ' + str(i))
-        plt.grid(True)
-        plt.legend()
-        plt.show()
-else: 
-    pass
-
-# # Plot Attention (BETWEEN-SUBJECT)
-
-# average_attention_ASPS_between = ASPS_between.groupby('prob_option_A')['dwell_time'].median()
-# average_attention_ACPC_between = ACPC_between.groupby('prob_option_A')['dwell_time'].median()
-# average_attention_ACPS_between = ACPS_between.groupby('prob_option_A')['dwell_time'].median()
-# average_attention_ASPC_between = ASPC_between.groupby('prob_option_A')['dwell_time'].median()
-
-# all_attention_between = pd.concat([average_attention_ASPS_between, average_attention_ACPC_between, 
-#                                    average_attention_ACPS_between, average_attention_ASPC_between])
-# all_attention_between = all_attention_between.groupby('prob_option_A').median()
-
-# plt.plot(average_attention_ASPS_between.index, average_attention_ASPS_between, label='ASPS', color='blue', marker='o', linestyle='-')
-# plt.plot(average_attention_ACPS_between.index, average_attention_ACPS_between, label='ACPS', color='red', marker='o', linestyle='-')
-# plt.plot(average_attention_ASPC_between.index, average_attention_ASPC_between, label='ASPC', color='orange', marker='o', linestyle='-')
-# plt.plot(average_attention_ACPC_between.index, average_attention_ACPC_between, label='ACPC', color='green', marker='o', linestyle='-')
-
-# x_fit = np.linspace(0, 1, num = 10)
-
-# plt.xlabel('Probability P of Non-Zero Payment')
-# plt.ylabel('Dwell time of urn (' +str(attention_type) +')')
-# plt.title('(Between-subj) Median Attentional processes (' +str(attention_type) +')')
-# plt.grid(True)
-# plt.legend()
-
-# plt.show()
-
-
-# plt.plot(all_attention_between.index, all_attention_between, marker='o', linestyle='-')
-
-# plt.xlabel('Probability P of Non-Zero Payment')
-# plt.ylabel('Dwell time of urn (' +str(attention_type) +')')
-# plt.title('(Between-subj) Median across conditions (' +str(attention_type) +')')
-# plt.grid(True)
-# plt.show()
-
+#         plt.plot(ASPS_att_ind['prob_option_A'], ASPS_att_ind['dwell_time'], label='ASPS', color='blue', marker='o', linestyle='-')
+#         plt.plot(ACPS_att_ind['prob_option_A'], ACPS_att_ind['dwell_time'], label='ACPS', color='red', marker='o', linestyle='-')
+#         plt.plot(ASPC_att_ind['prob_option_A'], ASPC_att_ind['dwell_time'], label='ASPC', color='orange', marker='o', linestyle='-')
+#         plt.plot(ACPC_att_ind['prob_option_A'], ACPC_att_ind['dwell_time'], label='ACPC', color='green', marker='o', linestyle='-')
+#         plt.title('Individual (' +str(attention_type) +') ' + str(i))
+#         plt.grid(True)
+#         plt.legend()
+#         plt.show()
+# else: 
+#     pass
 
 
 
@@ -411,7 +450,7 @@ else:
 # =============================================================================
 
 data_for_analysis = pd.concat([ASPS, ACPC, ASPC, ACPS], ignore_index=True)
-
+data_for_analysis_EDRP = pd.concat([ASPS_EDRP, ACPC_EDRP, ASPC_EDRP, ACPS_EDRP], ignore_index=True)
 
 ######## ATTENTION REGRESSION (WITHIN)
 
@@ -438,6 +477,30 @@ model_2 = sm.OLS(y_2, X).fit(cov_type='cluster', cov_kwds={'groups': data_for_an
 print(model_2.summary())
 
 
+# EDRP
+
+# Add fixed effects
+dummy_ind_EDRP = pd.get_dummies(data_for_analysis_EDRP['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
+dummy_prob_EDRP = pd.get_dummies(data_for_analysis_EDRP['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
+data_for_analysis_EDRP = pd.concat([data_for_analysis_EDRP, dummy_ind_EDRP, dummy_prob_EDRP], axis=1)
+
+# Add controls 
+data_for_analysis_EDRP = data_for_analysis_EDRP.merge(survey, on='id', how='left')
+control_variables_EDRP = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
+                 ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
+
+# Create the design matrix and dependent variable
+X_EDRP = data_for_analysis_EDRP[['charity', 'tradeoff', 'interaction', 'case_order'] + list(dummy_ind_EDRP.columns) + list(dummy_prob_EDRP.columns)]
+# X = data_for_analysis[['charity', 'tradeoff', 'interaction'] + list(dummy_ind.columns)]
+X_EDRP = pd.concat([X_EDRP, data_for_analysis_EDRP[control_variables_EDRP]], axis=1)
+X_EDRP = sm.add_constant(X_EDRP, has_constant='add') # add a first column full of ones to account for intercept of regression
+
+# Same process but now dwell_time as dependent variable
+y_2_EDRP = data_for_analysis_EDRP['dwell_time_relative']
+model_2_EDRP = sm.OLS(y_2_EDRP, X_EDRP).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis_EDRP['number']}) # cluster at individual level
+print(model_2_EDRP.summary())
+
+
 
 
 
@@ -445,43 +508,7 @@ md_2 = smf.mixedlm("dwell_time_relative ~ charity + tradeoff + interaction", dat
 mdf_2 = md_2.fit()
 print(mdf_2.summary())
 
-######## ATTENTION REGRESSION (BETWEEN)
-
-# # Same as above but only use the first case of each individual 
-# data_for_analysis_between = pd.concat([ASPS_between, ACPC_between, ASPC_between, ACPS_between], ignore_index=True)
-
-# # Add fixed effects
-# dummy_prob = pd.get_dummies(data_for_analysis_between['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
-# data_for_analysis_between = pd.concat([data_for_analysis_between, dummy_prob], axis=1)
-# data_for_analysis_between = data_for_analysis_between.merge(survey, on='id', how='left')
-
-# # Create the design matrix and dependent variable
-# X_between = data_for_analysis_between[['charity', 'tradeoff', 'interaction'] + list(dummy_prob.columns)]
-# X_between = pd.concat([X_between, data_for_analysis_between[control_variables]], axis=1) # add controls
-# X_between = sm.add_constant(X_between, has_constant='add') # add a first column full of ones to account for intercept of regression 
-# y_between = data_for_analysis_between['dwell_time']
-
-# model_3 = sm.OLS(y_between, X_between).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis_between['prob_option_A']}) 
-
-# print(model_3.summary())
-
-# # no controls
-# X_between_2 = data_for_analysis_between[['charity', 'tradeoff', 'interaction'] + list(dummy_prob.columns)]
-# X_between_2 = sm.add_constant(X_between_2, has_constant='add') 
-# model_3_2 = sm.OLS(y_between, X_between_2).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis_between['prob_option_A']}) 
-# print(model_3_2.summary())
-
-# # explo controls
-
-# # control_variables_2 = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + 
-# #                   ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
-# # X_between_3 = data_for_analysis_between[['charity', 'tradeoff', 'interaction'] + list(dummy_prob.columns)]
-# # X_between_3 = pd.concat([X_between_3, data_for_analysis_between[control_variables_2]], axis=1) # add controls
-# # X_between_3 = sm.add_constant(X_between_3, has_constant='add') 
-# # model_3_3 = sm.OLS(y_between, X_between_3).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis_between['number']}) # cluster at individual level
-# # print(model_3_3.summary())
-
-# md_3 = smf.mixedlm("dwell_time ~ charity + tradeoff + interaction", data_for_analysis_between, groups=data_for_analysis_between["prob_option_A"])
-# mdf_3 = md_3.fit()
-# print(mdf_3.summary())
+md_3 = smf.mixedlm("dwell_time_relative ~ case_order", data_for_analysis, groups=data_for_analysis["number"])
+mdf_3 = md_3.fit()
+print(mdf_3.summary())
 
