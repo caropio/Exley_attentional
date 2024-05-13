@@ -72,8 +72,12 @@ for i in range(len(data_for_plot)):
     data_for_plot['order of cases'][i] = ast.literal_eval(data_for_plot['order of cases'][i])
     
 
+# %%
+# =============================================================================
+# REMOVING OUTLIERS
+# =============================================================================
 
-# Remove outliers? 
+# Remove outliers
 
 dwell_mean = data_for_plot['dwell_time'].mean()
 dwell_std = np.std(data_for_plot['dwell_time'])
@@ -90,19 +94,54 @@ dwell_std_relative = np.std(data_for_plot['dwell_time_relative'])
 outliers_data_relative = data_for_plot[(data_for_plot['dwell_time_relative'] < dwell_mean_relative - 3 * dwell_std_relative)
                          | (data_for_plot['dwell_time_relative'] > dwell_mean_relative + 3 * dwell_std_relative)]
 
+outliers_all = np.union1d(outliers_data.index, np.union1d(outliers_data_total.index, outliers_data_relative.index))
 
-if outliers ==1:
-    outliers_all = outliers_data.index.tolist() + outliers_data_total.index.tolist() + outliers_data_relative.index.tolist()
-    data_for_plot = data_for_plot.drop(outliers_all)
-    data_for_plot = data_for_plot.reset_index(drop=True)
-else: 
-    pass 
+# Remove outliers and associated data 
 
-#######
-#### ENLEVER DONNEES ASSOCIEES
-#######
-#######
+associated_outliers = []
 
+for index in outliers_all:
+    outlier_row = data_for_plot.iloc[index]
+
+    if outlier_row['case'] == 'ASPS':
+        corresponding_row = data_for_plot[
+            (data_for_plot['case'] == 'ACPS') &
+            (data_for_plot['number'] == outlier_row['number']) & 
+            (data_for_plot['prob_option_A'] == outlier_row['prob_option_A'])
+        ]
+    elif outlier_row['case'] == 'ACPS' :
+        corresponding_row = data_for_plot[
+            (data_for_plot['case'] == 'ASPS') &
+            (data_for_plot['number'] == outlier_row['number']) & 
+            (data_for_plot['prob_option_A'] == outlier_row['prob_option_A'])
+        ]
+    elif outlier_row['case'] == 'ACPC' :
+        corresponding_row = data_for_plot[
+            (data_for_plot['case'] == 'ASPC') &
+            (data_for_plot['number'] == outlier_row['number']) & 
+            (data_for_plot['prob_option_A'] == outlier_row['prob_option_A'])
+        ]
+    elif outlier_row['case'] == 'ASPC':
+        corresponding_row = data_for_plot[
+            (data_for_plot['case'] == 'ACPC') &
+            (data_for_plot['number'] == outlier_row['number']) & 
+            (data_for_plot['prob_option_A'] == outlier_row['prob_option_A'])
+        ]
+
+    associated_outliers.append(corresponding_row.index[0])
+
+
+remove_all = np.union1d(associated_outliers,outliers_all)
+
+data_for_plot = data_for_plot.drop(remove_all)
+data_for_plot = data_for_plot.reset_index(drop=True)
+
+
+
+# %%
+# =============================================================================
+# GET ALL DATA
+# =============================================================================
 
 # Get different cases
 
@@ -133,6 +172,12 @@ first_case = data_for_plot[data_for_plot['case_order']==1]
 second_case = data_for_plot[data_for_plot['case_order']==2]
 third_case = data_for_plot[data_for_plot['case_order']==3]
 fourth_case = data_for_plot[data_for_plot['case_order']==4]
+
+
+# %%
+# =============================================================================
+# Get valuation and attention differences specific to H3
+# =============================================================================
 
 
 # Difference data valuation ( /!/ inverse difference of H1 and H2 /!/ )
@@ -192,11 +237,11 @@ for i in charity_lottery['number'].unique():
 
 
 
-
 # %%
 # =============================================================================
 # Categorisation Excuse-driven risk preferences
 # =============================================================================
+
 
 EDRP_self = []
 EDRP_charity = []
@@ -205,28 +250,46 @@ altruistic_self = []
 altruistic_charity = []
 
 for i in data_for_plot['number'].unique():
-    self_diff = self_lottery_differences_all.loc[self_lottery_differences_all['number'] == i,['valuation_ASPS_ACPS']].mean()
-    charity_diff = charity_lottery_differences_all.loc[charity_lottery_differences_all['number'] == i,['valuation_ACPC_ASPC']].mean()
+    self_diff = self_lottery_differences_all.loc[self_lottery_differences_all['number'] == i,['valuation_ASPS_ACPS']].mean() # mean across probabilities
+    charity_diff = charity_lottery_differences_all.loc[charity_lottery_differences_all['number'] == i,['valuation_ACPC_ASPC']].mean() # mean across probabilities
 
-    if self_diff.item() < - 5 :
+    if self_diff.item() > 5 :
         EDRP_self.append(i)
-    elif self_diff.item() > 5 :
+    elif self_diff.item() < - 5 :
         altruistic_self.append(i)
-    if charity_diff.item() > 5 :
+    if charity_diff.item() < - 5 :
         EDRP_charity.append(i)
-    if charity_diff.item() < -5 :
+    if charity_diff.item() > 5 :
         altruistic_charity.append(i)
     
 EDRP_total = np.intersect1d(EDRP_self, EDRP_charity)
 
 altruistic_total = np.intersect1d(altruistic_self, altruistic_charity)
 
+no_EDRP = np.setdiff1d(data_for_plot['number'].unique(), np.union1d(EDRP_total, altruistic_total))
+
+plt.bar(['Self', 'Charity'], [len(EDRP_self), len(EDRP_charity)], color = ['lightskyblue', 'lightgreen']) 
+plt.bar(['Self', 'Charity'], [len(EDRP_total), len(EDRP_total)], color = ['palegoldenrod', 'palegoldenrod'], label ='Both') 
+plt.xlabel('Type of Excuse-driven risk preference')
+plt.ylabel('Number of people')
+plt.title('Number of Excuse-driven participants')
+plt.legend()
+plt.show()
 
 X_EDRP_total = data_autre_principal[data_autre_principal['number'].isin(EDRP_total)]
-
 data_X_EDRP_total = data_for_plot[data_for_plot['number'].isin(EDRP_total)]
 
-data_NO_EDRP = data_for_plot[~data_for_plot['number'].isin(data_X_EDRP_total['number'])]
+X_else_EDRP_total = data_autre_principal[~data_autre_principal['number'].isin(EDRP_total)]
+data_else_EDRP = data_for_plot[~data_for_plot['number'].isin(data_X_EDRP_total['number'])]
+
+X_no_EDRP_total = data_autre_principal[data_autre_principal['number'].isin(no_EDRP)]
+data_no_EDRP = data_for_plot[data_for_plot['number'].isin(no_EDRP)]
+
+X_altruistic = data_autre_principal[data_autre_principal['number'].isin(altruistic_total)]
+data_altruistic = data_for_plot[data_for_plot['number'].isin(altruistic_total)]
+
+# self_lottery_difference_EDRP = self_lottery_differences_all[self_lottery_differences_all['number'].isin(EDRP_total)]
+# charity_lottery_differences_EDRP = charity_lottery_differences[charity_lottery_differences['number'].isin(EDRP_total)]
 
 
 ASPS_EDRP = data_X_EDRP_total[(data_X_EDRP_total['charity'] == 0) & (data_X_EDRP_total['tradeoff'] == 0)]
@@ -234,10 +297,24 @@ ACPC_EDRP = data_X_EDRP_total[(data_X_EDRP_total['charity'] == 1) & (data_X_EDRP
 ASPC_EDRP = data_X_EDRP_total[(data_X_EDRP_total['charity'] == 1) & (data_X_EDRP_total['tradeoff'] == 1)]
 ACPS_EDRP = data_X_EDRP_total[(data_X_EDRP_total['charity'] == 0) & (data_X_EDRP_total['tradeoff'] == 1)]
 
+ASPS_no_EDRP = data_no_EDRP[(data_no_EDRP['charity'] == 0) & (data_no_EDRP['tradeoff'] == 0)]
+ACPC_no_EDRP = data_no_EDRP[(data_no_EDRP['charity'] == 1) & (data_no_EDRP['tradeoff'] == 0)]
+ASPC_no_EDRP = data_no_EDRP[(data_no_EDRP['charity'] == 1) & (data_no_EDRP['tradeoff'] == 1)]
+ACPS_no_EDRP = data_no_EDRP[(data_no_EDRP['charity'] == 0) & (data_no_EDRP['tradeoff'] == 1)]
+
+ASPS_altruistic = data_altruistic[(data_altruistic['charity'] == 0) & (data_altruistic['tradeoff'] == 0)]
+ACPC_altruistic = data_altruistic[(data_altruistic['charity'] == 1) & (data_altruistic['tradeoff'] == 0)]
+ASPC_altruistic = data_altruistic[(data_altruistic['charity'] == 1) & (data_altruistic['tradeoff'] == 1)]
+ACPS_altruistic = data_altruistic[(data_altruistic['charity'] == 0) & (data_altruistic['tradeoff'] == 1)]
 
 self_lottery_differences_all_EDRP = self_lottery_differences_all[self_lottery_differences_all['number'].isin(EDRP_total)]
 charity_lottery_differences_all_EDRP = charity_lottery_differences_all[charity_lottery_differences_all['number'].isin(EDRP_total)]
 
+# self_lottery_differences_no_EDRP = self_lottery_differences_all[self_lottery_differences_all['number'].isin(no_EDRP)]
+# charity_lottery_differences_attention_no_EDRP = charity_lottery_differences_attention[charity_lottery_differences_attention['number'].isin(no_EDRP)]
+
+# self_lottery_differences_attention_altruistic = self_lottery_differences_attention[self_lottery_differences_attention['number'].isin(altruistic_total)]
+# charity_lottery_differences_attention_altruistic = charity_lottery_differences_attention[charity_lottery_differences_attention['number'].isin(altruistic_total)]
 
 
 # %%
@@ -308,8 +385,8 @@ print(mdf_8.summary())
 
 
 
-self_lottery_differences_all = self_lottery_differences_all.dropna()
-charity_lottery_differences_all = charity_lottery_differences_all.dropna()
+# self_lottery_differences_all = self_lottery_differences_all.dropna()
+# charity_lottery_differences_all = charity_lottery_differences_all.dropna()
 
 # ALL 
 
@@ -323,8 +400,8 @@ print(mdf_charity.summary())
 
 
 # EDRP 
-self_lottery_differences_all_EDRP = self_lottery_differences_all_EDRP.dropna()
-charity_lottery_differences_all_EDRP = charity_lottery_differences_all_EDRP.dropna()
+# self_lottery_differences_all_EDRP = self_lottery_differences_all_EDRP.dropna()
+# charity_lottery_differences_all_EDRP = charity_lottery_differences_all_EDRP.dropna()
 
 md_self_EDRP = smf.mixedlm("valuation_ASPS_ACPS ~ dwell_time_ASPS_ACPS", self_lottery_differences_all_EDRP, groups=self_lottery_differences_all_EDRP["number"])
 mdf_self_EDRP = md_self_EDRP.fit()
