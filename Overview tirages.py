@@ -13,7 +13,7 @@ import pandas as pd
 
 # Info to find data
 path = '/Users/carolinepioger/Desktop/Fourth collection (partial)' # change to yours :)
-# dates = ['2024-03-28', '2024-03-25', '2024-04-03']
+# dates = ['2024-04-29','2024-04-30','2024-05-02', '2024-05-14']
 dates = ['2024-05-14']
 
 assoc_sum = pd.concat([pd.read_csv(path + '/EXLEY_ASSO_' + date + '.csv') for date in dates], ignore_index=True)

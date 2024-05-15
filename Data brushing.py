@@ -11,12 +11,10 @@ import pandas as pd
 import numpy as np
 import ast 
 
-attention_type = 'absolute' # relative for % of total time and 'absolute' for raw time
-
 # Info to find data
 path = '/Users/carolinepioger/Desktop/ALL collection' # change to yours :)
 # dates = ['2024-03-28', '2024-03-25', '2024-04-03']
-dates = ['2024-04-29','2024-04-30','2024-05-02']
+dates = ['2024-04-29','2024-04-30','2024-05-02', '2024-05-14', '2024-05-15']
 
 # Data for analysis 
 
@@ -313,18 +311,11 @@ dwell_time_absolute = [np.sum(data['watching_urn_ms_corrected'][i])/1000 for i i
 data.insert(data.columns.get_loc('watching_urn_ms_corrected') + 1, 'dwell_time_relative', dwell_time_relative)
 data.insert(data.columns.get_loc('dwell_time_relative') + 1, 'dwell_time_absolute', dwell_time_absolute)
 
-if attention_type == 'relative':
-    data.insert(data.columns.get_loc('watching_urn_ms_corrected') + 1, 'dwell_time', dwell_time_relative)
-elif attention_type == 'absolute':  
-    data.insert(data.columns.get_loc('watching_urn_ms_corrected') + 1, 'dwell_time', dwell_time_absolute)
-
-
 data['frequency'] = [len(data['watching_urn_ms_corrected'][i]) for i in range(len(data))]
 column_order_2 = list(data.columns)
 column_order_2.insert(column_order_2.index('switchpoint') + 1, column_order_2.pop(column_order_2.index('nb_switchpoint')))
 column_order_2.insert(column_order_2.index('watching_urn_ms') + 1, column_order_2.pop(column_order_2.index('watching_urn_ms_corrected')))
-column_order_2.insert(column_order_2.index('watching_urn_ms_corrected') + 1, column_order_2.pop(column_order_2.index('dwell_time')))
-column_order_2.insert(column_order_2.index('dwell_time') + 1, column_order_2.pop(column_order_2.index('frequency')))
+column_order_2.insert(column_order_2.index('watching_urn_ms_corrected') + 1, column_order_2.pop(column_order_2.index('frequency')))
 data = data[column_order_2]
 
 
@@ -358,6 +349,14 @@ for i in range(len(data)):
 
 data['valuation'] = data['valuation']*100 # to get percentage
 data['interaction'] = data['charity'] * data['tradeoff'] 
+
+# Exclusion criterion
+
+exclusion_criterion = data_autre.loc[data_autre['exclusion_B_to_A'] == 1, 'id'] 
+
+data = data.drop(data[data['id'].isin(exclusion_criterion) == True].index)
+data = data.reset_index(drop=True)
+
 
 # Save the concatenated dataset
 data_path = path + '/dataset.csv'

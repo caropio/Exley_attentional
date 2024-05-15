@@ -16,10 +16,6 @@ import statsmodels.formula.api as smf
 from scipy.stats import ttest_ind
 import ast 
 
-censure = 1 # Put 0 if include censored participants in analysis and 1 if we exclude them 
-MSP_excl = 1 # Put 0 if include MSP calib in analysis and 1 if we exclude them 
-by_ind = 0 # Put 0 if no display of individual plots and 1 if display 
-attention_type = 'absolute' # relative for % of total time and 'absolute' for raw time
 
 path = '/Users/carolinepioger/Desktop/ALL collection' # change to yours :)
 
@@ -35,6 +31,12 @@ for i in range(len(data_autre)):
     elif isinstance(data_autre['censored_calibration'][i], str):
         data_autre['censored_calibration'][i] = ast.literal_eval(data_autre['censored_calibration'][i])
 
+# Notes analyses
+len(data[data['valuation']==100])/len(data['valuation']) # % censored valuations
+len(data[(data['nb_switchpoint']!=1) & (data['nb_switchpoint']!=0)])/len(data['nb_switchpoint']) # % MSP valuations
+sum(data['watching_urn_ms'].map(lambda arr: any(x <= 200 for x in arr)))/len(data['watching_urn_ms']) # % of dwell time with <=200 value
+
+
 ########
 # data_autre['censored_calibration'].value_counts()
 ########
@@ -45,25 +47,22 @@ data_autre_censored = data_autre.loc[data_autre['censored_calibration'] == 1]
 data_autre_censored = data_autre_censored.reset_index(drop=True)
 
 
-# Remove (or not) participants with censored values in part 2
+# Remove participants with censored values in part 2
 exclude_participants = data_autre.loc[data_autre['censored_calibration'] == 1, 'id'] 
 
-if censure == 1: 
-    data = data.drop(data[data['id'].isin(exclude_participants) == True].index)
-    data = data.reset_index(drop=True)
-else: 
-    data = data
+data_censored = data[data['id'].isin(exclude_participants) == True]
+
+data = data.drop(data[data['id'].isin(exclude_participants) == True].index)
+data = data.reset_index(drop=True)
 
 
 # Remove participants with mutliple switchoint (MSP) in part 2
 
 exclude_participants_2 = data_autre.loc[data_autre['censored_calibration'] == 'MSP', 'id'] 
 
-if MSP_excl == 1: 
-    data = data.drop(data[data['id'].isin(exclude_participants_2) == True].index)
-    data = data.reset_index(drop=True)
-else: 
-    data = data
+data = data.drop(data[data['id'].isin(exclude_participants_2) == True].index)
+data = data.reset_index(drop=True)
+
 
 data_for_plot = data
 
@@ -395,7 +394,7 @@ plt.title('Valuation differences across probabilities H1')
 plt.savefig('Bar diff type Lottery H1.png', dpi=1200)
 plt.show()
 
-# ALL difference of valuations
+# Hist ALL difference of valuations
 plt.hist([self_lottery_differences['valuation_ACPS_ASPS'], charity_lottery_differences['valuation_ASPC_ACPC']], 
         bins = 20, color = ['lightskyblue', 'lightgreen'], label = ['Self lottery', 'Charity lottery']) 
 plt.xlabel('Difference in lottery valuation (trad - no trad)')
@@ -416,6 +415,86 @@ plt.legend()
 plt.savefig('Histo Valuation diff EDRP H1.png', dpi=1200)
 plt.show()
  
+# Case order effect
+first_case = data_for_plot[data_for_plot['case_order']==1]
+second_case = data_for_plot[data_for_plot['case_order']==2]
+third_case = data_for_plot[data_for_plot['case_order']==3]
+fourth_case = data_for_plot[data_for_plot['case_order']==4]
+
+plt.bar(['first', 'second', 'third', 'fourth'], [first_case['valuation'].mean(), second_case['valuation'].mean(), 
+                                               third_case['valuation'].mean(), fourth_case['valuation'].mean()], 
+        color = ['black', 'dimgray', 'darkgray', 'lightgrey']) 
+plt.xlabel('Case order')
+plt.ylabel('Mean valuation in %')
+plt.title('Mean valuation per cas order')
+plt.savefig('Valuation case order H2.png', dpi=1200)
+plt.show()
+
+
+# %%
+# =============================================================================
+# Data for censored participants
+# =============================================================================
+
+ASPS_censored = data_censored[(data_censored['charity'] == 0) & (data_censored['tradeoff'] == 0)]
+ACPC_censored = data_censored[(data_censored['charity'] == 1) & (data_censored['tradeoff'] == 0)]
+ASPC_censored = data_censored[(data_censored['charity'] == 1) & (data_censored['tradeoff'] == 1)]
+ACPS_censored = data_censored[(data_censored['charity'] == 0) & (data_censored['tradeoff'] == 1)]
+
+
+# Difference data
+self_lottery_censored = pd.concat([ASPS_censored, ACPS_censored], ignore_index = True)
+charity_lottery_censored = pd.concat([ACPC_censored, ASPC_censored], ignore_index=True)
+no_tradeoff_lottery_censored = pd.concat([ASPS_censored, ACPC_censored], ignore_index=True)
+
+self_lottery_differences_censored = pd.DataFrame(columns=['number', 'prob_option_A'])
+
+for i in self_lottery_censored['number'].unique():
+    individual = self_lottery_censored.loc[self_lottery_censored['number'] == i, ['case', 'prob_option_A', 'valuation']] 
+    individual_difference = individual.pivot(index='prob_option_A', columns='case', values='valuation')
+    individual_difference['valuation_ACPS_ASPS'] = individual_difference['ACPS'] - individual_difference['ASPS']
+    individual_difference['number'] = i
+    individual_difference.reset_index(inplace=True)
+    # individual_difference.columns = individual_difference.columns.droplevel(1)
+    self_lottery_differences_censored = pd.concat([self_lottery_differences_censored, individual_difference[['number', 'prob_option_A', 'valuation_ACPS_ASPS']]], ignore_index=True)
+
+charity_lottery_differences_censored = pd.DataFrame(columns=['number', 'prob_option_A'])
+
+for i in charity_lottery_censored['number'].unique():
+    individual = charity_lottery_censored.loc[charity_lottery_censored['number'] == i, ['case', 'prob_option_A', 'valuation']] 
+    individual_difference = individual.pivot(index='prob_option_A', columns='case', values='valuation')
+    individual_difference['valuation_ASPC_ACPC'] = individual_difference['ASPC'] - individual_difference['ACPC']
+    individual_difference['number'] = i
+    individual_difference.reset_index(inplace=True)
+    # individual_difference.columns = individual_difference.columns.droplevel(1)
+    charity_lottery_differences_censored = pd.concat([charity_lottery_differences_censored, individual_difference[['number', 'prob_option_A', 'valuation_ASPC_ACPC']]], ignore_index=True)
+
+no_tradeoff_lottery_differences_censored = pd.DataFrame(columns=['number', 'prob_option_A'])
+
+for i in no_tradeoff_lottery_censored['number'].unique():
+    individual = no_tradeoff_lottery_censored.loc[no_tradeoff_lottery_censored['number'] == i, ['case', 'prob_option_A', 'valuation']] 
+    individual_difference = individual.pivot(index='prob_option_A', columns='case', values='valuation')
+    individual_difference['valuation_ACPC_ASPS'] = individual_difference['ACPC'] - individual_difference['ASPS']
+    individual_difference['number'] = i
+    individual_difference.reset_index(inplace=True)
+    # individual_difference.columns = individual_difference.columns.droplevel(1)
+    no_tradeoff_lottery_differences_censored = pd.concat([no_tradeoff_lottery_differences_censored, individual_difference[['number', 'prob_option_A', 'valuation_ACPC_ASPS']]], ignore_index=True)
+
+
+plt.bar(['$Y^{C}(P^{C})-Y^{S}(P^{S}$)', '$Y^{C}(P^{S})-Y^{S}(P^{S})$', '$Y^{S}(P^{C})-Y^{C}(P^{C})$'], 
+        [no_tradeoff_lottery_differences_censored['valuation_ACPC_ASPS'].mean(), self_lottery_differences_censored['valuation_ACPS_ASPS'].mean(), charity_lottery_differences_censored['valuation_ASPC_ACPC'].mean()], 
+        color = ['bisque', 'lightskyblue', 'lightgreen']) 
+
+# plt.errorbar(['$Y^{C}(P^{C})-Y^{S}(P^{S}$)', '$Y^{C}(P^{S})-Y^{S}(P^{S})$', '$Y^{S}(P^{C})-Y^{C}(P^{C})$'], 
+#               [no_tradeoff_lottery_differences_censored['valuation_ACPC_ASPS'].mean(), self_lottery_differences_censored['valuation_ACPS_ASPS'].mean(), charity_lottery_differences_censored['valuation_ASPC_ACPC'].mean()], 
+#               [0.957, 1.771, 2.383], ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
+plt.axhline(y=0, color='grey', linestyle='--')
+plt.xlabel('Lottery difference')
+plt.ylabel('Valuation difference in %')
+plt.legend()
+plt.title('Valuation differences for Censored subjects')
+plt.savefig('Bar diff type Lottery Censored H1.png', dpi=1200)
+plt.show()
 
 
 # %%
@@ -524,6 +603,8 @@ print()
 ######## EXLEY REGRESSION 
 
 data_for_analysis = pd.concat([ASPS, ACPC, ASPC, ACPS], ignore_index=True)
+data_for_analysis_censored = pd.concat([ASPS_censored, ACPC_censored, ASPC_censored, ACPS_censored], ignore_index=True)
+
 
 # Add fixed effects
 dummy_ind = pd.get_dummies(data_for_analysis['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
@@ -537,6 +618,7 @@ control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Le
 
 # Create the design matrix and dependent variable
 X = data_for_analysis[['charity', 'tradeoff', 'interaction'] + list(dummy_ind.columns) + list(dummy_prob.columns)]
+# X = data_for_analysis[['charity', 'tradeoff', 'interaction', 'case_order'] + list(dummy_ind.columns) + list(dummy_prob.columns)]
 X = pd.concat([X, data_for_analysis[control_variables]], axis=1)
 X = sm.add_constant(X, has_constant='add') # add a first column full of ones to account for intercept of regression
 y = data_for_analysis['valuation']
@@ -544,6 +626,27 @@ y = data_for_analysis['valuation']
 # Fit the regression model using Ordinary Least Squares
 model = sm.OLS(y, X).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis['number']}) # cluster at individual level
 print(model.summary())
-  
+
+
+# For censored participants
+
+dummy_ind_censored = pd.get_dummies(data_for_analysis_censored['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
+dummy_prob_censored = pd.get_dummies(data_for_analysis_censored['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
+data_for_analysis_censored = pd.concat([data_for_analysis_censored, dummy_ind_censored, dummy_prob_censored], axis=1)
+
+# Add controls 
+data_for_analysis_censored = data_for_analysis_censored.merge(survey, on='id', how='left')
+control_variables_censored = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
+                 ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
+
+# Create the design matrix and dependent variable
+X_censored = data_for_analysis_censored[['charity', 'tradeoff', 'interaction'] + list(dummy_ind_censored.columns) + list(dummy_prob_censored.columns)]
+X_censored = pd.concat([X_censored, data_for_analysis_censored[control_variables_censored]], axis=1)
+X_censored = sm.add_constant(X_censored, has_constant='add') # add a first column full of ones to account for intercept of regression
+y_censored = data_for_analysis_censored['valuation']
+
+# Fit the regression model using Ordinary Least Squares
+model_censored = sm.OLS(y_censored, X_censored).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis_censored['number']}) # cluster at individual level
+print(model_censored.summary())
 
 
