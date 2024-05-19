@@ -451,10 +451,10 @@ plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
 valuation_per_proba = data_for_plot.groupby('prob_option_A')['valuation']
 
-plt.plot([0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95], valuation_per_proba.mean()) 
+plt.plot([0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95], valuation_per_proba.mean(), color='black', marker='o', linestyle='-')
 plt.xlabel('Probability')
 plt.ylabel('Mean valuation in %')
-plt.title('Mean valuation per probability')
+plt.title('Mean valuation per probability for all cases')
 plt.savefig('Valuation probability H1.png', dpi=1200)
 plt.show()
 
@@ -557,7 +557,7 @@ charity_lottery_differences_negated_censored['valuation_ASPC_ACPC'] *= -1
 
 t_statistic_diff_censored, p_value_diff_censored = ttest_ind(self_lottery_differences_censored['valuation_ACPS_ASPS'], charity_lottery_differences_negated_censored['valuation_ASPC_ACPC'])
 print()
-print('Difference of magnitude between self and charity valuation difference:')
+print('Difference of magnitude between self and charity valuation difference for censored:')
 print(t_statistic_diff_censored, p_value_diff_censored)
 
 t_statistic_self, p_value_self = ttest_ind(self_lottery_differences['valuation_ACPS_ASPS'], self_lottery_differences_censored['valuation_ACPS_ASPS'])
@@ -614,6 +614,16 @@ plt.axvline(x=X_else_EDRP_total['charity_calibration'].mean(), color='grey', lin
 plt.axvline(x=X_else_EDRP_total['charity_calibration'].median(), color='gainsboro', linestyle='--', label = 'Median = '+ str(np.round(X_else_EDRP_total['charity_calibration'].median(), 1)))
 plt.legend()
 plt.savefig('X values for else EDRP.png', dpi=1200)
+plt.show()
+
+plt.hist(X_no_EDRP_total['charity_calibration'], bins=20, color = 'lightcoral') 
+plt.xlabel('X values')
+plt.ylabel('Frequency')
+plt.title('Distribution of X values of No EDRP subjects')
+plt.axvline(x=X_no_EDRP_total['charity_calibration'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(X_no_EDRP_total['charity_calibration'].mean(), 1)))
+plt.axvline(x=X_no_EDRP_total['charity_calibration'].median(), color='gainsboro', linestyle='--', label = 'Median = '+ str(np.round(X_no_EDRP_total['charity_calibration'].median(), 1)))
+plt.legend()
+plt.savefig('X values for No EDRP.png', dpi=1200)
 plt.show()
 
 plt.hist(X_altruistic['charity_calibration'], bins=20, color = 'lightcoral') 
@@ -711,6 +721,10 @@ model = sm.OLS(y, X).fit(cov_type='cluster', cov_kwds={'groups': data_for_analys
 print(model.summary())
 
 
+md = smf.mixedlm("valuation ~ charity + tradeoff + interaction", data_for_analysis, groups=data_for_analysis["number"])
+mdf = md.fit()
+print(mdf.summary())
+
 # For EDRP 
 dummy_ind_EDRP = pd.get_dummies(data_for_analysis_EDRP['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
 dummy_prob_EDRP = pd.get_dummies(data_for_analysis_EDRP['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
@@ -757,11 +771,21 @@ model_censored = sm.OLS(y_censored, X_censored).fit(cov_type='cluster', cov_kwds
 print(model_censored.summary())
 
 
-### Look at differences for each probability
+
+md_c = smf.mixedlm("valuation ~ charity + tradeoff + interaction", data_for_analysis_censored, groups=data_for_analysis_censored["number"])
+mdf_c = md_c.fit()
+print(mdf_c.summary())
+
+# %%
+# =============================================================================
+# Look at differences for each probability
+# =============================================================================
+# FOR ALL 
+
 # for no tradeoff
-dummy_ind_proba = pd.get_dummies(no_tradeoff_lottery_differences['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
-dummy_prob_proba = pd.get_dummies(no_tradeoff_lottery_differences['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
-no_tradeoff_diff_reg = pd.concat([no_tradeoff_lottery_differences, dummy_ind_proba, dummy_prob_proba], axis=1)
+dummy_ind_proba_no_tradeoff = pd.get_dummies(no_tradeoff_lottery_differences['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
+dummy_prob_proba_no_tradeoff = pd.get_dummies(no_tradeoff_lottery_differences['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
+no_tradeoff_diff_reg = pd.concat([no_tradeoff_lottery_differences, dummy_ind_proba_no_tradeoff, dummy_prob_proba_no_tradeoff], axis=1)
 
 # Add controls 
 # no_tradeoff_diff_reg = no_tradeoff_diff_reg.merge(survey, on='number', how='left')
@@ -769,7 +793,7 @@ no_tradeoff_diff_reg = pd.concat([no_tradeoff_lottery_differences, dummy_ind_pro
 #                  ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
 
 # Create the design matrix and dependent variable
-X_proba_no_tradeoff = [list(dummy_ind_proba.columns) + list(dummy_prob_proba.columns)]
+X_proba_no_tradeoff = no_tradeoff_diff_reg[list(dummy_ind_proba_no_tradeoff.columns) + list(dummy_prob_proba_no_tradeoff.columns)]
 # X_proba_no_tradeoff = pd.concat([X_proba, no_tradeoff_lottery_differences[control_variables]], axis=1)
 X_proba_no_tradeoff = sm.add_constant(X_proba_no_tradeoff, has_constant='add') # add a first column full of ones to account for intercept of regression
 y_proba_no_tradeoff = no_tradeoff_diff_reg['valuation_ACPC_ASPS']
@@ -777,4 +801,187 @@ y_proba_no_tradeoff = no_tradeoff_diff_reg['valuation_ACPC_ASPS']
 # Fit the regression model using Ordinary Least Squares
 model_proba_no_tradeoff = sm.OLS(y_proba_no_tradeoff, X_proba_no_tradeoff).fit(cov_type='cluster', cov_kwds={'groups': no_tradeoff_diff_reg['number']}) # cluster at individual level
 print(model_proba_no_tradeoff.summary())
+
+
+
+# for self diff
+dummy_ind_proba_self = pd.get_dummies(self_lottery_differences['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
+dummy_prob_proba_self = pd.get_dummies(self_lottery_differences['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
+self_diff_reg = pd.concat([self_lottery_differences, dummy_ind_proba_self, dummy_prob_proba_self], axis=1)
+
+# Add controls 
+# no_tradeoff_diff_reg = no_tradeoff_diff_reg.merge(survey, on='number', how='left')
+# control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
+#                  ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
+
+# Create the design matrix and dependent variable
+X_proba_self = self_diff_reg[list(dummy_ind_proba_self.columns) + list(dummy_prob_proba_self.columns)]
+X_proba_self = sm.add_constant(X_proba_self, has_constant='add') # add a first column full of ones to account for intercept of regression
+y_proba_self = self_diff_reg['valuation_ACPS_ASPS']
+
+# Fit the regression model using Ordinary Least Squares
+model_proba_self = sm.OLS(y_proba_self, X_proba_self).fit(cov_type='cluster', cov_kwds={'groups': self_diff_reg['number']}) # cluster at individual level
+print(model_proba_self.summary())
+
+
+
+# for charity diff
+dummy_ind_proba_charity = pd.get_dummies(charity_lottery_differences['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
+dummy_prob_proba_charity = pd.get_dummies(charity_lottery_differences['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
+charity_diff_reg = pd.concat([charity_lottery_differences, dummy_ind_proba_charity, dummy_prob_proba_charity], axis=1)
+
+# Add controls 
+# no_tradeoff_diff_reg = no_tradeoff_diff_reg.merge(survey, on='number', how='left')
+# control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
+#                  ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
+
+# Create the design matrix and dependent variable
+X_proba_charity = charity_diff_reg[list(dummy_ind_proba_charity.columns) + list(dummy_prob_proba_charity.columns)]
+X_proba_charity = sm.add_constant(X_proba_charity, has_constant='add') # add a first column full of ones to account for intercept of regression
+y_proba_charity = charity_diff_reg['valuation_ASPC_ACPC']
+
+# Fit the regression model using Ordinary Least Squares
+model_proba_charity = sm.OLS(y_proba_charity, X_proba_charity).fit(cov_type='cluster', cov_kwds={'groups': charity_diff_reg['number']}) # cluster at individual level
+print(model_proba_charity.summary())
+
+###################
+# FOR CENSORED
+
+
+# for no tradeoff
+dummy_ind_proba_no_tradeoff_censored = pd.get_dummies(no_tradeoff_lottery_differences_censored['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
+dummy_prob_proba_no_tradeoff_censored = pd.get_dummies(no_tradeoff_lottery_differences_censored['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
+no_tradeoff_diff_reg_censored = pd.concat([no_tradeoff_lottery_differences_censored, dummy_ind_proba_no_tradeoff_censored, dummy_prob_proba_no_tradeoff_censored], axis=1)
+
+# Add controls 
+# no_tradeoff_diff_reg = no_tradeoff_diff_reg.merge(survey, on='number', how='left')
+# control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
+#                  ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
+
+# Create the design matrix and dependent variable
+X_proba_no_tradeoff_censored = no_tradeoff_diff_reg_censored[list(dummy_ind_proba_no_tradeoff_censored.columns) + list(dummy_prob_proba_no_tradeoff_censored.columns)]
+X_proba_no_tradeoff_censored = sm.add_constant(X_proba_no_tradeoff_censored, has_constant='add') # add a first column full of ones to account for intercept of regression
+y_proba_no_tradeoff_censored = no_tradeoff_diff_reg_censored['valuation_ACPC_ASPS']
+
+# Fit the regression model using Ordinary Least Squares
+model_proba_no_tradeoff_censored = sm.OLS(y_proba_no_tradeoff_censored, X_proba_no_tradeoff_censored).fit(cov_type='cluster', cov_kwds={'groups': no_tradeoff_diff_reg_censored['number']}) # cluster at individual level
+print(model_proba_no_tradeoff_censored.summary())
+
+
+# for self diff
+dummy_ind_proba_self_censored = pd.get_dummies(self_lottery_differences_censored['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
+dummy_prob_proba_self_censored = pd.get_dummies(self_lottery_differences_censored['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
+self_diff_reg_censored = pd.concat([self_lottery_differences_censored, dummy_ind_proba_self_censored, dummy_prob_proba_self_censored], axis=1)
+
+# Add controls 
+# no_tradeoff_diff_reg = no_tradeoff_diff_reg.merge(survey, on='number', how='left')
+# control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
+#                  ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
+
+# Create the design matrix and dependent variable
+X_proba_self_censored = self_diff_reg_censored[list(dummy_ind_proba_self_censored.columns) + list(dummy_prob_proba_self_censored.columns)]
+X_proba_self_censored = sm.add_constant(X_proba_self_censored, has_constant='add') # add a first column full of ones to account for intercept of regression
+y_proba_self_censored = self_diff_reg_censored['valuation_ACPS_ASPS']
+
+# Fit the regression model using Ordinary Least Squares
+model_proba_self_censored = sm.OLS(y_proba_self_censored, X_proba_self_censored).fit(cov_type='cluster', cov_kwds={'groups': self_diff_reg_censored['number']}) # cluster at individual level
+print(model_proba_self_censored.summary())
+
+
+
+# for charity diff
+dummy_ind_proba_charity_censored = pd.get_dummies(charity_lottery_differences_censored['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
+dummy_prob_proba_charity_censored = pd.get_dummies(charity_lottery_differences_censored['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
+charity_diff_reg_censored = pd.concat([charity_lottery_differences_censored, dummy_ind_proba_charity_censored, dummy_prob_proba_charity_censored], axis=1)
+
+# Add controls 
+# no_tradeoff_diff_reg = no_tradeoff_diff_reg.merge(survey, on='number', how='left')
+# control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
+#                  ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
+
+# Create the design matrix and dependent variable
+X_proba_charity_censored = charity_diff_reg_censored[list(dummy_ind_proba_charity_censored.columns) + list(dummy_prob_proba_charity_censored.columns)]
+X_proba_charity_censored = sm.add_constant(X_proba_charity_censored, has_constant='add') # add a first column full of ones to account for intercept of regression
+y_proba_charity_censored = charity_diff_reg_censored['valuation_ASPC_ACPC']
+
+# Fit the regression model using Ordinary Least Squares
+model_proba_charity_censored = sm.OLS(y_proba_charity_censored, X_proba_charity_censored).fit(cov_type='cluster', cov_kwds={'groups': charity_diff_reg_censored['number']}) # cluster at individual level
+print(model_proba_charity_censored.summary())
+
+# %%
+# =============================================================================
+# calibration bias
+# =============================================================================
+
+data_for_analysis = pd.concat([ASPS, ACPC, ASPC, ACPS], ignore_index=True)
+
+# # Add fixed effects
+# dummy_ind = pd.get_dummies(data_for_analysis['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
+# dummy_prob = pd.get_dummies(data_for_analysis['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
+# data_for_analysis = pd.concat([data_for_analysis, dummy_ind, dummy_prob], axis=1)
+
+# # Add controls 
+# data_for_analysis = data_for_analysis.merge(survey, on='id', how='left')
+# control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
+#                  ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
+
+# # Create the design matrix and dependent variable
+# # X = data_for_analysis[['charity', 'tradeoff', 'interaction'] + list(dummy_ind.columns) + list(dummy_prob.columns)]
+# X = data_for_analysis[['charity', 'tradeoff', 'interaction', 'case_order'] + list(dummy_ind.columns) + list(dummy_prob.columns)]
+# X = pd.concat([X, data_for_analysis[control_variables]], axis=1)
+# X = sm.add_constant(X, has_constant='add') # add a first column full of ones to account for intercept of regression
+# y = data_for_analysis['valuation']
+
+# # Fit the regression model using Ordinary Least Squares
+# model = sm.OLS(y, X).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis['number']}) # cluster at individual level
+# print(model.summary())
+
+
+iteration_number = 1000
+sample = 107
+p_values = np.zeros(iteration_number)
+
+for inter in range(1, iteration_number):
+    subjects_drawn = np.random.choice(range(1,data_for_analysis['number'].nunique()+1), sample)
+    data_drawn = []
+    for subj in subjects_drawn:
+        subj_data = data_for_analysis.loc[data_for_analysis['number'] == subj, ['number', 'prob_option_A', 'valuation', 'charity', 'tradeoff', 'interaction']]
+        data_drawn.append(subj_data)
+    data_drawn = pd.concat(data_drawn)
+    
+    try:
+        
+        # dummy_ind = pd.get_dummies(data_drawn['number'], drop_first=True, dtype=int) 
+        # dummy_prob = pd.get_dummies(data_drawn['prob_option_A'], drop_first=True, dtype=int) 
+        # data_for_analysis = pd.concat([data_drawn, dummy_ind, dummy_prob], axis=1)
+        # X = data_for_analysis[['charity', 'tradeoff', 'interaction'] + list(dummy_ind.columns) + list(dummy_prob.columns)]
+        # X = sm.add_constant(X, has_constant='add') 
+        # y = data_for_analysis['valuation']
+        # model = sm.OLS(y, X).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis['number']}) # cluster at individual level
+        # summary = model.summary()
+        
+        test = smf.mixedlm("valuation ~ charity + tradeoff + interaction", data_drawn, groups=data_drawn["number"])
+        test = test.fit()
+        summary = test.summary()
+        coef_charity = summary.tables[1]['P>|z|']['charity']
+        
+        # coef_tradeoff = summary.tables[1].data[3][4]
+        # coef_interaction = summary.tables[1].data[4][4]
+        # p_values[inter] = [float(coef_tradeoff), float(coef_interaction)]
+       
+        coef_charity = ast.literal_eval(coef_charity)
+        p_values[inter] = coef_charity
+    except np.linalg.LinAlgError:
+        print()
+        print("Singular matrix encountered.")
+        print()
+        p_values[inter] = [np.nan,np.nan]
+    except ZeroDivisionError:
+        print()
+        print("Multicollinearity encountered.")
+        print()
+        p_values[inter] = [np.nan,np.nan]    
+        
+power_calculated = np.mean(p_values < 0.05)
+
 

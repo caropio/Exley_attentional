@@ -372,7 +372,7 @@ plt.show()
 # =============================================================================
 
 
-# No categorisation by lottery tyep 
+# No categorisation by lottery type 
 
 md_8 = smf.mixedlm("valuation ~ dwell_time_relative", data_for_analysis, groups=data_for_analysis["number"])
 mdf_8 = md_8.fit()
