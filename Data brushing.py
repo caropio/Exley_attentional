@@ -350,13 +350,15 @@ for i in range(len(data)):
 data['valuation'] = data['valuation']*100 # to get percentage
 data['interaction'] = data['charity'] * data['tradeoff'] 
 
-# Exclusion criterion
+# Exclusion criterion (starting from Option B in calibration task)
 
 exclusion_criterion = data_autre.loc[data_autre['exclusion_B_to_A'] == 1, 'id'] 
 
 data = data.drop(data[data['id'].isin(exclusion_criterion) == True].index)
 data = data.reset_index(drop=True)
 
+data_autre = data_autre.drop(data_autre[data_autre['id'].isin(exclusion_criterion) == True].index)
+data_autre = data_autre.reset_index(drop=True)
 
 # Save the concatenated dataset
 data_path = path + '/dataset.csv'

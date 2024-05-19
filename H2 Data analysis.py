@@ -15,6 +15,7 @@ import matplotlib.cm as cm
 import statsmodels.formula.api as smf
 import ast 
 
+threshold_EDRP = 4.2
 
 path = '/Users/carolinepioger/Desktop/ALL collection' # change to yours :)
 
@@ -148,7 +149,7 @@ ASPC = data_for_plot[(data_for_plot['charity'] == 1) & (data_for_plot['tradeoff'
 ACPS = data_for_plot[(data_for_plot['charity'] == 0) & (data_for_plot['tradeoff'] == 1)]
 
 
-# Difference data
+# Difference data for VALUATION
 self_lottery = pd.concat([ASPS, ACPS], ignore_index = True)
 charity_lottery = pd.concat([ACPC, ASPC], ignore_index=True)
 
@@ -199,7 +200,11 @@ fourth_case = data_for_plot[data_for_plot['case_order']==4]
 
 plt.bar(['first', 'second', 'third', 'fourth'], [first_case['dwell_time_relative'].mean(), second_case['dwell_time_relative'].mean(), 
                                                third_case['dwell_time_relative'].mean(), fourth_case['dwell_time_relative'].mean()], 
-        color = ['black', 'dimgray', 'darkgray', 'lightgrey']) 
+        color = ['dimgray', 'darkgray', 'silver', 'lightgrey']) 
+plt.errorbar(['first', 'second', 'third', 'fourth'], 
+             [first_case['dwell_time_relative'].mean(), second_case['dwell_time_relative'].mean(), third_case['dwell_time_relative'].mean(), fourth_case['dwell_time_relative'].mean()], 
+              [first_case['dwell_time_relative'].std(), second_case['dwell_time_relative'].std(), third_case['dwell_time_relative'].std(), fourth_case['dwell_time_relative'].std()], 
+              ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
 plt.xlabel('Case order')
 plt.ylabel('Mean dwell time in %')
 plt.title('Mean attention per cas order')
@@ -215,10 +220,11 @@ plt.savefig('Attention probability H2.png', dpi=1200)
 plt.show()
 
 
-# Get differences
+# Get differences for ATTENTION 
 
 self_lottery_attention = pd.concat([ASPS, ACPS], ignore_index = True)
 charity_lottery_attention = pd.concat([ACPC, ASPC], ignore_index=True)
+no_tradeoff_lottery_attention = pd.concat([ASPS, ACPC], ignore_index=True)
 
 self_lottery_differences_attention = pd.DataFrame(columns=['number', 'prob_option_A'])
 
@@ -242,6 +248,16 @@ for i in charity_lottery_attention['number'].unique():
     # individual_difference.columns = individual_difference.columns.droplevel(1)
     charity_lottery_differences_attention = pd.concat([charity_lottery_differences_attention, individual_difference[['number', 'prob_option_A', 'dwell_time_ASPC_ACPC']]], ignore_index=True)
 
+# no_tradeoff_lottery_differences_attention = pd.DataFrame(columns=['number', 'prob_option_A'])
+
+# for i in no_tradeoff_lottery_attention['number'].unique():
+#     individual = no_tradeoff_lottery_attention.loc[no_tradeoff_lottery_attention['number'] == i, ['case', 'prob_option_A', 'dwell_time_relative']] 
+#     individual_difference = individual.pivot(index='prob_option_A', columns='case', values='dwell_time_relative')
+#     individual_difference['dwell_time_ACPC_ASPS'] = individual_difference['ACPC'] - individual_difference['ASPS']
+#     individual_difference['number'] = i
+#     individual_difference.reset_index(inplace=True)
+#     # individual_difference.columns = individual_difference.columns.droplevel(1)
+#     no_tradeoff_lottery_differences_attention = pd.concat([no_tradeoff_lottery_differences_attention, individual_difference[['number', 'prob_option_A', 'dwell_time_ACPC_ASPS']]], ignore_index=True)
 
 
 # %%
@@ -260,13 +276,13 @@ for i in data_for_plot['number'].unique():
     self_diff = self_lottery_differences.loc[self_lottery_differences['number'] == i,['valuation_ACPS_ASPS']].mean() # mean across probabilities
     charity_diff = charity_lottery_differences.loc[charity_lottery_differences['number'] == i,['valuation_ASPC_ACPC']].mean() # mean across probabilities
 
-    if self_diff.item() > 5 :
+    if self_diff.item() > threshold_EDRP :
         EDRP_self.append(i)
-    elif self_diff.item() < - 5 :
+    elif self_diff.item() < - threshold_EDRP :
         altruistic_self.append(i)
-    if charity_diff.item() < - 5 :
+    if charity_diff.item() < - threshold_EDRP :
         EDRP_charity.append(i)
-    if charity_diff.item() > 5 :
+    if charity_diff.item() > threshold_EDRP :
         altruistic_charity.append(i)
     
 EDRP_total = np.intersect1d(EDRP_self, EDRP_charity)
@@ -316,12 +332,15 @@ ACPS_altruistic = data_altruistic[(data_altruistic['charity'] == 0) & (data_altr
 
 self_lottery_differences_attention_EDRP = self_lottery_differences_attention[self_lottery_differences_attention['number'].isin(EDRP_total)]
 charity_lottery_differences_attention_EDRP = charity_lottery_differences_attention[charity_lottery_differences_attention['number'].isin(EDRP_total)]
+# no_tradeoff_lottery_differences_attention_EDRP = no_tradeoff_lottery_differences_attention[no_tradeoff_lottery_differences_attention['number'].isin(EDRP_total)]
 
 self_lottery_differences_attention_no_EDRP = self_lottery_differences_attention[self_lottery_differences_attention['number'].isin(no_EDRP)]
 charity_lottery_differences_attention_no_EDRP = charity_lottery_differences_attention[charity_lottery_differences_attention['number'].isin(no_EDRP)]
+# no_tradeoff_lottery_differences_attention_no_EDRP = no_tradeoff_lottery_differences_attention[no_tradeoff_lottery_differences_attention['number'].isin(no_EDRP)]
 
 self_lottery_differences_attention_altruistic = self_lottery_differences_attention[self_lottery_differences_attention['number'].isin(altruistic_total)]
 charity_lottery_differences_attention_altruistic = charity_lottery_differences_attention[charity_lottery_differences_attention['number'].isin(altruistic_total)]
+# no_tradeoff_lottery_differences_attention_altruistic = no_tradeoff_lottery_differences_attention[no_tradeoff_lottery_differences_attention['number'].isin(altruistic_total)]
 
 
 # %%
@@ -338,6 +357,7 @@ ACPS_censored = data_censored[(data_censored['charity'] == 0) & (data_censored['
 # Difference data
 self_lottery_attention_censored = pd.concat([ASPS_censored, ACPS_censored], ignore_index = True)
 charity_lottery_attention_censored = pd.concat([ACPC_censored, ASPC_censored], ignore_index=True)
+no_tradeoff_lottery_attention_censored = pd.concat([ASPS_censored, ACPC_censored], ignore_index=True)
 
 self_lottery_differences_attention_censored = pd.DataFrame(columns=['number', 'prob_option_A'])
 
@@ -361,6 +381,16 @@ for i in charity_lottery_attention_censored['number'].unique():
     # individual_difference.columns = individual_difference.columns.droplevel(1)
     charity_lottery_differences_attention_censored = pd.concat([charity_lottery_differences_attention_censored, individual_difference[['number', 'prob_option_A', 'dwell_time_ASPC_ACPC']]], ignore_index=True)
 
+no_tradeoff_lottery_differences_attention_censored = pd.DataFrame(columns=['number', 'prob_option_A'])
+
+for i in no_tradeoff_lottery_attention_censored['number'].unique():
+    individual = no_tradeoff_lottery_attention_censored.loc[no_tradeoff_lottery_attention_censored['number'] == i, ['case', 'prob_option_A', 'dwell_time_relative']] 
+    individual_difference = individual.pivot(index='prob_option_A', columns='case', values='dwell_time_relative')
+    individual_difference['dwell_time_ACPC_ASPS'] = individual_difference['ACPC'] - individual_difference['ASPS']
+    individual_difference['number'] = i
+    individual_difference.reset_index(inplace=True)
+    # individual_difference.columns = individual_difference.columns.droplevel(1)
+    no_tradeoff_lottery_differences_attention_censored = pd.concat([no_tradeoff_lottery_differences_attention_censored, individual_difference[['number', 'prob_option_A', 'dwell_time_ACPC_ASPS']]], ignore_index=True)
 
 
 attention_per_proba_censored = data_censored.groupby('prob_option_A')['dwell_time_relative']
@@ -368,22 +398,29 @@ attention_per_proba_censored = data_censored.groupby('prob_option_A')['dwell_tim
 plt.bar(['0.05', '0.1', '0.25', '0.5', '0.75', '0.9', '0.95'], attention_per_proba_censored.mean(), 
         color = ['darkgoldenrod', 'goldenrod', 'gold', 'khaki', 'beige', 'papayawhip', 'peachpuff']) 
 plt.xlabel('Probability')
-plt.ylabel('Mean dwell time in %')
+plt.ylabel('Mean atention time in %')
 plt.title('Mean attention per probability for Censored')
 plt.savefig('Attention probability CENSORED H2.png', dpi=1200)
 plt.show()
 
 
-plt.bar(['Self ($A^{C}(P^{S})-A^{S}(P^{S})$)', 'Charity ($A^{S}(P^{C})-A^{C}(P^{C})$)'], 
-        [self_lottery_differences_attention_censored['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention_censored['dwell_time_ASPC_ACPC'].mean()], 
+plt.bar(['$A^{C}(P^{S})-A^{S}(P^{S})$', '$A^{S}(P^{C})-A^{C}(P^{C})$'], 
+        [self_lottery_differences_attention_censored['dwell_time_ACPS_ASPS'].mean(), 
+         charity_lottery_differences_attention_censored['dwell_time_ASPC_ACPC'].mean()], 
         color = ['lightskyblue', 'lightgreen']) 
-# plt.errorbar(['Self ($A^{C}(P^{S})-A^{S}(P^{S})$)', 'Charity ($A^{S}(P^{C})-A^{C}(P^{C})$)'], 
-#               [self_lottery_differences_attention['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention['dwell_time_ASPC_ACPC'].mean()], 
-#               [0.402, 0.599], ecolor = 'black', fmt='none', alpha=0.7)
+# plt.bar(['$A^{C}(P^{C})-A^{S}(P^{S}$)', '$A^{C}(P^{S})-A^{S}(P^{S})$', '$A^{S}(P^{C})-A^{C}(P^{C})$'], 
+#         [no_tradeoff_lottery_differences_attention_censored['dwell_time_ACPC_ASPS'].mean(), 
+#          self_lottery_differences_attention_censored['dwell_time_ACPS_ASPS'].mean(), 
+#          charity_lottery_differences_attention_censored['dwell_time_ASPC_ACPC'].mean()], 
+#         color = ['bisque', 'lightskyblue', 'lightgreen']) 
+plt.errorbar(['$A^{C}(P^{S})-A^{S}(P^{S})$', '$A^{S}(P^{C})-A^{C}(P^{C})$'], 
+              [self_lottery_differences_attention_censored['dwell_time_ACPS_ASPS'].mean(), 
+               charity_lottery_differences_attention_censored['dwell_time_ASPC_ACPC'].mean()], 
+              [0.611, 0.633], ecolor = 'black', fmt='none', alpha=0.7)
 plt.axhline(y=0, color='grey', linestyle='--')
 plt.xlabel('Lottery type')
-plt.ylabel('Difference in dwell time (trad - no trad) in %')
-plt.title('Difference in dwell time across probabilities for Censored')
+plt.ylabel('Difference in attention (trad - no trad) in %')
+plt.title('Difference in attention across probabilities for Censored')
 plt.savefig('Bar diff type Lottery CENSORED H2.png', dpi=1200)
 plt.show()
 
@@ -410,6 +447,18 @@ plt.ylabel('Mean attention in s')
 plt.title('Attention per case, across probabilities')
 plt.legend()
 plt.savefig('Bar all Lottery H2.png', dpi=1200)
+plt.show()
+
+# ACROSS CONDITIONS
+
+attention_per_proba_censored = data_censored.groupby('prob_option_A')['dwell_time_relative']
+
+plt.bar(['0.05', '0.1', '0.25', '0.5', '0.75', '0.9', '0.95'], attention_per_proba_censored.mean(), 
+        color = ['darkgoldenrod', 'goldenrod', 'gold', 'khaki', 'beige', 'papayawhip', 'peachpuff']) 
+plt.xlabel('Probability')
+plt.ylabel('Mean attention in %')
+plt.title('Mean attention per probability for Censored')
+plt.savefig('Attention probability CENSORED H2.png', dpi=1200)
 plt.show()
 
 # EDRP
@@ -439,22 +488,25 @@ plt.bar(['Self ($A^{C}(P^{S})-A^{S}(P^{S})$)', 'Charity ($A^{S}(P^{C})-A^{C}(P^{
         color = ['lightskyblue', 'lightgreen']) 
 plt.errorbar(['Self ($A^{C}(P^{S})-A^{S}(P^{S})$)', 'Charity ($A^{S}(P^{C})-A^{C}(P^{C})$)'], 
               [self_lottery_differences_attention['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention['dwell_time_ASPC_ACPC'].mean()], 
-              [0.402, 0.599], ecolor = 'black', fmt='none', alpha=0.7)
+              [0.322, 0.4015], ecolor = 'black', fmt='none', alpha=0.7)
 plt.axhline(y=0, color='grey', linestyle='--')
 plt.xlabel('Lottery type')
-plt.ylabel('Difference in dwell time (trad - no trad) in %')
-plt.title('Difference in dwell time across probabilities H2')
+plt.ylabel('Difference in attention (trad - no trad) in %')
+plt.title('Difference in attention across probabilities H2')
 plt.savefig('Bar diff type Lottery H2.png', dpi=1200)
 plt.show()
  
 # ERDP
 
-plt.bar(['Self ($A^{C}(P^{S})-A^{S}(P^{S})$)', 'Charity ($A^{S}(P^{C})-A^{C}(P^{C})$)'], 
+plt.bar(['$A^{C}(P^{S})-A^{S}(P^{S})$', '$A^{S}(P^{C})-A^{C}(P^{C})$'], 
         [self_lottery_differences_attention_EDRP['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention_EDRP['dwell_time_ASPC_ACPC'].mean()], 
         color = ['lightskyblue', 'lightgreen']) 
-plt.errorbar(['Self ($A^{C}(P^{S})-A^{S}(P^{S})$)', 'Charity ($A^{S}(P^{C})-A^{C}(P^{C})$)'], 
+# plt.bar(['$A^{C}(P^{C})-A^{S}(P^{S}$)', '$A^{C}(P^{S})-A^{S}(P^{S})$', '$A^{S}(P^{C})-A^{C}(P^{C})$'], 
+#         [no_tradeoff_lottery_differences_attention_EDRP['dwell_time_ACPC_ASPS'].mean(), self_lottery_differences_attention_EDRP['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention_EDRP['dwell_time_ASPC_ACPC'].mean()], 
+#         color = ['bisque', 'lightskyblue', 'lightgreen']) 
+plt.errorbar(['$A^{C}(P^{S})-A^{S}(P^{S})$', '$A^{S}(P^{C})-A^{C}(P^{C})$'], 
               [self_lottery_differences_attention_EDRP['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention_EDRP['dwell_time_ASPC_ACPC'].mean()], 
-              [0.582, 1.003], ecolor = 'black', fmt='none', alpha=0.7)
+              [0.565, 0.741], ecolor = 'black', fmt='none', alpha=0.7)
 # plt.errorbar(['Self ($Y^{C}(P^{S})-Y^{S}(P^{S})$)', 'Charity ($Y^{S}(P^{C})-Y^{C}(P^{C})$)'], 
 #               [self_lottery_differences_attention_EDRP['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention_EDRP['dwell_time_ASPC_ACPC'].mean()], 
 #               [np.std(self_lottery_differences_attention_EDRP['dwell_time_ACPS_ASPS']), np.std(charity_lottery_differences_attention_EDRP['dwell_time_ASPC_ACPC'])], ecolor = 'black', fmt='none', alpha=0.7)
@@ -472,7 +524,7 @@ plt.bar(['Self ($A^{C}(P^{S})-A^{S}(P^{S})$)', 'Charity ($A^{S}(P^{C})-A^{C}(P^{
         color = ['lightskyblue', 'lightgreen']) 
 plt.errorbar(['Self ($A^{C}(P^{S})-A^{S}(P^{S})$)', 'Charity ($A^{S}(P^{C})-A^{C}(P^{C})$)'], 
               [self_lottery_differences_attention_altruistic['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention_altruistic['dwell_time_ASPC_ACPC'].mean()], 
-              [0.952, 1.0125], ecolor = 'black', fmt='none', alpha=0.7)
+              [0.675, 0.786], ecolor = 'black', fmt='none', alpha=0.7)
 plt.axhline(y=0, color='grey', linestyle='--')
 plt.xlabel('Lottery type')
 plt.ylabel('Difference in attention (trad - no trad) in %')
@@ -496,7 +548,7 @@ plt.axhline(y=0, color='grey', linestyle='--')
 plt.xlabel('Lottery type')
 plt.ylabel('Difference in attention (trad - no trad) in %')
 plt.title('Difference in attention for NO EDRP subjects H2')
-plt.savefig('Bar diff type Lottery EO DRP H2.png', dpi=1200)
+plt.savefig('Bar diff type Lottery NO EDRP H2.png', dpi=1200)
 plt.show()
 
 
@@ -540,58 +592,82 @@ plt.ylabel('Mean Attention in %')
 plt.title('Mean Attention per probability')
 plt.grid(True)
 plt.legend()
+plt.savefig('Proba attention diff ALL H2.png', dpi=1200)
 plt.show()
-
 
 # ACROSS CONDITIONS
-plt.bar(all_attention.index, all_attention)
 
-plt.xlabel('Probability P of Non-Zero Payment')
-plt.ylabel('Mean Attention in %')
-plt.title('Mean Attention per probability across conditions')
-plt.grid(True)
+plt.bar(['0.05', '0.1', '0.25', '0.5', '0.75', '0.9', '0.95'], attention_per_proba.mean(), 
+        color = ['darkgoldenrod', 'goldenrod', 'gold', 'khaki', 'beige', 'papayawhip', 'peachpuff']) 
+plt.errorbar(['0.05', '0.1', '0.25', '0.5', '0.75', '0.9', '0.95'], attention_per_proba.mean(), 
+             attention_per_proba.std(), 
+             ecolor = 'black', fmt='none', alpha=0.5, label='std')
+plt.xlabel('Probability')
+plt.ylabel('Mean attention in %')
+plt.title('Mean attention per probability for all')
+plt.savefig('Attention probability H2.png', dpi=1200)
 plt.show()
 
+
+
 # EDRP  
-average_attention_ASPS_EDRP = ASPS_EDRP.groupby('prob_option_A')['dwell_time_relative'].mean()
-average_attention_ACPC_EDRP = ACPC_EDRP.groupby('prob_option_A')['dwell_time_relative'].mean()
-average_attention_ACPS_EDRP = ACPS_EDRP.groupby('prob_option_A')['dwell_time_relative'].mean()
-average_attention_ASPC_EDRP = ASPC_EDRP.groupby('prob_option_A')['dwell_time_relative'].mean()
+offset = 0.02
 
-all_attention_EDRP = pd.concat([average_attention_ASPS_EDRP, average_attention_ACPC_EDRP, average_attention_ACPS_EDRP, average_attention_ASPC_EDRP])
-all_attention_EDRP = all_attention_EDRP.groupby('prob_option_A').median()
+average_attention_ASPS_EDRP = ASPS_EDRP.groupby('prob_option_A')['dwell_time_relative']
+average_attention_ACPC_EDRP = ACPC_EDRP.groupby('prob_option_A')['dwell_time_relative']
+average_attention_ACPS_EDRP = ACPS_EDRP.groupby('prob_option_A')['dwell_time_relative']
+average_attention_ASPC_EDRP = ASPC_EDRP.groupby('prob_option_A')['dwell_time_relative']
 
-plt.plot(average_attention_ASPS_EDRP.index, average_attention_ASPS_EDRP, label='$A^{S}(P^{S})$', color='blue', marker='o', linestyle='-')
-plt.plot(average_attention_ACPS_EDRP.index, average_attention_ACPS_EDRP, label='$A^{C}(P^{S})$', color='dodgerblue', marker='o', linestyle='-')
-plt.plot(average_attention_ACPC_EDRP.index, average_attention_ACPC_EDRP, label='$A^{C}(P^{C})$', color='green', marker='o', linestyle='-')
-plt.plot(average_attention_ASPC_EDRP.index, average_attention_ASPC_EDRP, label='$A^{S}(P^{C})$', color='limegreen', marker='o', linestyle='-')
+# all_attention_EDRP = pd.concat([average_attention_ASPS_EDRP, average_attention_ACPC_EDRP, average_attention_ACPS_EDRP, average_attention_ASPC_EDRP])
+# all_attention_EDRP = all_attention_EDRP.groupby('prob_option_A').median()
+
+plt.errorbar(average_attention_ASPS_EDRP.mean().index - offset, average_attention_ASPS_EDRP.mean(), average_attention_ASPS_EDRP.std(), ecolor = 'black', fmt='none', alpha=0.5, label='std')
+plt.plot(average_attention_ASPS_EDRP.mean().index- offset, average_attention_ASPS_EDRP.mean(), label='$A^{S}(P^{S})$', color='blue', marker='o', linestyle='-')
+
+plt.errorbar(average_attention_ACPS_EDRP.mean().index - offset/2, average_attention_ACPS_EDRP.mean(), average_attention_ACPS_EDRP.std(), ecolor = 'black', fmt='none', alpha=0.5)
+plt.plot(average_attention_ACPS_EDRP.mean().index- offset/2, average_attention_ACPS_EDRP.mean(), label='$A^{C}(P^{S})$', color='dodgerblue', marker='o', linestyle='-')
+
+plt.errorbar(average_attention_ACPC_EDRP.mean().index + offset/2, average_attention_ACPC_EDRP.mean(), average_attention_ACPC_EDRP.std(), ecolor = 'black', fmt='none', alpha=0.5)
+plt.plot(average_attention_ACPC_EDRP.mean().index+ offset/2, average_attention_ACPC_EDRP.mean(), label='$A^{C}(P^{C})$', color='green', marker='o', linestyle='-')
+
+plt.errorbar(average_attention_ASPC_EDRP.mean().index + offset, average_attention_ASPC_EDRP.mean(), average_attention_ASPC_EDRP.std(), ecolor = 'black', fmt='none', alpha=0.5)
+plt.plot(average_attention_ASPC_EDRP.mean().index+ offset, average_attention_ASPC_EDRP.mean(), label='$A^{S}(P^{C})$', color='limegreen', marker='o', linestyle='-')
 
 plt.xlabel('Probability P of Non-Zero Payment')
 plt.ylabel('Mean Attention in %')
 plt.title('Mean Attention per probability EDRP')
 plt.grid(True)
 plt.legend()
+plt.savefig('Proba attention diff EDRP H2.png', dpi=1200)
 plt.show()
 
 # Censored  
-average_attention_ASPS_censored = ASPS_censored.groupby('prob_option_A')['dwell_time_relative'].mean()
-average_attention_ACPC_censored = ACPC_censored.groupby('prob_option_A')['dwell_time_relative'].mean()
-average_attention_ACPS_censored = ACPS_censored.groupby('prob_option_A')['dwell_time_relative'].mean()
-average_attention_ASPC_censored = ASPC_censored.groupby('prob_option_A')['dwell_time_relative'].mean()
+average_attention_ASPS_censored = ASPS_censored.groupby('prob_option_A')['dwell_time_relative']
+average_attention_ACPC_censored = ACPC_censored.groupby('prob_option_A')['dwell_time_relative']
+average_attention_ACPS_censored = ACPS_censored.groupby('prob_option_A')['dwell_time_relative']
+average_attention_ASPC_censored = ASPC_censored.groupby('prob_option_A')['dwell_time_relative']
 
-all_attention_censored = pd.concat([average_attention_ASPS_censored, average_attention_ACPC_censored, average_attention_ACPS_censored, average_attention_ASPC_censored])
-all_attention_censored = all_attention_censored.groupby('prob_option_A').median()
+# all_attention_censored = pd.concat([average_attention_ASPS_censored, average_attention_ACPC_censored, average_attention_ACPS_censored, average_attention_ASPC_censored])
+# all_attention_censored = all_attention_censored.groupby('prob_option_A').median()
 
-plt.plot(average_attention_ASPS_censored.index, average_attention_ASPS_censored, label='$A^{S}(P^{S})$', color='blue', marker='o', linestyle='-')
-plt.plot(average_attention_ACPS_censored.index, average_attention_ACPS_censored, label='$A^{C}(P^{S})$', color='dodgerblue', marker='o', linestyle='-')
-plt.plot(average_attention_ACPC_censored.index, average_attention_ACPC_censored, label='$A^{C}(P^{C})$', color='green', marker='o', linestyle='-')
-plt.plot(average_attention_ASPC_censored.index, average_attention_ASPC_censored, label='$A^{S}(P^{C})$', color='limegreen', marker='o', linestyle='-')
+plt.errorbar(average_attention_ASPS_censored.mean().index - offset, average_attention_ASPS_censored.mean(), average_attention_ASPS_censored.std(), ecolor = 'black', fmt='none', alpha=0.5, label='std')
+plt.plot(average_attention_ASPS_censored.mean().index- offset, average_attention_ASPS_censored.mean(), label='$A^{S}(P^{S})$', color='blue', marker='o', linestyle='-')
+
+plt.errorbar(average_attention_ACPS_censored.mean().index - offset/2, average_attention_ACPS_censored.mean(), average_attention_ACPS_censored.std(), ecolor = 'black', fmt='none', alpha=0.5)
+plt.plot(average_attention_ACPS_censored.mean().index- offset/2, average_attention_ACPS_censored.mean(), label='$A^{C}(P^{S})$', color='dodgerblue', marker='o', linestyle='-')
+
+plt.errorbar(average_attention_ACPC_censored.mean().index + offset/2, average_attention_ACPC_censored.mean(), average_attention_ACPC_censored.std(), ecolor = 'black', fmt='none', alpha=0.5)
+plt.plot(average_attention_ACPC_censored.mean().index+ offset/2, average_attention_ACPC_censored.mean(), label='$A^{C}(P^{C})$', color='green', marker='o', linestyle='-')
+
+plt.errorbar(average_attention_ASPC_censored.mean().index + offset, average_attention_ASPC_censored.mean(), average_attention_ASPC_censored.std(), ecolor = 'black', fmt='none', alpha=0.5)
+plt.plot(average_attention_ASPC_censored.mean().index+ offset, average_attention_ASPC_censored.mean(), label='$A^{S}(P^{C})$', color='limegreen', marker='o', linestyle='-')
 
 plt.xlabel('Probability P of Non-Zero Payment')
 plt.ylabel('Mean Attention in %')
 plt.title('Mean Attention per probability for Censored')
 plt.grid(True)
 plt.legend()
+plt.savefig('Proba attention diff Censored H2.png', dpi=1200)
 plt.show()
 
 
@@ -606,6 +682,79 @@ plt.show()
 # plt.savefig('Histo Valuation diff H1.png', dpi=1200)
 # plt.show()
 
+offset_2 = 0.02
+plt.axhline(y=0, color='grey', linestyle='--')
+
+diff_proba_self_attention_EDRP = self_lottery_differences_attention_EDRP.groupby('prob_option_A')['dwell_time_ACPS_ASPS']
+diff_proba_charity_attention_EDRP = charity_lottery_differences_attention_EDRP.groupby('prob_option_A')['dwell_time_ASPC_ACPC']
+# diff_proba_no_tradeoff_attention_EDRP = no_tradeoff_lottery_differences_attention_EDRP.groupby('prob_option_A')['dwell_time_ACPC_ASPS']
+
+# plt.errorbar(diff_proba_no_tradeoff.mean().index - offset_2/2, diff_proba_no_tradeoff.mean(), diff_proba_no_tradeoff.std(), ecolor = 'black', fmt='none', alpha=0.4)
+# plt.plot(diff_proba_no_tradeoff.mean().index - offset_2/2, diff_proba_no_tradeoff.mean(), label='$A^{C}(P^{C})-A^{S}(P^{S})$', color='bisque', marker='o', linestyle='-')
+
+plt.errorbar(diff_proba_self_attention_EDRP.mean().index, diff_proba_self_attention_EDRP.mean(), diff_proba_self_attention_EDRP.std(), ecolor = 'black', fmt='none', alpha=0.4, label='std')
+plt.plot(diff_proba_self_attention_EDRP.mean().index, diff_proba_self_attention_EDRP.mean(), label='$A^{C}(P^{S})-A^{S}(P^{S})$', color='dodgerblue', marker='o', linestyle='-')
+
+plt.errorbar(diff_proba_charity_attention_EDRP.mean().index + offset_2/2, diff_proba_charity_attention_EDRP.mean(), diff_proba_charity_attention_EDRP.std(), ecolor = 'black', fmt='none', alpha=0.4)
+plt.plot(diff_proba_charity_attention_EDRP.mean().index + offset_2/2, diff_proba_charity_attention_EDRP.mean(), label='$A^{S}(P^{C})-A^{C}(P^{C})$', color='limegreen', marker='o', linestyle='-')
+
+x_fit = np.linspace(0, 1, num = 10)
+y_fit = np.linspace(0, 100, num = 10)
+
+plt.xlabel('Probability P of Non-Zero Payment')
+plt.ylabel('Attention as % of Riskless Lottery')
+plt.title('Lottery attention difference across probabilities for EDRP')
+plt.legend()
+plt.savefig('Attention across proba Lottery difference EDRP H2.png', dpi=1200)
+plt.show()
+
+
+# Plot the difference of attention across proba 
+
+plt.bar(['$Y^{C}(P^{S})-Y^{S}(P^{S})$', '$Y^{S}(P^{C})-Y^{C}(P^{C})$'], 
+        [self_lottery_differences_attention['dwell_time_ACPS_ASPS'].mean(), charity_lottery_differences_attention['dwell_time_ASPC_ACPC'].mean()], 
+        color = ['lightskyblue', 'lightgreen']) 
+
+# plt.errorbar(['$Y^{C}(P^{C})-Y^{S}(P^{S}$)', '$Y^{C}(P^{S})-Y^{S}(P^{S})$', '$Y^{S}(P^{C})-Y^{C}(P^{C})$'], 
+#               [no_tradeoff_lottery_differences['valuation_ACPC_ASPS'].mean(), self_lottery_differences['valuation_ACPS_ASPS'].mean(), charity_lottery_differences['valuation_ASPC_ACPC'].mean()], 
+#               [0.957, 1.771, 2.383], ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
+plt.axhline(y=0, color='grey', linestyle='--')
+plt.xlabel('Lottery difference')
+plt.ylabel('Attention difference in %')
+plt.legend()
+plt.title('Attention differences across probabilities H2')
+plt.savefig('Attention diff Proba Lottery H2.png', dpi=1200)
+plt.show()
+
+
+
+# CENSORED
+
+offset_2 = 0.02
+plt.axhline(y=0, color='grey', linestyle='--')
+
+diff_proba_self_attention_censored = self_lottery_differences_attention_censored.groupby('prob_option_A')['dwell_time_ACPS_ASPS']
+diff_proba_charity_attention_censored = charity_lottery_differences_attention_censored.groupby('prob_option_A')['dwell_time_ASPC_ACPC']
+# diff_proba_no_tradeoff_attention_EDRP = no_tradeoff_lottery_differences_attention_EDRP.groupby('prob_option_A')['dwell_time_ACPC_ASPS']
+
+# plt.errorbar(diff_proba_no_tradeoff.mean().index - offset_2/2, diff_proba_no_tradeoff.mean(), diff_proba_no_tradeoff.std(), ecolor = 'black', fmt='none', alpha=0.4)
+# plt.plot(diff_proba_no_tradeoff.mean().index - offset_2/2, diff_proba_no_tradeoff.mean(), label='$A^{C}(P^{C})-A^{S}(P^{S})$', color='bisque', marker='o', linestyle='-')
+
+plt.errorbar(diff_proba_self_attention_censored.mean().index, diff_proba_self_attention_censored.mean(), diff_proba_self_attention_censored.std(), ecolor = 'black', fmt='none', alpha=0.4, label='std')
+plt.plot(diff_proba_self_attention_censored.mean().index, diff_proba_self_attention_censored.mean(), label='$A^{C}(P^{S})-A^{S}(P^{S})$', color='dodgerblue', marker='o', linestyle='-')
+
+plt.errorbar(diff_proba_charity_attention_censored.mean().index + offset_2/2, diff_proba_charity_attention_censored.mean(), diff_proba_charity_attention_censored.std(), ecolor = 'black', fmt='none', alpha=0.4)
+plt.plot(diff_proba_charity_attention_censored.mean().index + offset_2/2, diff_proba_charity_attention_censored.mean(), label='$A^{S}(P^{C})-A^{C}(P^{C})$', color='limegreen', marker='o', linestyle='-')
+
+x_fit = np.linspace(0, 1, num = 10)
+y_fit = np.linspace(0, 100, num = 10)
+
+plt.xlabel('Probability P of Non-Zero Payment')
+plt.ylabel('Attention as % of Riskless Lottery')
+plt.title('Lottery attention difference across probabilities for Censored')
+plt.legend()
+plt.savefig('Attention across proba Lottery difference CENSORED H2.png', dpi=1200)
+plt.show()
 
 
 # %%
