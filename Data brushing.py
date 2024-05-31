@@ -10,6 +10,7 @@ Created on Mon Mar  4 13:38:56 2024
 import pandas as pd
 import numpy as np
 import ast 
+from scipy.stats import ttest_ind
 
 # Info to find data
 path = '/Users/carolinepioger/Desktop/ALL collection' # change to yours :)
@@ -402,4 +403,36 @@ print('There is ' + str(round(100*len(survey_principal[survey_principal['Demog_S
 print('The mean highest education level is ' + 
       str(['A level', 'Bsci', 'Msci', 'Phd', 'RNS'][round(survey_principal['Demog_High_Ed_Lev'].mean())-1]))
 
+# Censored subjects
 
+data_autre_censored = data_autre.loc[data_autre['censored_calibration'] == 1] 
+survey_censored = pd.merge(data_autre_censored[['id']], survey, on='id', how='inner')
+
+print('Censored  SUBJECTS')
+print('The mean age is ' + str(survey_censored['Demog_AGE'].mean()))
+print('There is ' + str(round(100*len(survey_censored[survey_censored['Demog_Sex']==1])/(len(survey_censored[survey_censored['Demog_Sex']==1])+
+                                                             len(survey_censored[survey_censored['Demog_Sex']==2])), 1))
+                        + ' % of women')
+print('The mean highest education level is ' + 
+      str(['A level', 'Bsci', 'Msci', 'Phd', 'RNS'][round(survey_censored['Demog_High_Ed_Lev'].mean())-1]))
+
+
+print(survey_principal['Charity_LIKE'].mean())
+print(survey_principal['Charity_TRUST'].mean())
+print(survey_principal['Charity_LIKELY'].mean())
+print(survey_principal['Charity_DONATION_DONE'].mean())
+
+print(survey_censored['Charity_LIKE'].mean())
+print(survey_censored['Charity_TRUST'].mean())
+print(survey_censored['Charity_LIKELY'].mean())
+print(survey_censored['Charity_DONATION_DONE'].mean())
+
+
+t_statistic_like, p_value_like = ttest_ind(survey_principal['Charity_LIKE'], survey_censored['Charity_LIKE'])
+print(t_statistic_like, p_value_like)
+t_statistic_trust, p_value_trust = ttest_ind(survey_principal['Charity_TRUST'], survey_censored['Charity_TRUST'])
+print(t_statistic_trust, p_value_trust)
+t_statistic_likely, p_value_likely = ttest_ind(survey_principal['Charity_LIKELY'], survey_censored['Charity_LIKELY'])
+print(t_statistic_likely, p_value_likely)
+t_statistic_donation, p_value_donation = ttest_ind(survey_principal['Charity_DONATION_DONE'], survey_censored['Charity_DONATION_DONE'])
+print(t_statistic_donation, p_value_donation)

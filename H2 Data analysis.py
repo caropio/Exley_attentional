@@ -13,9 +13,10 @@ import statsmodels.api as sm
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import statsmodels.formula.api as smf
+from scipy.stats import ttest_ind
 import ast 
 
-threshold_EDRP = 4.2
+threshold_EDRP = 2.1
 
 path = '/Users/carolinepioger/Desktop/ALL collection' # change to yours :)
 
@@ -401,6 +402,11 @@ for i in no_tradeoff_lottery_attention_censored['number'].unique():
     # individual_difference.columns = individual_difference.columns.droplevel(1)
     no_tradeoff_lottery_differences_attention_censored = pd.concat([no_tradeoff_lottery_differences_attention_censored, individual_difference[['number', 'prob_option_A', 'dwell_time_ACPC_ASPS']]], ignore_index=True)
 
+# EDRP + CENSORED
+no_tradeoff_lottery_differences_attention_ALL = pd.concat([no_tradeoff_lottery_differences_attention_EDRP, no_tradeoff_lottery_differences_attention_censored], ignore_index=True)
+self_lottery_differences_attention_ALL = pd.concat([self_lottery_differences_attention_EDRP, self_lottery_differences_attention_censored], ignore_index=True)
+charity_lottery_differences_attention_ALL = pd.concat([charity_lottery_differences_attention_EDRP, charity_lottery_differences_attention_censored], ignore_index=True)
+
 
 attention_per_proba_censored = data_censored.groupby('prob_option_A')['dwell_time_relative']
 
@@ -427,6 +433,23 @@ plt.xlabel('Lottery type')
 plt.ylabel('Difference in attention (trad - no trad) in %')
 plt.title('Difference in attention across probabilities for Censored')
 plt.savefig('Bar diff type Lottery CENSORED H2.png', dpi=1200)
+plt.show()
+
+plt.bar(['$A^{C}(P^{C})-A^{S}(P^{S}$)', '$A^{C}(P^{S})-A^{S}(P^{S})$', '$A^{S}(P^{C})-A^{C}(P^{C})$'], 
+        [no_tradeoff_lottery_differences_attention_ALL['dwell_time_ACPC_ASPS'].mean(), 
+          self_lottery_differences_attention_ALL['dwell_time_ACPS_ASPS'].mean(), 
+          charity_lottery_differences_attention_ALL['dwell_time_ASPC_ACPC'].mean()], 
+        color = ['bisque', 'lightskyblue', 'lightgreen']) 
+plt.errorbar(['$A^{C}(P^{C})-A^{S}(P^{S}$)', '$A^{C}(P^{S})-A^{S}(P^{S})$', '$A^{S}(P^{C})-A^{C}(P^{C})$'], 
+              [no_tradeoff_lottery_differences_attention_ALL['dwell_time_ACPC_ASPS'].mean(), 
+               self_lottery_differences_attention_ALL['dwell_time_ACPS_ASPS'].mean(), 
+               charity_lottery_differences_attention_ALL['dwell_time_ASPC_ACPC'].mean()], 
+              [0.357, 0.419, 0.4795], ecolor = 'black', fmt='none', alpha=0.7)
+plt.axhline(y=0, color='grey', linestyle='--')
+plt.xlabel('Lottery type')
+plt.ylabel('Difference in attention (trad - no trad) in %')
+plt.title('Difference in attention across probabilities for EDRP and Censored')
+plt.savefig('Bar diff type Lottery EDRP + CENSORED H2.png', dpi=1200)
 plt.show()
 
 
@@ -529,6 +552,37 @@ plt.ylabel('Difference in attention (trad - no trad) in %')
 plt.title('Difference in attention for altruistic subjects H2')
 plt.legend()
 plt.savefig('Bar diff type Lottery Altruistic H2.png', dpi=1200)
+plt.show()
+
+# EDRP VS CENSORED
+lottery_types = ['$A^{C}(P^{C})-A^{S}(P^{S}$)', '$A^{C}(P^{S})-A^{S}(P^{S})$', '$A^{S}(P^{C})-A^{C}(P^{C})$']
+
+EDRP_means = [
+    no_tradeoff_lottery_differences_attention_EDRP['dwell_time_ACPC_ASPS'].mean(),
+    self_lottery_differences_attention_EDRP['dwell_time_ACPS_ASPS'].mean(),
+    charity_lottery_differences_attention_EDRP['dwell_time_ASPC_ACPC'].mean()
+]
+EDRP_errors = [0.513, 0.565, 0.7405]
+
+censored_means = [
+    no_tradeoff_lottery_differences_attention_censored['dwell_time_ACPC_ASPS'].mean(),
+    self_lottery_differences_attention_censored['dwell_time_ACPS_ASPS'].mean(),
+    charity_lottery_differences_attention_censored['dwell_time_ASPC_ACPC'].mean()
+]
+censored_errors = [0.507, 0.611, 0.633]
+
+x = np.arange(len(lottery_types))
+width = 0.35
+
+plt.bar(x - width/2, EDRP_means, width, yerr=EDRP_errors, capsize=5, label='Excuse-driven', color='lavender')
+plt.bar(x + width/2, censored_means, width, yerr=censored_errors, capsize=5, label='Censored', color='lightcoral')
+plt.xlabel('Lottery type')
+plt.ylabel('Difference in attention (trad - no trad) in %')
+plt.title('Difference in attention for EDRP and Censored subjects H2')
+plt.xticks(x, lottery_types)
+plt.axhline(y=0, color='grey', linestyle='--')
+plt.legend()
+plt.savefig('Merged Attention EDRP and Censored.png', dpi=1200)
 plt.show()
 
 
@@ -692,8 +746,8 @@ x_fit = np.linspace(0, 1, num = 10)
 y_fit = np.linspace(0, 100, num = 10)
 
 plt.xlabel('Probability P of Non-Zero Payment')
-plt.ylabel('Attention as % of Riskless Lottery')
-plt.title('Lottery attention difference across probabilities for all subjects')
+plt.ylabel('Difference in attention (trad - no trad) in %')
+plt.title('Attentional differences for principal analysis')
 plt.legend()
 plt.savefig('Attention across proba Lottery difference ALL H2.png', dpi=1200)
 plt.show()
@@ -719,8 +773,8 @@ x_fit = np.linspace(0, 1, num = 10)
 y_fit = np.linspace(0, 100, num = 10)
 
 plt.xlabel('Probability P of Non-Zero Payment')
-plt.ylabel('Attention as % of Riskless Lottery')
-plt.title('Lottery attention difference across probabilities for EDRP')
+plt.ylabel('Difference in attention (trad - no trad) in %')
+plt.title('Attentional differences for Excuse-driven subjects')
 plt.legend()
 plt.savefig('Attention across proba Lottery difference EDRP H2.png', dpi=1200)
 plt.show()
@@ -746,8 +800,8 @@ x_fit = np.linspace(0, 1, num = 10)
 y_fit = np.linspace(0, 100, num = 10)
 
 plt.xlabel('Probability P of Non-Zero Payment')
-plt.ylabel('Attention as % of Riskless Lottery')
-plt.title('Lottery attention difference across probabilities for Altruistic')
+plt.ylabel('Difference in attention (trad - no trad) in %')
+plt.title('Attentional differences for Altruistic subjects')
 plt.legend()
 plt.savefig('Attention across proba Lottery difference Altruistic H2.png', dpi=1200)
 plt.show()
@@ -775,11 +829,40 @@ x_fit = np.linspace(0, 1, num = 10)
 y_fit = np.linspace(0, 100, num = 10)
 
 plt.xlabel('Probability P of Non-Zero Payment')
-plt.ylabel('Attention as % of Riskless Lottery')
-plt.title('Lottery attention difference across probabilities for Censored')
+plt.ylabel('Difference in attention (trad - no trad) in %')
+plt.title('Attentional differences for Censored subjects')
 plt.legend()
 plt.savefig('Attention across proba Lottery difference CENSORED H2.png', dpi=1200)
 plt.show()
+
+# CENSORED + EDRP
+
+offset_2 = 0.02
+plt.axhline(y=0, color='grey', linestyle='--')
+
+diff_proba_self_attention_ALL = self_lottery_differences_attention_ALL.groupby('prob_option_A')['dwell_time_ACPS_ASPS']
+diff_proba_charity_attention_ALL = charity_lottery_differences_attention_ALL.groupby('prob_option_A')['dwell_time_ASPC_ACPC']
+diff_proba_no_tradeoff_attention_ALL = no_tradeoff_lottery_differences_attention_ALL.groupby('prob_option_A')['dwell_time_ACPC_ASPS']
+
+plt.errorbar(diff_proba_no_tradeoff_attention_ALL.mean().index - offset_2/2, diff_proba_no_tradeoff_attention_ALL.mean(), diff_proba_no_tradeoff_attention_ALL.std(), ecolor = 'black', fmt='none', alpha=0.4)
+plt.plot(diff_proba_no_tradeoff_attention_ALL.mean().index - offset_2/2, diff_proba_no_tradeoff_attention_ALL.mean(), label='$A^{C}(P^{C})-A^{S}(P^{S})$', color='bisque', marker='o', linestyle='-')
+
+plt.errorbar(diff_proba_self_attention_censored.mean().index, diff_proba_self_attention_ALL.mean(), diff_proba_self_attention_ALL.std(), ecolor = 'black', fmt='none', alpha=0.4, label='std')
+plt.plot(diff_proba_self_attention_censored.mean().index, diff_proba_self_attention_ALL.mean(), label='$A^{C}(P^{S})-A^{S}(P^{S})$', color='dodgerblue', marker='o', linestyle='-')
+
+plt.errorbar(diff_proba_charity_attention_ALL.mean().index + offset_2/2, diff_proba_charity_attention_ALL.mean(), diff_proba_charity_attention_ALL.std(), ecolor = 'black', fmt='none', alpha=0.4)
+plt.plot(diff_proba_charity_attention_ALL.mean().index + offset_2/2, diff_proba_charity_attention_ALL.mean(), label='$A^{S}(P^{C})-A^{C}(P^{C})$', color='limegreen', marker='o', linestyle='-')
+
+x_fit = np.linspace(0, 1, num = 10)
+y_fit = np.linspace(0, 100, num = 10)
+
+plt.xlabel('Probability P of Non-Zero Payment')
+plt.ylabel('Difference in attention (trad - no trad) in %')
+plt.title('Attentional differences for Excuse-driven and Censored subjects')
+plt.legend()
+plt.savefig('Attention across proba Lottery difference EDRP + CENSORED H2.png', dpi=1200)
+plt.show()
+
 
 
 # %%
@@ -793,17 +876,47 @@ data_for_analysis_altruistic = pd.concat([ASPS_altruistic, ACPC_altruistic, ASPC
 data_for_analysis_no_EDRP = pd.concat([ASPS_no_EDRP, ACPC_no_EDRP, ASPC_no_EDRP, ACPS_no_EDRP], ignore_index=True)
 
 data_for_analysis_censored = pd.concat([ASPS_censored, ACPC_censored, ASPC_censored, ACPS_censored], ignore_index=True)
+data_for_analysis_all_and_censored = pd.concat([ASPS, ACPC, ASPC, ACPS, ASPS_censored, ACPC_censored, ASPC_censored, ACPS_censored], ignore_index=True)
+data_for_analysis_EDRP_and_censored = pd.concat([ASPS_EDRP, ACPC_EDRP, ASPC_EDRP, ACPS_EDRP, ASPS_censored, ACPC_censored, ASPC_censored, ACPS_censored], ignore_index=True)
 
-### differences between EDRP and censored
+# data_for_analysis_EDRP['dwell_time_absolute'].mean()
+# data_for_analysis_censored['dwell_time_absolute'].mean()
 
-t_statistic_att_self, p_value_att_self = ttest_ind(self_lottery_differences_attention_EDRP['dwell_time_ACPS_ASPS'], self_lottery_differences_attention_censored['dwell_time_ACPS_ASPS'])
-print('t-test and p-value of Self difference between EDRP vs censored')
+### differences between all and censored
+
+t_statistic_att_self, p_value_att_self = ttest_ind(self_lottery_differences_attention['dwell_time_ACPS_ASPS'], self_lottery_differences_attention_censored['dwell_time_ACPS_ASPS'])
+print('t-test and p-value of Self difference between All vs censored')
 print(t_statistic_att_self, p_value_att_self)
 print()
 
-t_statistic_att_charity, p_value_att_charity = ttest_ind(charity_lottery_differences_attention_EDRP['dwell_time_ASPC_ACPC'], charity_lottery_differences_attention_censored['dwell_time_ASPC_ACPC'])
-print('t-test and p-value of Charity difference between EDRP vs censored')
+t_statistic_att_charity, p_value_att_charity = ttest_ind(charity_lottery_differences_attention['dwell_time_ASPC_ACPC'], charity_lottery_differences_attention_censored['dwell_time_ASPC_ACPC'])
+print('t-test and p-value of Charity difference between All vs censored')
 print(t_statistic_att_charity, p_value_att_charity)
+print()
+
+### differences between EDRP and censored
+
+t_statistic_att_self_2, p_value_att_self_2 = ttest_ind(self_lottery_differences_attention_EDRP['dwell_time_ACPS_ASPS'], self_lottery_differences_attention_censored['dwell_time_ACPS_ASPS'])
+print('t-test and p-value of Self difference between EDRP vs censored')
+print(t_statistic_att_self_2, p_value_att_self_2)
+print()
+
+t_statistic_att_charity_2, p_value_att_charity_2 = ttest_ind(charity_lottery_differences_attention_EDRP['dwell_time_ASPC_ACPC'], charity_lottery_differences_attention_censored['dwell_time_ASPC_ACPC'])
+print('t-test and p-value of Charity difference between EDRP vs censored')
+print(t_statistic_att_charity_2, p_value_att_charity_2)
+print()
+
+
+### differences between all and EDRP
+
+t_statistic_att_self_3, p_value_att_self_3 = ttest_ind(self_lottery_differences_attention['dwell_time_ACPS_ASPS'], self_lottery_differences_attention_EDRP['dwell_time_ACPS_ASPS'])
+print('t-test and p-value of Self difference between EDRP vs censored')
+print(t_statistic_att_self_3, p_value_att_self_3)
+print()
+
+t_statistic_att_charity_3, p_value_att_charity_3 = ttest_ind(charity_lottery_differences_attention['dwell_time_ASPC_ACPC'], charity_lottery_differences_attention_EDRP['dwell_time_ASPC_ACPC'])
+print('t-test and p-value of Charity difference between all vs EDRP')
+print(t_statistic_att_charity_3, p_value_att_charity_3)
 print()
 
 
@@ -929,6 +1042,54 @@ print(model_2_censored.summary())
 
 
 
+###########@
+# All and censored
+dummy_ind_all_and_censored = pd.get_dummies(data_for_analysis_all_and_censored['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
+dummy_prob_all_and_censored = pd.get_dummies(data_for_analysis_all_and_censored['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
+data_for_analysis_all_and_censored = pd.concat([data_for_analysis_all_and_censored, dummy_ind_all_and_censored, dummy_prob_all_and_censored], axis=1)
+
+# Add controls 
+data_for_analysis_all_and_censored = data_for_analysis_all_and_censored.merge(survey, on='id', how='left')
+control_variables_all_and_censored = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
+                 ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
+
+# Create the design matrix and dependent variable
+X_all_and_censored = data_for_analysis_all_and_censored[['charity', 'tradeoff', 'interaction', 'case_order'] + list(dummy_ind_all_and_censored.columns) + list(dummy_prob_all_and_censored.columns)]
+X_all_and_censored = pd.concat([X_all_and_censored, data_for_analysis_all_and_censored[control_variables_all_and_censored]], axis=1)
+X_all_and_censored = sm.add_constant(X_all_and_censored, has_constant='add') # add a first column full of ones to account for intercept of regression
+
+# Same process but now dwell_time as dependent variable
+y_2_all_and_censored = data_for_analysis_all_and_censored['dwell_time_relative']
+model_2_all_and_censored = sm.OLS(y_2_all_and_censored, X_all_and_censored).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis_all_and_censored['number']}) # cluster at individual level
+print(model_2_all_and_censored.summary())
+
+
+
+
+###########@
+# EDRP and censored
+dummy_ind_EDRP_and_censored = pd.get_dummies(data_for_analysis_EDRP_and_censored['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
+dummy_prob_EDRP_and_censored = pd.get_dummies(data_for_analysis_EDRP_and_censored['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
+data_for_analysis_EDRP_and_censored = pd.concat([data_for_analysis_EDRP_and_censored, dummy_ind_EDRP_and_censored, dummy_prob_EDRP_and_censored], axis=1)
+
+# Add controls 
+data_for_analysis_EDRP_and_censored = data_for_analysis_EDRP_and_censored.merge(survey, on='id', how='left')
+control_variables_EDRP_and_censored = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
+                 ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
+
+# Create the design matrix and dependent variable
+X_EDRP_and_censored = data_for_analysis_EDRP_and_censored[['charity', 'tradeoff', 'interaction', 'case_order'] + list(dummy_ind_EDRP_and_censored.columns) + list(dummy_prob_EDRP_and_censored.columns)]
+X_EDRP_and_censored = pd.concat([X_EDRP_and_censored, data_for_analysis_EDRP_and_censored[control_variables_EDRP_and_censored]], axis=1)
+X_EDRP_and_censored = sm.add_constant(X_EDRP_and_censored, has_constant='add') # add a first column full of ones to account for intercept of regression
+
+# Same process but now dwell_time as dependent variable
+y_2_EDRP_and_censored = data_for_analysis_EDRP_and_censored['dwell_time_relative']
+model_2_EDRP_and_censored = sm.OLS(y_2_EDRP_and_censored, X_EDRP_and_censored).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis_EDRP_and_censored['number']}) # cluster at individual level
+print(model_2_EDRP_and_censored.summary())
+
+
+
+# Mixed effects
 md_2 = smf.mixedlm("dwell_time_relative ~ charity + tradeoff + interaction", data_for_analysis, groups=data_for_analysis["number"])
 mdf_2 = md_2.fit()
 print(mdf_2.summary())
@@ -940,3 +1101,4 @@ print(mdf_3.summary())
 md_4 = smf.mixedlm("dwell_time_relative ~ prob_option_A", data_for_analysis, groups=data_for_analysis["number"])
 mdf_4 = md_4.fit()
 print(mdf_4.summary())
+

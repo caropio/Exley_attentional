@@ -12,9 +12,9 @@ import pandas as pd
 
 
 # Info to find data
-path = '/Users/carolinepioger/Desktop/Fourth collection (partial)' # change to yours :)
-# dates = ['2024-04-29','2024-04-30','2024-05-02', '2024-05-14']
-dates = ['2024-05-14']
+path = '/Users/carolinepioger/Desktop/ALL collection' # change to yours :)
+dates = ['2024-04-29','2024-04-30','2024-05-02', '2024-05-14', '2024-05-15']
+# dates = ['2024-05-15']
 
 assoc_sum = pd.concat([pd.read_csv(path + '/EXLEY_ASSO_' + date + '.csv') for date in dates], ignore_index=True)
 assoc_sum = assoc_sum.drop(assoc_sum[assoc_sum['participant._current_page_name'] != 'prolific'].index)
@@ -51,6 +51,17 @@ data_path = path + '/resultats_overview.csv'
 outcome_data.to_csv(data_path, index=False)
 
 data_path
+
+# Data analysis 
+
+print('Average bonus:')
+print(outcome_data['self reward'].mean())
+print()
+print('Average donations:')
+print(outcome_data['total charity'].mean())
+print()
+print('Charity choice:')
+print(outcome_data['charity choice'].value_counts())
 
 
 

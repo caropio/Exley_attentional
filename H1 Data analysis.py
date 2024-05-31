@@ -32,11 +32,44 @@ for i in range(len(data_autre)):
     elif isinstance(data_autre['censored_calibration'][i], str):
         data_autre['censored_calibration'][i] = ast.literal_eval(data_autre['censored_calibration'][i])
 
-# Notes analyses
+# # Notes analyses of criteria 
+# for i in range(len(data)):
+#     if isinstance(data['watching_urn_ms'][i], str):
+#         data['watching_urn_ms'][i] = ast.literal_eval(data['watching_urn_ms'][i])
+# for i in range(len(data_censored)):
+#     if isinstance(data_censored['watching_urn_ms'][i], str):
+#         data_censored['watching_urn_ms'][i] = ast.literal_eval(data_censored['watching_urn_ms'][i])
+
 # len(data[data['valuation']==100])/len(data['valuation']) # % censored valuations
 # len(data[(data['nb_switchpoint']!=1) & (data['nb_switchpoint']!=0)])/len(data['nb_switchpoint']) # % MSP valuations
 # sum(data['watching_urn_ms'].map(lambda arr: any(x <= 200 for x in arr)))/len(data['watching_urn_ms']) # % of dwell time with <=200 value
-
+# lol = data[data['watching_urn_ms'].apply(lambda arr: any(x <= 200 for x in arr))]['watching_urn_ms'].reset_index(drop=True)
+# less_200 = []
+# all_all = []
+# for i in range(len(lol)):
+#     for j in range(len(lol[i])):
+#         if lol[i][j] <= 200:
+#             less_200.append(lol[i][j])
+# np.sum(less_200)
+# for i in range(len(data['watching_urn_ms'])):
+#     for j in range(len(data['watching_urn_ms'][i])):
+#         all_all.append(data['watching_urn_ms'][i][j])
+# np.sum(less_200)/np.sum(all_all)
+# # len(data_censored[data_censored['valuation']==100])/len(data_censored['valuation']) # % censored valuations for censored
+# len(data_censored[(data_censored['nb_switchpoint']!=1) & (data_censored['nb_switchpoint']!=0)])/len(data_censored['nb_switchpoint']) # % MSP valuations for censored
+# sum(data_censored['watching_urn_ms'].map(lambda arr: any(x <= 200 for x in arr)))/len(data_censored['watching_urn_ms']) # % of dwell time with <=200 value for censored
+# lol_2 = data_censored[data_censored['watching_urn_ms'].apply(lambda arr: any(x <= 200 for x in arr))]['watching_urn_ms'].reset_index(drop=True)
+# less_200_cen = []
+# all_cen = []
+# for i in range(len(lol_2)):
+#     for j in range(len(lol_2[i])):
+#         if lol_2[i][j] <= 200:
+#             less_200_cen.append(lol_2[i][j])
+# np.sum(less_200_cen)
+# for i in range(len(data_censored['watching_urn_ms'])):
+#     for j in range(len(data_censored['watching_urn_ms'][i])):
+#         all_cen.append(data_censored['watching_urn_ms'][i][j])
+# np.sum(less_200_cen)/np.sum(all_cen)
 
 ########
 # data_autre['censored_calibration'].value_counts()
@@ -52,6 +85,7 @@ data_autre_censored = data_autre_censored.reset_index(drop=True)
 exclude_participants = data_autre.loc[data_autre['censored_calibration'] == 1, 'id'] 
 
 data_censored = data[data['id'].isin(exclude_participants) == True]
+data_censored = data_censored.reset_index(drop=True)
 
 data = data.drop(data[data['id'].isin(exclude_participants) == True].index)
 data = data.reset_index(drop=True)
@@ -199,7 +233,7 @@ data_no_EDRP = data_for_plot[data_for_plot['number'].isin(no_EDRP)]
 X_altruistic = data_autre_principal[data_autre_principal['number'].isin(altruistic_total)]
 data_altruistic = data_for_plot[data_for_plot['number'].isin(altruistic_total)]
 
-self_lottery_difference_EDRP = self_lottery_differences[self_lottery_differences['number'].isin(EDRP_total)]
+self_lottery_differences_EDRP = self_lottery_differences[self_lottery_differences['number'].isin(EDRP_total)]
 charity_lottery_differences_EDRP = charity_lottery_differences[charity_lottery_differences['number'].isin(EDRP_total)]
 
 
@@ -241,41 +275,56 @@ x_fit = np.linspace(0, 1, num = 10)
 y_fit = np.linspace(0, 100, num = 10)
 
 # Plot No Tradeoff Context (Replication Exley)
-
+plt.figure(figsize=(5, 5))
 plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
-plt.plot(valuation_ASPS.mean().index, valuation_ASPS.mean(), label='$Y^{S}(P^{S})$', color='blue', marker='o', linestyle='-')
-plt.plot(valuation_ACPC.mean().index, valuation_ACPC.mean(), label='$Y^{C}(P^{C})$', color='red', marker='o', linestyle='-')
+# Add the points (0, 0) and (1, 100) to replicate Exley's figures
+valuation_ASPS_mean = valuation_ASPS.mean() if isinstance(valuation_ASPS, pd.core.groupby.SeriesGroupBy) else valuation_ASPS
+valuation_ACPC_mean = valuation_ACPC.mean() if isinstance(valuation_ACPC, pd.core.groupby.SeriesGroupBy) else valuation_ACPC
+valuation_ASPS_Exley = pd.concat([valuation_ASPS_mean, pd.Series({0: 0, 1: 100})]).sort_index()
+valuation_ACPC_Exley = pd.concat([valuation_ACPC_mean, pd.Series({0: 0, 1: 100})]).sort_index()
+plt.plot(valuation_ASPS_Exley.index, valuation_ASPS_Exley, label='$Y^{S}(P^{S})$', color='blue', marker='o', linestyle='-')
+plt.plot(valuation_ACPC_Exley.index, valuation_ACPC_Exley, label='$Y^{C}(P^{C})$', color='red', marker='o', linestyle='-')
+
+# plt.plot(valuation_ASPS.mean().index, valuation_ASPS.mean(), label='$Y^{S}(P^{S})$', color='blue', marker='o', linestyle='-')
+# plt.plot(valuation_ACPC.mean().index, valuation_ACPC.mean(), label='$Y^{C}(P^{C})$', color='red', marker='o', linestyle='-')
 
 plt.xlabel('Probability P of Non-Zero Payment')
 plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('Results for No Tradeoff Context ')
+plt.title('Valuations for No Tradeoff Context ')
 plt.grid(True)
 plt.legend()
 plt.savefig('No Tradeoff H1.png', dpi=1200)
 plt.show()
 
 # Plot Tradeoff Context (Replication Exley)
-
+plt.figure(figsize=(5, 5))
 plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
-plt.plot(valuation_ACPS.mean().index, valuation_ACPS.mean(), label='$Y^{C}(P^{S})$', color='blue', marker='o', linestyle='-')
-plt.plot(valuation_ASPC.mean().index, valuation_ASPC.mean(), label='$Y^{S}(P^{C})$', color='red', marker='o', linestyle='-')
+# Add the points (0, 0) and (1, 100) to replicate Exley's figures
+valuation_ACPS_mean = valuation_ACPS.mean() if isinstance(valuation_ACPS, pd.core.groupby.SeriesGroupBy) else valuation_ACPS
+valuation_ASPC_mean = valuation_ASPC.mean() if isinstance(valuation_ASPC, pd.core.groupby.SeriesGroupBy) else valuation_ASPC
+valuation_ACPS_Exley = pd.concat([valuation_ACPS_mean, pd.Series({0: 0, 1: 100})]).sort_index()
+valuation_ASPC_Exley = pd.concat([valuation_ASPC_mean, pd.Series({0: 0, 1: 100})]).sort_index()
+plt.plot(valuation_ACPS_Exley.index, valuation_ACPS_Exley, label='$Y^{C}(P^{S})$', color='blue', marker='o', linestyle='-')
+plt.plot(valuation_ASPC_Exley.index, valuation_ASPC_Exley, label='$Y^{S}(P^{C})$', color='red', marker='o', linestyle='-')
 
+# plt.plot(valuation_ACPS.mean().index, valuation_ACPS.mean(), label='$Y^{C}(P^{S})$', color='blue', marker='o', linestyle='-')
+# plt.plot(valuation_ASPC.mean().index, valuation_ASPC.mean(), label='$Y^{S}(P^{C})$', color='red', marker='o', linestyle='-')
 
 x_fit = np.linspace(0, 1, num = 10)
 y_fit = np.linspace(0, 100, num = 10)
 
 plt.xlabel('Probability P of Non-Zero Payment')
 plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('Results for Tradeoff Context')
+plt.title('Valuations for Tradeoff Context')
 plt.grid(True)
 plt.legend()
 plt.savefig('Tradeoff H1.png', dpi=1200)
 plt.show()
 
 # Plot Self Lottery Valuation
-
+plt.figure(figsize=(5, 5))
 plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
 plt.plot(valuation_ASPS.mean().index, valuation_ASPS.mean(), label='$Y^{S}(P^{S})$', color='green', marker='o', linestyle='-')
@@ -286,14 +335,14 @@ y_fit = np.linspace(0, 100, num = 10)
 
 plt.xlabel('Probability P of Non-Zero Payment')
 plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('Results for Self Lottery Valuation')
+plt.title('Valuations for Self Lottery Valuation')
 plt.grid(True)
 plt.legend()
 plt.savefig('Self Lottery H1.png', dpi=1200)
 plt.show()
 
 # Plot Charity Lottery Valuation
-
+plt.figure(figsize=(5, 5))
 plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 
 plt.plot(valuation_ASPC.mean().index, valuation_ASPC.mean(), label='$Y^{S}(P^{C})$', color='green', marker='o', linestyle='-')
@@ -305,7 +354,7 @@ y_fit = np.linspace(0, 100, num = 10)
 
 plt.xlabel('Probability P of Non-Zero Payment')
 plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('Results for Charity Lottery Valuation')
+plt.title('Valuations for Charity Lottery Valuation')
 plt.grid(True)
 plt.legend()
 plt.savefig('Charity Lottery H1.png', dpi=1200)
@@ -365,8 +414,8 @@ x_fit = np.linspace(0, 1, num = 10)
 y_fit = np.linspace(0, 100, num = 10)
 
 plt.xlabel('Probability P of Non-Zero Payment')
-plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('Lottery Valuation difference for all probabilities')
+plt.ylabel('Difference in lottery valuation (trad - no trad)')
+plt.title('Valuation differences for principal analysis')
 plt.legend()
 plt.savefig('All Lottery difference H1.png', dpi=1200)
 plt.show()
@@ -416,7 +465,7 @@ plt.show()
 
 # Difference of valuations of EDRP
 
-plt.hist([self_lottery_difference_EDRP['valuation_ACPS_ASPS'], charity_lottery_differences_EDRP['valuation_ASPC_ACPC']], 
+plt.hist([self_lottery_differences_EDRP['valuation_ACPS_ASPS'], charity_lottery_differences_EDRP['valuation_ASPC_ACPC']], 
         bins = 20, color = ['lightskyblue', 'lightgreen'], label = ['Self lottery', 'Charity lottery']) 
 plt.xlabel('Difference in lottery valuation (trad - no trad)')
 plt.ylabel('Frequency')
@@ -546,8 +595,8 @@ x_fit = np.linspace(0, 1, num = 10)
 y_fit = np.linspace(0, 100, num = 10)
 
 plt.xlabel('Probability P of Non-Zero Payment')
-plt.ylabel('Valuation as % of Riskless Lottery')
-plt.title('Lottery Valuation difference for all probabilities for Censored subjects')
+plt.ylabel('Difference in lottery valuation (trad - no trad)')
+plt.title('Valuation differences for censored subjects')
 plt.legend()
 plt.savefig('All Lottery difference Censored H1.png', dpi=1200)
 plt.show()
@@ -568,6 +617,16 @@ print()
 t_statistic_charity, p_value_charity = ttest_ind(charity_lottery_differences['valuation_ASPC_ACPC'], charity_lottery_differences_censored['valuation_ASPC_ACPC'])
 print('t-test and p-value of Charity difference between All vs censored')
 print(t_statistic_charity, p_value_charity)
+print()
+
+t_statistic_self_EDRP_censored, p_value_self_EDRP_censored = ttest_ind(self_lottery_differences_EDRP['valuation_ACPS_ASPS'], self_lottery_differences_censored['valuation_ACPS_ASPS'])
+print('t-test and p-value of Self difference between EDRP vs censored')
+print(t_statistic_self_EDRP_censored, p_value_self_EDRP_censored)
+print()
+
+t_statistic_charity_EDRP_censored, p_value_charity_EDRP_censored = ttest_ind(charity_lottery_differences_EDRP['valuation_ASPC_ACPC'], charity_lottery_differences_censored['valuation_ASPC_ACPC'])
+print('t-test and p-value of Charity difference between EDRP vs censored')
+print(t_statistic_charity_EDRP_censored, p_value_charity_EDRP_censored)
 print()
 
 
@@ -595,6 +654,30 @@ plt.legend()
 plt.savefig('X values for everyone.png', dpi=1200)
 plt.show()
 
+# Replication figure Exley
+# hist, bins, _ = plt.hist(data_autre_principal['charity_calibration'], bins=16, color='black', density=True) 
+# hist_percentage = hist * 100
+# bar_width = np.diff(bins) * 0.8
+# bin_centers = bins[:-1] + np.diff(bins) * 0.1
+# plt.bar(bin_centers, hist_percentage, width=bar_width, edgecolor='black', align='center', color='black')
+# plt.xlabel('X values')
+# plt.ylabel('Percentage')
+# plt.title('Distribution of participant-specific X values (Exley replication)')
+# mean_val = data_autre_principal['charity_calibration'].mean()
+# median_val = data_autre_principal['charity_calibration'].median()
+# plt.text(0.27, 0.85, f'Mean = {mean_val:.1f}, Median = {median_val:.1f}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
+# plt.savefig('X values for everyone EXLEY.png', dpi=1200)
+# plt.show()
+
+plt.hist(data_autre_principal['charity_calibration'], bins=16, color = 'black') 
+plt.xlabel('X values')
+plt.ylabel('Percentage')
+plt.title('Distribution of participant-specific X values (Exley replication)')
+plt.axvline(x=data_autre_principal['charity_calibration'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data_autre_principal['charity_calibration'].mean(), 1)))
+plt.axvline(x=data_autre_principal['charity_calibration'].median(), color='gainsboro', linestyle='--', label = 'Median = '+ str(np.round(data_autre_principal['charity_calibration'].median(), 1)))
+plt.legend()
+plt.savefig('X values for everyone EXLEY.png', dpi=1200)
+plt.show()
 
 plt.hist(X_EDRP_total['charity_calibration'], bins=20, color = 'lightcoral') 
 plt.xlabel('X values')
@@ -698,6 +781,8 @@ data_for_analysis = pd.concat([ASPS, ACPC, ASPC, ACPS], ignore_index=True)
 data_for_analysis_EDRP = pd.concat([ASPS_EDRP, ACPC_EDRP, ASPC_EDRP, ACPS_EDRP], ignore_index=True)
 data_for_analysis_censored = pd.concat([ASPS_censored, ACPC_censored, ASPC_censored, ACPS_censored], ignore_index=True)
 
+data_for_analysis_all_and_censored = pd.concat([ASPS, ACPC, ASPC, ACPS, ASPS_censored, ACPC_censored, ASPC_censored, ACPS_censored], ignore_index=True)
+
 
 # Add fixed effects
 dummy_ind = pd.get_dummies(data_for_analysis['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
@@ -771,6 +856,27 @@ model_censored = sm.OLS(y_censored, X_censored).fit(cov_type='cluster', cov_kwds
 print(model_censored.summary())
 
 
+# All and censored
+dummy_ind_all_and_censored = pd.get_dummies(data_for_analysis_all_and_censored['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
+dummy_prob_all_and_censored = pd.get_dummies(data_for_analysis_all_and_censored['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
+data_for_analysis_all_and_censored = pd.concat([data_for_analysis_all_and_censored, dummy_ind_all_and_censored, dummy_prob_all_and_censored], axis=1)
+
+# Add controls 
+data_for_analysis_all_and_censored = data_for_analysis_all_and_censored.merge(survey, on='id', how='left')
+control_variables_all_and_censored = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
+                 ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
+
+# Create the design matrix and dependent variable
+X_all_and_censored = data_for_analysis_all_and_censored[['charity', 'tradeoff', 'interaction', 'case_order'] + list(dummy_ind.columns) + list(dummy_prob.columns)]
+X_all_and_censored = pd.concat([X_all_and_censored, data_for_analysis_all_and_censored[control_variables_all_and_censored]], axis=1)
+X_all_and_censored = sm.add_constant(X_all_and_censored, has_constant='add') # add a first column full of ones to account for intercept of regression
+
+# Same process but now dwell_time as dependent variable
+y_all_and_censored = data_for_analysis_all_and_censored['valuation']
+model_all_and_censored = sm.OLS(y_all_and_censored, X_all_and_censored).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis_all_and_censored['number']}) # cluster at individual level
+print(model_all_and_censored.summary())
+
+
 
 md_c = smf.mixedlm("valuation ~ charity + tradeoff + interaction", data_for_analysis_censored, groups=data_for_analysis_censored["number"])
 mdf_c = md_c.fit()
@@ -802,7 +908,9 @@ y_proba_no_tradeoff = no_tradeoff_diff_reg['valuation_ACPC_ASPS']
 model_proba_no_tradeoff = sm.OLS(y_proba_no_tradeoff, X_proba_no_tradeoff).fit(cov_type='cluster', cov_kwds={'groups': no_tradeoff_diff_reg['number']}) # cluster at individual level
 print(model_proba_no_tradeoff.summary())
 
-
+# md_ = smf.mixedlm("valuation_ACPC_ASPS ~ prob_option_A", no_tradeoff_lottery_differences, groups=no_tradeoff_lottery_differences["number"])
+# mdf_ = md_.fit()
+# print(mdf_.summary())
 
 # for self diff
 dummy_ind_proba_self = pd.get_dummies(self_lottery_differences['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
@@ -910,7 +1018,7 @@ print(model_proba_charity_censored.summary())
 
 # %%
 # =============================================================================
-# calibration bias
+# Simulation with sample size of Exley and Garcia
 # =============================================================================
 
 data_for_analysis = pd.concat([ASPS, ACPC, ASPC, ACPS], ignore_index=True)
