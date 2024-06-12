@@ -207,8 +207,8 @@ plt.errorbar(['first', 'second', 'third', 'fourth'],
               [first_case['dwell_time_relative'].std(), second_case['dwell_time_relative'].std(), third_case['dwell_time_relative'].std(), fourth_case['dwell_time_relative'].std()], 
               ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
 plt.xlabel('Case order')
-plt.ylabel('Mean dwell time in %')
-plt.title('Mean attention per cas order')
+plt.ylabel('Mean attention in %')
+plt.title('Mean attention per case order')
 plt.savefig('Attention case order H2.png', dpi=1200)
 plt.show()
 
@@ -574,15 +574,15 @@ censored_errors = [0.507, 0.611, 0.633]
 x = np.arange(len(lottery_types))
 width = 0.35
 
-plt.bar(x - width/2, EDRP_means, width, yerr=EDRP_errors, capsize=5, label='Excuse-driven', color='lavender')
+plt.bar(x - width/2, EDRP_means, width, yerr=EDRP_errors, capsize=5, label='Adapted', color='lavender')
 plt.bar(x + width/2, censored_means, width, yerr=censored_errors, capsize=5, label='Censored', color='lightcoral')
 plt.xlabel('Lottery type')
 plt.ylabel('Difference in attention (trad - no trad) in %')
-plt.title('Difference in attention for EDRP and Censored subjects H2')
+plt.title('Difference in attention for Adapted and Censored subjects H2')
 plt.xticks(x, lottery_types)
 plt.axhline(y=0, color='grey', linestyle='--')
 plt.legend()
-plt.savefig('Merged Attention EDRP and Censored.png', dpi=1200)
+plt.savefig('Merged Attention Adapted and Censored.png', dpi=1200)
 plt.show()
 
 
@@ -906,6 +906,10 @@ print('t-test and p-value of Charity difference between EDRP vs censored')
 print(t_statistic_att_charity_2, p_value_att_charity_2)
 print()
 
+t_statistic_att_notrade_2, p_value_att_notrade_2 = ttest_ind(no_tradeoff_lottery_differences_attention_EDRP.dropna()['dwell_time_ACPC_ASPS'], no_tradeoff_lottery_differences_attention_censored.dropna()['dwell_time_ACPC_ASPS'])
+print('t-test and p-value of No tradeoff difference between EDRP vs censored')
+print(t_statistic_att_notrade_2, p_value_att_notrade_2)
+print()
 
 ### differences between all and EDRP
 
