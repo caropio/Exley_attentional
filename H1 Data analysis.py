@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import statsmodels.formula.api as smf
 from scipy.stats import ttest_ind
+from matplotlib.patches import Patch
 import ast 
 
 threshold_EDRP = 4
@@ -266,6 +267,19 @@ print('The mean highest education level is ' +
       str(['A level', 'Bsci', 'Msci', 'Phd', 'RNS'][round(survey_altruistic['Demog_High_Ed_Lev'].mean())-1]))
 print()
 
+# Adapted and Censored subjects
+
+survey_censored = pd.merge(data_autre_censored[['id']], survey, on='id', how='inner')
+survey_adapted_censored = pd.concat([survey_EDRP, survey_censored], ignore_index = True)
+
+print('Adapted and Censored  SUBJECTS')
+print('The mean age is ' + str(survey_adapted_censored['Demog_AGE'].mean()))
+print('There is ' + str(round(100*len(survey_adapted_censored[survey_adapted_censored['Demog_Sex']==1])/(len(survey_adapted_censored[survey_adapted_censored['Demog_Sex']==1])+
+                                                             len(survey_adapted_censored[survey_adapted_censored['Demog_Sex']==2])), 1))
+                        + ' % of women')
+print('The mean highest education level is ' + 
+      str(['A level', 'Bsci', 'Msci', 'Phd', 'RNS'][round(survey_adapted_censored['Demog_High_Ed_Lev'].mean())-1]))
+
 
 # %%
 # =============================================================================
@@ -438,7 +452,7 @@ plt.show()
 
 
 # Plot the difference of valuation 
-
+# ALL 
 plt.bar(['$Y^{C}(P^{C})-Y^{S}(P^{S}$)', '$Y^{C}(P^{S})-Y^{S}(P^{S})$', '$Y^{S}(P^{C})-Y^{C}(P^{C})$'], 
         [no_tradeoff_lottery_differences['valuation_ACPC_ASPS'].mean(), self_lottery_differences['valuation_ACPS_ASPS'].mean(), charity_lottery_differences['valuation_ASPC_ACPC'].mean()], 
         color = ['bisque', 'lightskyblue', 'lightgreen']) 
@@ -452,6 +466,21 @@ plt.ylabel('Valuation difference in %')
 plt.legend()
 plt.title('Valuation differences across probabilities H1')
 plt.savefig('Bar diff type Lottery H1.png', dpi=1200)
+plt.show()
+
+# EDRP 
+plt.bar(['$Y^{C}(P^{C})-Y^{S}(P^{S}$)', '$Y^{C}(P^{S})-Y^{S}(P^{S})$', '$Y^{S}(P^{C})-Y^{C}(P^{C})$'], 
+        [no_tradeoff_lottery_differences_EDRP['valuation_ACPC_ASPS'].mean(), self_lottery_differences_EDRP['valuation_ACPS_ASPS'].mean(), charity_lottery_differences_EDRP['valuation_ASPC_ACPC'].mean()], 
+        color = ['bisque', 'lightskyblue', 'lightgreen']) 
+plt.errorbar(['$Y^{C}(P^{C})-Y^{S}(P^{S}$)', '$Y^{C}(P^{S})-Y^{S}(P^{S})$', '$Y^{S}(P^{C})-Y^{C}(P^{C})$'], 
+              [no_tradeoff_lottery_differences_EDRP['valuation_ACPC_ASPS'].mean(), self_lottery_differences_EDRP['valuation_ACPS_ASPS'].mean(), charity_lottery_differences_EDRP['valuation_ASPC_ACPC'].mean()], 
+              [1.433, 2.082, 2.636], ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
+plt.axhline(y=0, color='grey', linestyle='--')
+plt.xlabel('Lottery difference')
+plt.ylabel('Valuation difference in %')
+plt.legend()
+plt.title('Valuation differences for Adaptive across probabilities H1')
+plt.savefig('Bar diff type Lottery Adaptive H1.png', dpi=1200)
 plt.show()
 
 # Hist ALL difference of valuations
@@ -610,6 +639,14 @@ print()
 print('Difference of magnitude between self and charity valuation difference for censored:')
 print(t_statistic_diff_censored, p_value_diff_censored)
 
+
+# PRINCIPAL ANALYSIS VS CENSORED
+
+t_statistic_no_tradeoff, p_value_no_tradeoff = ttest_ind(no_tradeoff_lottery_differences['valuation_ACPC_ASPS'], no_tradeoff_lottery_differences_censored['valuation_ACPC_ASPS'])
+print('t-test and p-value of No tradeoff difference between All vs censored')
+print(t_statistic_no_tradeoff, p_value_no_tradeoff)
+print()
+
 t_statistic_self, p_value_self = ttest_ind(self_lottery_differences['valuation_ACPS_ASPS'], self_lottery_differences_censored['valuation_ACPS_ASPS'])
 print('t-test and p-value of Self difference between All vs censored')
 print(t_statistic_self, p_value_self)
@@ -618,6 +655,14 @@ print()
 t_statistic_charity, p_value_charity = ttest_ind(charity_lottery_differences['valuation_ASPC_ACPC'], charity_lottery_differences_censored['valuation_ASPC_ACPC'])
 print('t-test and p-value of Charity difference between All vs censored')
 print(t_statistic_charity, p_value_charity)
+print()
+
+
+# ADAPTIVE  VS CENSORED
+
+t_statistic_no_tradeoff_EDRP_censored, p_value_no_tradeoff_EDRP_censored = ttest_ind(no_tradeoff_lottery_differences_EDRP['valuation_ACPC_ASPS'], no_tradeoff_lottery_differences_censored['valuation_ACPC_ASPS'])
+print('t-test and p-value of No Tradeoff difference between EDRP vs censored')
+print(t_statistic_no_tradeoff_EDRP_censored, p_value_no_tradeoff_EDRP_censored)
 print()
 
 t_statistic_self_EDRP_censored, p_value_self_EDRP_censored = ttest_ind(self_lottery_differences_EDRP['valuation_ACPS_ASPS'], self_lottery_differences_censored['valuation_ACPS_ASPS'])
@@ -630,14 +675,18 @@ print('t-test and p-value of Charity difference between EDRP vs censored')
 print(t_statistic_charity_EDRP_censored, p_value_charity_EDRP_censored)
 print()
 
-t_statistic_no_tradeoff_EDRP_censored, p_value_no_tradeoff_EDRP_censored = ttest_ind(no_tradeoff_lottery_differences_EDRP['valuation_ACPC_ASPS'], no_tradeoff_lottery_differences_censored['valuation_ACPC_ASPS'])
-print('t-test and p-value of No Tradeoff difference between EDRP vs censored')
-print(t_statistic_no_tradeoff_EDRP_censored, p_value_no_tradeoff_EDRP_censored)
-print()
 
 
 
 lottery_types = ['$Y^{C}(P^{C})-Y^{S}(P^{S}$)', '$Y^{C}(P^{S})-Y^{S}(P^{S})$', '$Y^{S}(P^{C})-Y^{C}(P^{C})$']
+
+
+all_means = [
+    no_tradeoff_lottery_differences['valuation_ACPC_ASPS'].mean(),
+    self_lottery_differences['valuation_ACPS_ASPS'].mean(),
+    charity_lottery_differences['valuation_ASPC_ACPC'].mean()
+]
+all_errors = [0.825, 1.456, 1.991]
 
 EDRP_means = [
     no_tradeoff_lottery_differences_EDRP['valuation_ACPC_ASPS'].mean(),
@@ -656,15 +705,35 @@ censored_errors = [0.507, 0.611, 0.633]
 x = np.arange(len(lottery_types))
 width = 0.35
 
-plt.bar(x - width/2, EDRP_means, width, yerr=EDRP_errors, capsize=5, label='Adapted', color='lavender')
-plt.bar(x + width/2, censored_means, width, yerr=censored_errors, capsize=5, label='Censored', color='lightcoral')
+
+plt.bar(x - width/2, all_means, width, yerr=all_errors, capsize=5, color=['bisque', 'lightskyblue', 'lightgreen'], label='Principal analysis')
+plt.bar(x + width/2, censored_means, width, yerr=censored_errors, capsize=5, color=['bisque', 'lightskyblue', 'lightgreen'], hatch="//", label='Censored')
 plt.xlabel('Lottery type')
 plt.ylabel('Difference in valuation (trad - no trad) in %')
-plt.title('Difference in valuation for Adapted and Censored subjects H1')
+plt.title('Difference in valuation for Principal analysis and Censored subjects H1')
 plt.xticks(x, lottery_types)
 plt.axhline(y=0, color='grey', linestyle='--')
-plt.legend()
-plt.savefig('Merged Valuation Adapted and Censored.png', dpi=1200)
+proxy_artists = [
+    Patch(facecolor='white', edgecolor='black', label='Principal analysis'),
+    Patch(facecolor='white', edgecolor='black', hatch="//", label='Censored')
+]
+plt.legend(handles=proxy_artists)
+plt.savefig('Merged Valuation ALL and Censored.png', dpi=1200)
+plt.show()
+
+plt.bar(x - width/2, EDRP_means, width, yerr=EDRP_errors, capsize=5, color=['bisque', 'lightskyblue', 'lightgreen'], label='Adaptive')
+plt.bar(x + width/2, censored_means, width, yerr=censored_errors, capsize=5, color=['bisque', 'lightskyblue', 'lightgreen'], hatch="//", label='Censored')
+plt.xlabel('Lottery type')
+plt.ylabel('Difference in valuation (trad - no trad) in %')
+plt.title('Difference in valuation for Adaptive and Censored subjects H1')
+plt.xticks(x, lottery_types)
+plt.axhline(y=0, color='grey', linestyle='--')
+proxy_artists = [
+    Patch(facecolor='white', edgecolor='black', label='Adaptive'),
+    Patch(facecolor='white', edgecolor='black', hatch="//", label='Censored')
+]
+plt.legend(handles=proxy_artists)
+plt.savefig('Merged Valuation Adaptive and Censored.png', dpi=1200)
 plt.show()
 
 

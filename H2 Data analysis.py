@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import statsmodels.formula.api as smf
 from scipy.stats import ttest_ind
+from matplotlib.patches import Patch
 import ast 
 
 threshold_EDRP = 2.1
@@ -444,8 +445,9 @@ plt.errorbar(['$A^{C}(P^{C})-A^{S}(P^{S}$)', '$A^{C}(P^{S})-A^{S}(P^{S})$', '$A^
               [no_tradeoff_lottery_differences_attention_ALL['dwell_time_ACPC_ASPS'].mean(), 
                self_lottery_differences_attention_ALL['dwell_time_ACPS_ASPS'].mean(), 
                charity_lottery_differences_attention_ALL['dwell_time_ASPC_ACPC'].mean()], 
-              [0.357, 0.419, 0.4795], ecolor = 'black', fmt='none', alpha=0.7)
+              [0.340, 0.407, 0.461], ecolor = 'black', fmt='none', alpha=0.7)
 plt.axhline(y=0, color='grey', linestyle='--')
+plt.ylim(-2.75, 0.5)
 plt.xlabel('Lottery type')
 plt.ylabel('Difference in attention (trad - no trad) in %')
 plt.title('Difference in attention across probabilities for EDRP and Censored')
@@ -574,14 +576,19 @@ censored_errors = [0.507, 0.611, 0.633]
 x = np.arange(len(lottery_types))
 width = 0.35
 
-plt.bar(x - width/2, EDRP_means, width, yerr=EDRP_errors, capsize=5, label='Adapted', color='lavender')
-plt.bar(x + width/2, censored_means, width, yerr=censored_errors, capsize=5, label='Censored', color='lightcoral')
+plt.bar(x - width/2, EDRP_means, width, yerr=EDRP_errors, capsize=5, color=['bisque', 'lightskyblue', 'lightgreen'], label='Adaptive')
+plt.bar(x + width/2, censored_means, width, yerr=censored_errors, capsize=5, color=['bisque', 'lightskyblue', 'lightgreen'], hatch="//", label='Censored')
 plt.xlabel('Lottery type')
 plt.ylabel('Difference in attention (trad - no trad) in %')
-plt.title('Difference in attention for Adapted and Censored subjects H2')
+plt.title('Difference in attention for Adaptive and Censored subjects H2')
 plt.xticks(x, lottery_types)
 plt.axhline(y=0, color='grey', linestyle='--')
-plt.legend()
+proxy_artists = [
+    Patch(facecolor='white', edgecolor='black', label='Adaptive'),
+    Patch(facecolor='white', edgecolor='black', hatch="//", label='Censored')
+]
+plt.ylim(-5, 1.25)
+plt.legend(handles=proxy_artists)
 plt.savefig('Merged Attention Adapted and Censored.png', dpi=1200)
 plt.show()
 
@@ -896,6 +903,11 @@ print()
 
 ### differences between EDRP and censored
 
+t_statistic_att_notrade_2, p_value_att_notrade_2 = ttest_ind(no_tradeoff_lottery_differences_attention_EDRP.dropna()['dwell_time_ACPC_ASPS'], no_tradeoff_lottery_differences_attention_censored.dropna()['dwell_time_ACPC_ASPS'])
+print('t-test and p-value of No tradeoff difference between EDRP vs censored')
+print(t_statistic_att_notrade_2, p_value_att_notrade_2)
+print()
+
 t_statistic_att_self_2, p_value_att_self_2 = ttest_ind(self_lottery_differences_attention_EDRP['dwell_time_ACPS_ASPS'], self_lottery_differences_attention_censored['dwell_time_ACPS_ASPS'])
 print('t-test and p-value of Self difference between EDRP vs censored')
 print(t_statistic_att_self_2, p_value_att_self_2)
@@ -906,10 +918,6 @@ print('t-test and p-value of Charity difference between EDRP vs censored')
 print(t_statistic_att_charity_2, p_value_att_charity_2)
 print()
 
-t_statistic_att_notrade_2, p_value_att_notrade_2 = ttest_ind(no_tradeoff_lottery_differences_attention_EDRP.dropna()['dwell_time_ACPC_ASPS'], no_tradeoff_lottery_differences_attention_censored.dropna()['dwell_time_ACPC_ASPS'])
-print('t-test and p-value of No tradeoff difference between EDRP vs censored')
-print(t_statistic_att_notrade_2, p_value_att_notrade_2)
-print()
 
 ### differences between all and EDRP
 
