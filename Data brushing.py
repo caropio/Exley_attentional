@@ -250,6 +250,10 @@ for i in range(len(data_autre)):
     elif len(data_autre['switchpoint_calib'][i]) > 1:
         data_autre['censored_calibration'][i] = 'MSP'  
 
+# note that participants called "censored" are those who don't chose option B 
+# in the calibration price list (regardless of the buffer one) thus individuals
+# with data_autre['censored_calibration'] = 1 
+
 # For buffer price list
 for i in range(len(data_autre)):
     if data_autre['switchpoint_buffer'][i] == []:
@@ -317,6 +321,8 @@ column_order.insert(column_order.index('switchpoint') + 1, column_order.pop(colu
 data = data[column_order] # get the switching points after the column of switchinpoints
 
 # Get the instances of Mutliple Switching Points (MSP) in valuation price lists 
+# meaning, for each participant, the number of valuation price lists in which 
+# they have multiple switching points (regardless of the number of MSP per price list)
 switchpoint_counts_filtered = data[data['nb_switchpoint'] >= 2] # only count for MSP
 MSP_counts = switchpoint_counts_filtered.groupby('id')['nb_switchpoint'].count().reset_index() # instances of MSP for each participant across all 28 price lists
 data_autre = data_autre.merge(MSP_counts, how='left', on='id')
@@ -463,14 +469,17 @@ survey = survey.reset_index(drop=True)
 # Save data as "dataset.csv"
 data_path = path + '/dataset.csv'
 data.to_csv(data_path, index=False)
+# this file pools all the data of interest for the analysis (apart from survey info)
 
 # Save data_autre as "criterion info data.csv"
 data_path_2 = path + '/criterion info data.csv'
 data_autre.to_csv(data_path_2, index=False)
+# this file combines all participant specific information 
 
 # Save survey as "survey data.csv"
 data_path_3 = path + '/survey data.csv'
 survey.to_csv(data_path_3, index=False)
+# this file gathers all of the survey information (used for controls in regressions)
 
 # The CSV files are saved in the folder from which the raw data is taken from 
 
@@ -488,6 +497,9 @@ survey.to_csv(data_path_3, index=False)
 # We find the mean age, percentage of women and mean highest education level 
 
 # For all subjects (not including ones that were excluded with above criterion)
+print()
+print()
+
 print('ALL SUBJECTS')
 print('The mean age is ' + str(survey['Demog_AGE'].mean()))
 print('There is ' + 
@@ -502,7 +514,12 @@ print()
 
 # For principal analysis (not including subjects having MSP and being censored in calibration price list)
 
+data_principal = data.loc[data['censored_calibration'] == 0]
+data_principal = data_principal.reset_index(drop=True)
+ 
 data_autre_principal = data_autre.loc[data_autre['censored_calibration'] == 0] 
+data_autre_principal = data_autre_principal.reset_index(drop=True)
+
 survey_principal = pd.merge(data_autre_principal[['id']], survey, on='id', how='inner')
 
 print('Principal analyses SUBJECTS')
@@ -517,7 +534,12 @@ print()
 
 # For censored subjects specifically (only subjects being censored in calibration price list)
 
+data_censored = data.loc[data['censored_calibration'] == 0]
+data_censored = data_censored.reset_index(drop=True)
+                                            
 data_autre_censored = data_autre.loc[data_autre['censored_calibration'] == 1] 
+data_autre_censored = data_autre_censored.reset_index(drop=True)
+
 survey_censored = pd.merge(data_autre_censored[['id']], survey, on='id', how='inner')
 
 print('Censored  SUBJECTS')
@@ -537,34 +559,118 @@ print()
 
 # For principal analysis (not including subjects having MSP and being censored in calibration price list)
 print('Principal analyses SUBJECTS')
-print('Charity like: ' + survey_principal['Charity_LIKE'].mean())
-print('Charity trust: ' + survey_principal['Charity_TRUST'].mean())
-print('Charity likelihood to donate: ' + survey_principal['Charity_LIKELY'].mean())
-print('Charity actual donation: ' + survey_principal['Charity_DONATION_DONE'].mean())
+print('Charity like: ' + str(survey_principal['Charity_LIKE'].mean()))
+print('Charity trust: ' + str(survey_principal['Charity_TRUST'].mean()))
+print('Charity likelihood to donate: ' + str(survey_principal['Charity_LIKELY'].mean()))
+print('Charity actual donation: ' + str(survey_principal['Charity_DONATION_DONE'].mean()))
 print()
 
 # For censored subjects specifically (only subjects being censored in calibration price list)
 print('Censored  SUBJECTS')
-print('Charity like: ' + survey_censored['Charity_LIKE'].mean())
-print('Charity trust: ' + survey_censored['Charity_TRUST'].mean())
-print('Charity likelihood to donate: ' + survey_censored['Charity_LIKELY'].mean())
-print('Charity actual donation: ' + survey_censored['Charity_DONATION_DONE'].mean())
+print('Charity like: ' + str(survey_censored['Charity_LIKE'].mean()))
+print('Charity trust: ' + str(survey_censored['Charity_TRUST'].mean()))
+print('Charity likelihood to donate: ' + str(survey_censored['Charity_LIKELY'].mean()))
+print('Charity actual donation: ' + str(survey_censored['Charity_DONATION_DONE'].mean()))
 print()
 
 # Compare results from principal analysis and censored subjects 
 print('T-test between principal analysis and censored subjects: ')
+
 t_statistic_like, p_value_like = ttest_ind(survey_principal['Charity_LIKE'], survey_censored['Charity_LIKE'])
-print('Charity like: ' + t_statistic_like, p_value_like)
+print('Charity like: t-test ' + str(t_statistic_like) + ' and p ' + str(p_value_like))
 print()
 
 t_statistic_trust, p_value_trust = ttest_ind(survey_principal['Charity_TRUST'], survey_censored['Charity_TRUST'])
-print('Charity trust: ' + t_statistic_trust, p_value_trust)
+print('Charity trust: t-test ' + str(t_statistic_trust) + ' and p ' + str(p_value_trust))
 print()
 
 t_statistic_likely, p_value_likely = ttest_ind(survey_principal['Charity_LIKELY'], survey_censored['Charity_LIKELY'])
-print('Charity likelihood to donate: ' + t_statistic_likely, p_value_likely)
+print('Charity likelihood to donate: t-test ' + str(t_statistic_likely) + ' and p ' + str(p_value_likely))
 print()
 
 t_statistic_donation, p_value_donation = ttest_ind(survey_principal['Charity_DONATION_DONE'], survey_censored['Charity_DONATION_DONE'])
-print('Charity actual donation: ' + t_statistic_donation, p_value_donation)
+print('Charity actual donation: t-test ' + str(t_statistic_donation) + ' and p ' + str(p_value_donation))
 print()
+
+
+
+# %%
+# =============================================================================
+# INFORMATION OF CRITERIA AND DATA TRANSFORMATION
+# =============================================================================
+
+# We extract information regarding the different criteria and data transformation (pre-registered)
+
+print()
+print('Information of criteria and data transformation:')
+print()
+print('For ALL DATA')
+print('The percentage of censored valuations over all data : ' 
+      + str(len(data[data['valuation']==100])*100/len(data['valuation']))) 
+
+print()
+print('The percentage of valuations with MSP over all data : ' 
+      + str(len(data[(data['nb_switchpoint']!=1) & (data['nb_switchpoint']!=0)])*100/len(data['nb_switchpoint'])))
+
+print()
+print('The percentage of occurence of attention time inferior or equal to 200ms over all data : ' 
+      + str(sum(data['watching_urn_ms'].map(lambda arr: any(x <= 200 for x in arr)))/len(data['watching_urn_ms'])*100))
+
+# Finding total attention time inferior or equal to 200ms
+
+attention_less_200 = data[data['watching_urn_ms'].apply(lambda arr: any(x <= 200 for x in arr))]['watching_urn_ms'].reset_index(drop=True)
+less_200 = []
+all_all = []
+for i in range(len(attention_less_200)):
+    for j in range(len(attention_less_200[i])):
+        if attention_less_200[i][j] <= 200:
+            less_200.append(attention_less_200[i][j]) # put all times inferior to 200ms in same array
+for i in range(len(data['watching_urn_ms'])):
+    for j in range(len(data['watching_urn_ms'][i])):
+        all_all.append(data['watching_urn_ms'][i][j]) # put all times in same array
+        
+print()
+print('The total attention time inferior or equal to 200ms over all data is : ' 
+      + str(np.sum(less_200)) + ' ms')
+print()
+print('The percentage of attention time inferior or equal to 200ms over all data is : ' 
+      + str(np.sum(less_200)/np.sum(all_all)*100))
+
+
+
+
+# We do exactly the same thing for censored subjects data
+print()
+print('For CENSORED DATA')
+print('The percentage of censored valuations for censored participants data: '
+      + str(len(data_censored[data_censored['valuation']==100])*100/len(data_censored['valuation']))) 
+
+print()
+print('The percentage of valuations with MSP for censored participants data: '
+      + str(len(data_censored[(data_censored['nb_switchpoint']!=1) & (data_censored['nb_switchpoint']!=0)])*100/len(data_censored['nb_switchpoint']))) 
+
+print()
+print('The percentage of occurence of attention time inferior or equal to 200ms  for censored participants data: '
+      + str(sum(data_censored['watching_urn_ms'].map(lambda arr: any(x <= 200 for x in arr)))/len(data_censored['watching_urn_ms'])*100)) 
+
+
+attention_less_200_cen = data_censored[data_censored['watching_urn_ms'].apply(lambda arr: any(x <= 200 for x in arr))]['watching_urn_ms'].reset_index(drop=True)
+less_200_cen = []
+all_cen = []
+for i in range(len(attention_less_200_cen)):
+    for j in range(len(attention_less_200_cen[i])):
+        if attention_less_200_cen[i][j] <= 200:
+            less_200_cen.append(attention_less_200_cen[i][j])
+
+for i in range(len(data_censored['watching_urn_ms'])):
+    for j in range(len(data_censored['watching_urn_ms'][i])):
+        all_cen.append(data_censored['watching_urn_ms'][i][j])
+
+print()
+print('The total attention time inferior or equal to 200ms over censored subjects data is : ' 
+      + str(np.sum(less_200_cen)) + ' ms')
+print()
+print('The percentage of attention time inferior or equal to 200ms over censored subjects data is : ' 
+      + str(np.sum(less_200_cen)/np.sum(all_cen)*100))
+
+
