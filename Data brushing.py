@@ -416,6 +416,14 @@ column_order_4 = list(data_autre.columns)
 column_order_4.insert(column_order_4.index('id') + 1, column_order_4.pop(column_order_4.index('number')))
 data_autre = data_autre[column_order_4] # add number column after id 
 
+# Add this number information in survey as well 
+survey = survey.merge(data[['id', 'number']], how='left', on='id')
+survey= survey.drop_duplicates(subset=['id'])
+
+column_order_5 = list(survey.columns)
+column_order_5.insert(column_order_5.index('id') + 1, column_order_5.pop(column_order_5.index('number')))
+survey = survey[column_order_5] # add number column after id 
+
 ################################################
 # Get Dummy Variables for Regression model 
 ################################################

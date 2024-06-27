@@ -434,6 +434,11 @@ print()
 
 # We plot the different ditribution of participant-specific X values 
 
+samplesize_principal = len(data_autre_principal) # sample size of Principal Analysis
+samplesize_adaptive = len(data_autre_EDRP) # sample size of Adaptive subjects
+samplesize_altruistic = len(data_autre_altruistic) # sample size of Altruistic subjects
+samplesize_censored = len(data_autre_censored) # sample size of Censored subjects
+
 # Distribution for all subjects
 plt.hist(data_autre['charity_calibration'], bins=20, color = 'lightcoral') 
 plt.axvline(x=data_autre['charity_calibration'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data_autre['charity_calibration'].mean(), 1)))
@@ -452,7 +457,6 @@ plt.ylabel('Frequency')
 plt.title('Distribution of participant-specific X values (Principal Analysis)')
 plt.axvline(x=data_autre_principal['charity_calibration'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data_autre_principal['charity_calibration'].mean(), 1)))
 plt.axvline(x=data_autre_principal['charity_calibration'].median(), color='gainsboro', linestyle='--', label = 'Median = '+ str(np.round(data_autre_principal['charity_calibration'].median(), 1)))
-samplesize_principal = len(data_autre_principal)
 plt.text(0.15, 0.9, f'n = {samplesize_principal:.1f}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
 plt.legend()
 plt.savefig('X values distribution Principal analysis.png', dpi=1200)
@@ -480,7 +484,6 @@ plt.ylabel('Frequency')
 plt.title('Distribution of X values of Adaptive subjects')
 plt.axvline(x=X_EDRP_total['charity_calibration'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(X_EDRP_total['charity_calibration'].mean(), 1)))
 plt.axvline(x=X_EDRP_total['charity_calibration'].median(), color='gainsboro', linestyle='--', label = 'Median = '+ str(np.round(X_EDRP_total['charity_calibration'].median(), 1)))
-samplesize_adaptive = len(data_autre_EDRP)
 plt.text(0.15, 0.9, f'n = {samplesize_adaptive:.1f}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
 plt.legend()
 plt.savefig('X values distribution ADAPTIVE.png', dpi=1200)
@@ -493,7 +496,6 @@ plt.ylabel('Frequency')
 plt.title('Distribution of X values of Altruistic subjects')
 plt.axvline(x=X_altruistic['charity_calibration'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(X_altruistic['charity_calibration'].mean(), 1)))
 plt.axvline(x=X_altruistic['charity_calibration'].median(), color='gainsboro', linestyle='--', label = 'Median = '+ str(np.round(X_altruistic['charity_calibration'].median(), 1)))
-samplesize_altruistic = len(data_autre_altruistic)
 plt.text(0.85, 0.9, f'n = {samplesize_altruistic:.1f}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
 plt.legend()
 plt.savefig('X values distribution for ALTRUISTIC.png', dpi=1200)
@@ -537,6 +539,8 @@ print()
 # Valuation
 ################################################
 
+lottery_types = ['$Y^{S}(P^{S})$', '$Y^{C}(P^{S})$', '$Y^{C}(P^{C})$', '$Y^{S}(P^{C})$']
+
 # Scales of X- and Y- axis for valuation plots
 x_fit = np.linspace(0, 1, num = 10)
 y_fit = np.linspace(0, 100, num = 10)
@@ -544,8 +548,8 @@ y_fit = np.linspace(0, 100, num = 10)
 # Plot Valuations in the No Tradeoff Context (Principal Analysis)
 plt.figure(figsize=(5, 5))
 plt.plot(x_fit, y_fit, color='grey', label='Expected value')
-plt.plot(valuation_ASPS.mean().index, valuation_ASPS.mean(), label='$Y^{S}(P^{S})$', color='blue', marker='o', linestyle='-')
-plt.plot(valuation_ACPC.mean().index, valuation_ACPC.mean(), label='$Y^{C}(P^{C})$', color='red', marker='o', linestyle='-')
+plt.plot(valuation_ASPS.mean().index, valuation_ASPS.mean(), label=lottery_types[0], color='blue', marker='o', linestyle='-')
+plt.plot(valuation_ACPC.mean().index, valuation_ACPC.mean(), label=lottery_types[2], color='red', marker='o', linestyle='-')
 plt.xlabel('Probability P of Non-Zero Amount')
 plt.ylabel('Valuation (in %)')
 plt.title('Valuations for No Tradeoff Context ')
@@ -562,8 +566,8 @@ valuation_ASPS_mean = valuation_ASPS.mean() if isinstance(valuation_ASPS, pd.cor
 valuation_ACPC_mean = valuation_ACPC.mean() if isinstance(valuation_ACPC, pd.core.groupby.SeriesGroupBy) else valuation_ACPC
 valuation_ASPS_Exley = pd.concat([valuation_ASPS_mean, pd.Series({0: 0, 1: 100})]).sort_index()
 valuation_ACPC_Exley = pd.concat([valuation_ACPC_mean, pd.Series({0: 0, 1: 100})]).sort_index()
-plt.plot(valuation_ASPS_Exley.index, valuation_ASPS_Exley, label='$Y^{S}(P^{S})$', color='blue', marker='o', linestyle='-')
-plt.plot(valuation_ACPC_Exley.index, valuation_ACPC_Exley, label='$Y^{C}(P^{C})$', color='red', marker='o', linestyle='-')
+plt.plot(valuation_ASPS_Exley.index, valuation_ASPS_Exley, label=lottery_types[0], color='blue', marker='o', linestyle='-')
+plt.plot(valuation_ACPC_Exley.index, valuation_ACPC_Exley, label=lottery_types[2], color='red', marker='o', linestyle='-')
 plt.xlabel('Probability P of Non-Zero Payment')
 plt.ylabel('Valuation as % of Riskless Lottery')
 plt.title('Valuations of No Tradeoff Context ')
@@ -575,8 +579,8 @@ plt.show()
 # Plot Valuations in the Tradeoff Context (Principal Analysis)
 plt.figure(figsize=(5, 5))
 plt.plot(x_fit, y_fit, color='grey', label='Expected value')
-plt.plot(valuation_ACPS.mean().index, valuation_ACPS.mean(), label='$Y^{C}(P^{S})$', color='blue', marker='o', linestyle='-')
-plt.plot(valuation_ASPC.mean().index, valuation_ASPC.mean(), label='$Y^{S}(P^{C})$', color='red', marker='o', linestyle='-')
+plt.plot(valuation_ACPS.mean().index, valuation_ACPS.mean(), label=lottery_types[1], color='blue', marker='o', linestyle='-')
+plt.plot(valuation_ASPC.mean().index, valuation_ASPC.mean(), label=lottery_types[3], color='red', marker='o', linestyle='-')
 plt.xlabel('Probability P of Non-Zero Amount')
 plt.ylabel('Valuation (in %)')
 plt.title('Valuations for Tradeoff Context')
@@ -593,8 +597,8 @@ valuation_ACPS_mean = valuation_ACPS.mean() if isinstance(valuation_ACPS, pd.cor
 valuation_ASPC_mean = valuation_ASPC.mean() if isinstance(valuation_ASPC, pd.core.groupby.SeriesGroupBy) else valuation_ASPC
 valuation_ACPS_Exley = pd.concat([valuation_ACPS_mean, pd.Series({0: 0, 1: 100})]).sort_index()
 valuation_ASPC_Exley = pd.concat([valuation_ASPC_mean, pd.Series({0: 0, 1: 100})]).sort_index()
-plt.plot(valuation_ACPS_Exley.index, valuation_ACPS_Exley, label='$Y^{C}(P^{S})$', color='blue', marker='o', linestyle='-')
-plt.plot(valuation_ASPC_Exley.index, valuation_ASPC_Exley, label='$Y^{S}(P^{C})$', color='red', marker='o', linestyle='-')
+plt.plot(valuation_ACPS_Exley.index, valuation_ACPS_Exley, label=lottery_types[1], color='blue', marker='o', linestyle='-')
+plt.plot(valuation_ASPC_Exley.index, valuation_ASPC_Exley, label=lottery_types[3], color='red', marker='o', linestyle='-')
 plt.xlabel('Probability P of Non-Zero Payment')
 plt.ylabel('Valuation as % of Riskless Lottery')
 plt.title('Valuations for Tradeoff Context')
@@ -606,8 +610,8 @@ plt.show()
 # Plot Valuations of the Self Lottery (Principal Analysis)
 plt.figure(figsize=(5, 5))
 plt.plot(x_fit, y_fit, color='grey', label='Expected value')
-plt.plot(valuation_ASPS.mean().index, valuation_ASPS.mean(), label='$Y^{S}(P^{S})$', color='green', marker='o', linestyle='-')
-plt.plot(valuation_ACPS.mean().index, valuation_ACPS.mean(), label='$Y^{C}(P^{S})$', color='orange', marker='o', linestyle='-')
+plt.plot(valuation_ASPS.mean().index, valuation_ASPS.mean(), label=lottery_types[0], color='green', marker='o', linestyle='-')
+plt.plot(valuation_ACPS.mean().index, valuation_ACPS.mean(), label=lottery_types[1], color='orange', marker='o', linestyle='-')
 plt.xlabel('Probability P of Non-Zero Amount')
 plt.ylabel('Valuation (in %)')
 plt.title('Valuations for Self Lottery')
@@ -619,8 +623,8 @@ plt.show()
 # Plot Valuation of the Charity Lottery (Principal Analysis)
 plt.figure(figsize=(5, 5))
 plt.plot(x_fit, y_fit, color='grey', label='Expected value')
-plt.plot(valuation_ASPC.mean().index, valuation_ASPC.mean(), label='$Y^{S}(P^{C})$', color='green', marker='o', linestyle='-')
-plt.plot(valuation_ACPC.mean().index, valuation_ACPC.mean(), label='$Y^{C}(P^{C})$', color='orange', marker='o', linestyle='-')
+plt.plot(valuation_ASPC.mean().index, valuation_ASPC.mean(), label=lottery_types[3], color='green', marker='o', linestyle='-')
+plt.plot(valuation_ACPC.mean().index, valuation_ACPC.mean(), label=lottery_types[2], color='orange', marker='o', linestyle='-')
 plt.xlabel('Probability P of Non-Zero Amount')
 plt.ylabel('Valuation (in %)')
 plt.title('Valuations for Charity Lottery')
@@ -633,13 +637,13 @@ plt.show()
 offset = 0.015
 plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 plt.errorbar(valuation_ASPS.mean().index - offset, valuation_ASPS.mean(), valuation_ASPS.std(), ecolor = 'black', fmt='none', alpha=0.5, label='std')
-plt.plot(valuation_ASPS.mean().index - offset, valuation_ASPS.mean(), label='$Y^{S}(P^{S})$', color='blue', marker='o', linestyle='-')
+plt.plot(valuation_ASPS.mean().index - offset, valuation_ASPS.mean(), label=lottery_types[0], color='blue', marker='o', linestyle='-')
 plt.errorbar(valuation_ACPS.mean().index - offset/2, valuation_ACPS.mean(), valuation_ACPS.std(), ecolor = 'black', fmt='none', alpha=0.5)
-plt.plot(valuation_ACPS.mean().index - offset/2, valuation_ACPS.mean(), label='$Y^{C}(P^{S})$', color='dodgerblue', marker='o', linestyle='-')
+plt.plot(valuation_ACPS.mean().index - offset/2, valuation_ACPS.mean(), label=lottery_types[1], color='dodgerblue', marker='o', linestyle='-')
 plt.errorbar(valuation_ACPC.mean().index + offset/2, valuation_ACPC.mean(), valuation_ACPC.std(), ecolor = 'black', fmt='none', alpha=0.5)
-plt.plot(valuation_ACPC.mean().index + offset/2, valuation_ACPC.mean(), label='$Y^{C}(P^{C})$', color='green', marker='o', linestyle='-')
+plt.plot(valuation_ACPC.mean().index + offset/2, valuation_ACPC.mean(), label=lottery_types[2], color='green', marker='o', linestyle='-')
 plt.errorbar(valuation_ASPC.mean().index + offset, valuation_ASPC.mean(), valuation_ASPC.std(), ecolor = 'black', fmt='none', alpha=0.5)
-plt.plot(valuation_ASPC.mean().index + offset, valuation_ASPC.mean(), label='$Y^{S}(P^{C})$', color='limegreen', marker='o', linestyle='-')
+plt.plot(valuation_ASPC.mean().index + offset, valuation_ASPC.mean(), label=lottery_types[3], color='limegreen', marker='o', linestyle='-')
 plt.xlabel('Probability P of Non-Zero Amount')
 plt.ylabel('Valuation (in %)')
 plt.title('4 Lottery Valuation for all probabilities')
@@ -651,8 +655,8 @@ plt.show()
 # Plot 4 Valuations with probabilities combined (Principal Analysis)
 error_valuation = [np.std(ASPS['valuation']), np.std(ACPS['valuation']), 
                   np.std(ACPC['valuation']), np.std(ASPC['valuation'])]
-plt.bar(['$Y^{S}(P^{S})$', '$Y^{C}(P^{S})$', '$Y^{C}(P^{C})$', '$Y^{S}(P^{C})$'], mean_valuations, color = ['blue', 'dodgerblue', 'green', 'limegreen']) 
-plt.errorbar(['$Y^{S}(P^{S})$', '$Y^{C}(P^{S})$', '$Y^{C}(P^{C})$', '$Y^{S}(P^{C})$'], mean_valuations, error_valuation, ecolor = 'black', fmt='none', alpha=0.7, label='std')
+plt.bar(lottery_types, mean_valuations, color = ['blue', 'dodgerblue', 'green', 'limegreen']) 
+plt.errorbar(lottery_types, mean_valuations, error_valuation, ecolor = 'black', fmt='none', alpha=0.7, label='std')
 plt.xlabel('Case')
 plt.ylabel('Valuation (in %)')
 plt.title('4 Lottery Valuation with probabilities combined')
@@ -668,8 +672,25 @@ plt.show()
 # Now we are interested in valuation DIFFERENCES, namely YCPC-YSPS, YCPS-YSPS and YSPC-YCPC
 # To verify for H1, we check for null, positive and negative differences respectively
 
-lottery_types = ['$Y^{C}(P^{C})-Y^{S}(P^{S}$)', '$Y^{C}(P^{S})-Y^{S}(P^{S})$', '$Y^{S}(P^{C})-Y^{C}(P^{C})$']
-x = np.arange(len(lottery_types))
+lottery_types_difference = ['$Y^{C}(P^{C})-Y^{S}(P^{S})$', '$Y^{C}(P^{S})-Y^{S}(P^{S})$', '$Y^{S}(P^{C})-Y^{C}(P^{C})$']
+x = np.arange(len(lottery_types_difference))
+
+# 3 valuation differences and standard errors at ind level for Principal Analysis, Adaptive and Censored subjects
+principal_means = [no_tradeoff_lottery_differences['valuation_ACPC_ASPS'].mean(), # for Principal Analysis
+                   self_lottery_differences['valuation_ACPS_ASPS'].mean(),
+                   charity_lottery_differences['valuation_ASPC_ACPC'].mean()]
+principal_errors = [0.825, 1.456, 1.991] # for Principal Analysis               # CHANGER 
+
+EDRP_means = [no_tradeoff_lottery_differences_EDRP['valuation_ACPC_ASPS'].mean(), # for Adaptive subjects
+              self_lottery_differences_EDRP['valuation_ACPS_ASPS'].mean(),
+              charity_lottery_differences_EDRP['valuation_ASPC_ACPC'].mean()]
+EDRP_errors = [0.513, 0.565, 0.7405] # for Adaptive subjects                    # CHANGER 
+
+censored_means = [no_tradeoff_lottery_differences_censored['valuation_ACPC_ASPS'].mean(), # for Censored subjects
+                  self_lottery_differences_censored['valuation_ACPS_ASPS'].mean(),
+                  charity_lottery_differences_censored['valuation_ASPC_ACPC'].mean()]
+censored_errors = [0.507, 0.611, 0.633] # for Censored subjects                 # CHANGER 
+
 
 # Plot 3 Valuation differences for all probabilities (Principal Analysis)
 offset_2 = 0.02
@@ -678,507 +699,284 @@ diff_proba_no_tradeoff = no_tradeoff_lottery_differences.groupby('prob_option_A'
 diff_proba_self = self_lottery_differences.groupby('prob_option_A')['valuation_ACPS_ASPS']
 diff_proba_charity = charity_lottery_differences.groupby('prob_option_A')['valuation_ASPC_ACPC']
 plt.errorbar(diff_proba_no_tradeoff.mean().index - offset_2/2, diff_proba_no_tradeoff.mean(), diff_proba_no_tradeoff.std(), ecolor = 'black', fmt='none', alpha=0.4, label='std')
-plt.plot(diff_proba_no_tradeoff.mean().index - offset_2/2, diff_proba_no_tradeoff.mean(), label='$Y^{C}(P^{C})-Y^{S}(P^{S})$', color='bisque', marker='o', linestyle='-')
+plt.plot(diff_proba_no_tradeoff.mean().index - offset_2/2, diff_proba_no_tradeoff.mean(), label=lottery_types_difference[0], color='bisque', marker='o', linestyle='-')
 plt.errorbar(diff_proba_self.mean().index, diff_proba_self.mean(), diff_proba_self.std(), ecolor = 'black', fmt='none', alpha=0.4)
-plt.plot(diff_proba_self.mean().index, diff_proba_self.mean(), label='$Y^{C}(P^{S})-Y^{S}(P^{S})$', color='dodgerblue', marker='o', linestyle='-')
+plt.plot(diff_proba_self.mean().index, diff_proba_self.mean(), label=lottery_types_difference[1], color='dodgerblue', marker='o', linestyle='-')
 plt.errorbar(diff_proba_charity.mean().index + offset_2/2, diff_proba_charity.mean(), diff_proba_charity.std(), ecolor = 'black', fmt='none', alpha=0.4)
-plt.plot(diff_proba_charity.mean().index + offset_2/2, diff_proba_charity.mean(), label='$Y^{S}(P^{C})-Y^{C}(P^{C})$', color='limegreen', marker='o', linestyle='-')
+plt.plot(diff_proba_charity.mean().index + offset_2/2, diff_proba_charity.mean(), label=lottery_types_difference[2], color='limegreen', marker='o', linestyle='-')
 plt.xlabel('Probability P of Non-Zero Amount')
 plt.ylabel('Valuation difference in %')
 plt.title('Valuation differences for Principal Analysis')
 plt.legend()
-plt.savefig('All Lottery difference plot H1.png', dpi=1200)
+plt.savefig('All Lottery difference plot Principal H1.png', dpi=1200)
 plt.show()
 
+# Plot 3 Valuation differences for all probabilities (Censored subjects)
+plt.axhline(y=0, color='grey', linestyle='--')
+diff_proba_self_censored = self_lottery_differences_censored.groupby('prob_option_A')['valuation_ACPS_ASPS']
+diff_proba_charity_censored = charity_lottery_differences_censored.groupby('prob_option_A')['valuation_ASPC_ACPC']
+diff_proba_no_tradeoff_censored = no_tradeoff_lottery_differences_censored.groupby('prob_option_A')['valuation_ACPC_ASPS']
+plt.errorbar(diff_proba_no_tradeoff_censored.mean().index - offset_2/2, diff_proba_no_tradeoff_censored.mean(), diff_proba_no_tradeoff_censored.std(), ecolor = 'black', fmt='none', alpha=0.4, label='std')
+plt.plot(diff_proba_no_tradeoff_censored.mean().index - offset_2/2, diff_proba_no_tradeoff_censored.mean(), label=lottery_types_difference[0], color='bisque', marker='o', linestyle='-')
+plt.errorbar(diff_proba_self_censored.mean().index, diff_proba_self_censored.mean(), diff_proba_self_censored.std(), ecolor = 'black', fmt='none', alpha=0.4)
+plt.plot(diff_proba_self_censored.mean().index, diff_proba_self_censored.mean(), label=lottery_types_difference[1], color='dodgerblue', marker='o', linestyle='-')
+plt.errorbar(diff_proba_charity_censored.mean().index + offset_2/2, diff_proba_charity_censored.mean(), diff_proba_charity_censored.std(), ecolor = 'black', fmt='none', alpha=0.4)
+plt.plot(diff_proba_charity_censored.mean().index + offset_2/2, diff_proba_charity_censored.mean(), label=lottery_types_difference[2], color='limegreen', marker='o', linestyle='-')
+plt.xlabel('Probability P of Non-Zero Amount')
+plt.ylabel('Valuation difference in %')
+plt.title('Valuation differences for Censored subjects')
+plt.legend()
+plt.savefig('All Lottery difference plot Censored H1.png', dpi=1200)
+plt.show()
 
 # Plot 3 Valuation differences with probabilities combined (Principal Analysis)
-plt.bar(lottery_types, 
-        [no_tradeoff_lottery_differences['valuation_ACPC_ASPS'].mean(), self_lottery_differences['valuation_ACPS_ASPS'].mean(), charity_lottery_differences['valuation_ASPC_ACPC'].mean()], 
-        color = ['bisque', 'lightskyblue', 'lightgreen']) 
-plt.errorbar(['$Y^{C}(P^{C})-Y^{S}(P^{S}$)', '$Y^{C}(P^{S})-Y^{S}(P^{S})$', '$Y^{S}(P^{C})-Y^{C}(P^{C})$'], 
-              [no_tradeoff_lottery_differences['valuation_ACPC_ASPS'].mean(), self_lottery_differences['valuation_ACPS_ASPS'].mean(), charity_lottery_differences['valuation_ASPC_ACPC'].mean()], 
-              [0.825, 1.456, 1.991], ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
+plt.bar(lottery_types_difference, principal_means, color = ['bisque', 'lightskyblue', 'lightgreen']) 
+plt.errorbar(lottery_types_difference, principal_means, principal_errors, ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
 plt.axhline(y=0, color='grey', linestyle='--')
 plt.xlabel('Lottery differences')
 plt.ylabel('Valuation difference in %')
+plt.text(0.15, 0.9, f'n = {samplesize_principal:.1f}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
 plt.legend()
 plt.title('Valuation differences with probabilities combined')
 plt.savefig('All Lottery difference bar H1.png', dpi=1200)
 plt.show()
 
 # Plot 3 Valuation differences with probabilities combined (Adaptive Subjects)
-plt.bar(lottery_types, 
-        [no_tradeoff_lottery_differences_EDRP['valuation_ACPC_ASPS'].mean(), self_lottery_differences_EDRP['valuation_ACPS_ASPS'].mean(), charity_lottery_differences_EDRP['valuation_ASPC_ACPC'].mean()], 
-        color = ['bisque', 'lightskyblue', 'lightgreen']) 
-plt.errorbar(['$Y^{C}(P^{C})-Y^{S}(P^{S}$)', '$Y^{C}(P^{S})-Y^{S}(P^{S})$', '$Y^{S}(P^{C})-Y^{C}(P^{C})$'], 
-              [no_tradeoff_lottery_differences_EDRP['valuation_ACPC_ASPS'].mean(), self_lottery_differences_EDRP['valuation_ACPS_ASPS'].mean(), charity_lottery_differences_EDRP['valuation_ASPC_ACPC'].mean()], 
-              [1.433, 2.082, 2.636], ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
+plt.bar(lottery_types_difference, EDRP_means, color = ['bisque', 'lightskyblue', 'lightgreen']) 
+plt.errorbar(lottery_types_difference, EDRP_means, EDRP_errors, ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
 plt.axhline(y=0, color='grey', linestyle='--')
 plt.xlabel('Lottery differences')
 plt.ylabel('Valuation difference in %')
+plt.text(0.15, 0.9, f'n = {samplesize_adaptive:.1f}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
 plt.legend()
 plt.title('Valuation differences for Adaptive subjects')
 plt.savefig('Lottery differences Adaptive H1.png', dpi=1200)
 plt.show()
 
 # Plot 3 Valuation differences with probabilities combined (Censored Subjects)
-plt.bar(lottery_types, 
-        [no_tradeoff_lottery_differences_censored['valuation_ACPC_ASPS'].mean(), self_lottery_differences_censored['valuation_ACPS_ASPS'].mean(), charity_lottery_differences_censored['valuation_ASPC_ACPC'].mean()], 
-        color = ['bisque', 'lightskyblue', 'lightgreen']) 
-
-plt.errorbar(['$Y^{C}(P^{C})-Y^{S}(P^{S}$)', '$Y^{C}(P^{S})-Y^{S}(P^{S})$', '$Y^{S}(P^{C})-Y^{C}(P^{C})$'], 
-              [no_tradeoff_lottery_differences_censored['valuation_ACPC_ASPS'].mean(), self_lottery_differences_censored['valuation_ACPS_ASPS'].mean(), charity_lottery_differences_censored['valuation_ASPC_ACPC'].mean()], 
-              [1.739, 3.259, 4.1035], ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
+plt.bar(lottery_types_difference, censored_means, color = ['bisque', 'lightskyblue', 'lightgreen']) 
+plt.errorbar(lottery_types_difference, censored_means, censored_errors, ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
 plt.axhline(y=0, color='grey', linestyle='--')
 plt.xlabel('Lottery differences')
 plt.ylabel('Valuation difference in %')
+plt.text(0.15, 0.9, f'n = {samplesize_censored:.1f}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
 plt.legend()
 plt.title('Valuation differences for Censored subjects')
 plt.savefig('Lottery differences Censored H1.png', dpi=1200)
 plt.show()
 
-# Plot Valuation differences Principal Analysis and Censored
-
-all_means = [
-    no_tradeoff_lottery_differences['valuation_ACPC_ASPS'].mean(),
-    self_lottery_differences['valuation_ACPS_ASPS'].mean(),
-    charity_lottery_differences['valuation_ASPC_ACPC'].mean()
-]
-all_errors = [0.825, 1.456, 1.991]
-
-EDRP_means = [
-    no_tradeoff_lottery_differences_EDRP['valuation_ACPC_ASPS'].mean(),
-    self_lottery_differences_EDRP['valuation_ACPS_ASPS'].mean(),
-    charity_lottery_differences_EDRP['valuation_ASPC_ACPC'].mean()
-]
-EDRP_errors = [0.513, 0.565, 0.7405]
-
-censored_means = [
-    no_tradeoff_lottery_differences_censored['valuation_ACPC_ASPS'].mean(),
-    self_lottery_differences_censored['valuation_ACPS_ASPS'].mean(),
-    charity_lottery_differences_censored['valuation_ASPC_ACPC'].mean()
-]
-censored_errors = [0.507, 0.611, 0.633]
-
-x = np.arange(len(lottery_types))
+# Plot Valuation differences between Principal Analysis and Censored
 width = 0.35
-
-
-plt.bar(x - width/2, all_means, width, yerr=all_errors, capsize=5, color=['bisque', 'lightskyblue', 'lightgreen'], label='Principal analysis')
+plt.bar(x - width/2, principal_means, width, yerr=principal_errors, capsize=5, color=['bisque', 'lightskyblue', 'lightgreen'], label='Principal analysis')
 plt.bar(x + width/2, censored_means, width, yerr=censored_errors, capsize=5, color=['bisque', 'lightskyblue', 'lightgreen'], hatch="//", label='Censored')
 plt.xlabel('Lottery type')
 plt.ylabel('Difference in valuation (trad - no trad) in %')
 plt.title('Difference in valuation for Principal analysis and Censored subjects H1')
-plt.xticks(x, lottery_types)
+plt.xticks(x, lottery_types_difference)
 plt.axhline(y=0, color='grey', linestyle='--')
-proxy_artists = [
-    Patch(facecolor='white', edgecolor='black', label='Principal analysis'),
-    Patch(facecolor='white', edgecolor='black', hatch="//", label='Censored')
-]
+proxy_artists = [Patch(facecolor='white', edgecolor='black', label=f'Principal analysis n = {samplesize_principal:.1f}'),
+                 Patch(facecolor='white', edgecolor='black', hatch="//", label=f'Censored n = {samplesize_censored:.1f}')]
 plt.legend(handles=proxy_artists)
-plt.savefig('Merged Valuation ALL and Censored.png', dpi=1200)
+plt.savefig('Merged Valuation Principal Analysis and Censored.png', dpi=1200)
 plt.show()
 
+# Plot Valuation differences between Adaptive and Censored
 plt.bar(x - width/2, EDRP_means, width, yerr=EDRP_errors, capsize=5, color=['bisque', 'lightskyblue', 'lightgreen'], label='Adaptive')
 plt.bar(x + width/2, censored_means, width, yerr=censored_errors, capsize=5, color=['bisque', 'lightskyblue', 'lightgreen'], hatch="//", label='Censored')
 plt.xlabel('Lottery type')
 plt.ylabel('Difference in valuation (trad - no trad) in %')
 plt.title('Difference in valuation for Adaptive and Censored subjects H1')
-plt.xticks(x, lottery_types)
+plt.xticks(x, lottery_types_difference)
 plt.axhline(y=0, color='grey', linestyle='--')
-proxy_artists = [
-    Patch(facecolor='white', edgecolor='black', label='Adaptive'),
-    Patch(facecolor='white', edgecolor='black', hatch="//", label='Censored')
-]
+proxy_artists = [Patch(facecolor='white', edgecolor='black', label=f'Adaptive n = {samplesize_adaptive:.1f}'),
+                 Patch(facecolor='white', edgecolor='black', hatch="//", label=f'Censored n = {samplesize_censored:.1f}')]
 plt.legend(handles=proxy_artists)
 plt.savefig('Merged Valuation Adaptive and Censored.png', dpi=1200)
 plt.show()
 
 
-
-# Hist ALL difference of valuations
+# Histogram of the self and charity valuation differences of Principal Analysis
 plt.hist([self_lottery_differences['valuation_ACPS_ASPS'], charity_lottery_differences['valuation_ASPC_ACPC']], 
-        bins = 20, color = ['lightskyblue', 'lightgreen'], label = ['Self lottery', 'Charity lottery']) 
+        bins = 20, color = ['lightskyblue', 'lightgreen'], label = lottery_types_difference[1:3]) 
 plt.xlabel('Difference in lottery valuation (trad - no trad)')
 plt.ylabel('Frequency')
-plt.title('Difference in valuation across probabilities')
+plt.title('Self and charity valuation differences across probabilities')
 plt.legend()
-plt.savefig('Histo Valuation diff H1.png', dpi=1200)
+plt.savefig('Histo Valuation difference Principal H1.png', dpi=1200)
 plt.show()
 
-# Difference of valuations of EDRP
-
+# Histogram of the self and charity valuation differences of Adaptive subjects
 plt.hist([self_lottery_differences_EDRP['valuation_ACPS_ASPS'], charity_lottery_differences_EDRP['valuation_ASPC_ACPC']], 
-        bins = 20, color = ['lightskyblue', 'lightgreen'], label = ['Self lottery', 'Charity lottery']) 
+        bins = 20, color = ['lightskyblue', 'lightgreen'], label = lottery_types_difference[1:3]) 
 plt.xlabel('Difference in lottery valuation (trad - no trad)')
 plt.ylabel('Frequency')
-plt.title('Difference in valuation for EDRP subjects')
+plt.title('Self and charity valuation differences across probabilities')
 plt.legend()
-plt.savefig('Histo Valuation diff EDRP H1.png', dpi=1200)
+plt.savefig('Histo Valuation difference Adaptive H1.png', dpi=1200)
 plt.show()
  
-# Case order effect
-first_case = data_principal[data_principal['case_order']==1]
-second_case = data_principal[data_principal['case_order']==2]
-third_case = data_principal[data_principal['case_order']==3]
-fourth_case = data_principal[data_principal['case_order']==4]
 
-plt.bar(['first', 'second', 'third', 'fourth'], [first_case['valuation'].mean(), second_case['valuation'].mean(), 
-                                               third_case['valuation'].mean(), fourth_case['valuation'].mean()], 
-        color = ['dimgray', 'darkgray', 'silver', 'lightgrey']) 
-plt.errorbar(['first', 'second', 'third', 'fourth'], 
-             [first_case['valuation'].mean(), second_case['valuation'].mean(), third_case['valuation'].mean(), fourth_case['valuation'].mean()], 
-              [first_case['valuation'].std(), second_case['valuation'].std(), third_case['valuation'].std(), fourth_case['valuation'].std()], 
-              ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
+################################################
+# Valuation according to case order and probability
+################################################
+
+# Check the effect of order in which case are presented on valuation of lotteries
+
+cases = ['first', 'second', 'third', 'fourth']
+
+first_case = data_principal[data_principal['case_order']==1] # valuation from the first case presented
+second_case = data_principal[data_principal['case_order']==2] # valuation from the second case presented
+third_case = data_principal[data_principal['case_order']==3] # valuation from the third case presented
+fourth_case = data_principal[data_principal['case_order']==4] # valuation from the fourth case presented
+
+case_order  = [first_case['valuation'].mean(), second_case['valuation'].mean(), third_case['valuation'].mean(), fourth_case['valuation'].mean()]
+case_order_std = [first_case['valuation'].std(), second_case['valuation'].std(), third_case['valuation'].std(), fourth_case['valuation'].std()]
+
+plt.bar(cases, case_order, color = ['dimgray', 'darkgray', 'silver', 'lightgrey']) 
+plt.errorbar(cases, case_order, case_order_std, ecolor = 'black', fmt='none', alpha=0.7, label = 'std')
 plt.xlabel('Case order')
-plt.ylabel('Mean valuation in %')
-plt.title('Mean valuation per case order')
+plt.ylabel('Valuation (in %)')
+plt.title('Effect of case order on valuation (all cases combined)')
 plt.savefig('Valuation case order H1.png', dpi=1200)
 plt.show()
 
+# We find that individuals generally value less lotteries in the following case
+# which suggest we should control for case order in analysis 
 
-# Proba effect
+# Check the effect of probability on valuation of lotteries 
+
+# We group valuations according to probabilities (regardless of case and order)
+valuation_per_proba = data_principal.groupby('prob_option_A')['valuation'] 
+probabilities = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
 
 plt.plot(x_fit, y_fit, color='grey', label='Expected value')
-
-valuation_per_proba = data_principal.groupby('prob_option_A')['valuation']
-
-plt.plot([0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95], valuation_per_proba.mean(), color='black', marker='o', linestyle='-')
+plt.plot(probabilities, valuation_per_proba.mean(), color='black', marker='o', linestyle='-')
 plt.xlabel('Probability')
-plt.ylabel('Mean valuation in %')
-plt.title('Mean valuation per probability for all cases')
+plt.ylabel('Valuation (in %)')
+plt.title('Effect of probability on valuation (all cases combined)')
 plt.savefig('Valuation probability H1.png', dpi=1200)
 plt.show()
 
+# We indeed find the standard empirical finding in risky decision-making that 
+# the valuation is superior to expected value for small probabilities and inferior
+# for high probabilities meaning that individuals are generally risk seeking for 
+# small probabilities and more risk averse for high probabilities
 
-
-# Across probabilities
-
-offset_2 = 0.02
-plt.axhline(y=0, color='grey', linestyle='--')
-
-diff_proba_self_censored = self_lottery_differences_censored.groupby('prob_option_A')['valuation_ACPS_ASPS']
-diff_proba_charity_censored = charity_lottery_differences_censored.groupby('prob_option_A')['valuation_ASPC_ACPC']
-diff_proba_no_tradeoff_censored = no_tradeoff_lottery_differences_censored.groupby('prob_option_A')['valuation_ACPC_ASPS']
-
-plt.errorbar(diff_proba_no_tradeoff_censored.mean().index - offset_2/2, diff_proba_no_tradeoff_censored.mean(), diff_proba_no_tradeoff_censored.std(), ecolor = 'black', fmt='none', alpha=0.4, label='std')
-plt.plot(diff_proba_no_tradeoff_censored.mean().index - offset_2/2, diff_proba_no_tradeoff_censored.mean(), label='$Y^{C}(P^{S})-Y^{S}(P^{S})$', color='bisque', marker='o', linestyle='-')
-
-plt.errorbar(diff_proba_self_censored.mean().index, diff_proba_self_censored.mean(), diff_proba_self_censored.std(), ecolor = 'black', fmt='none', alpha=0.4)
-plt.plot(diff_proba_self_censored.mean().index, diff_proba_self_censored.mean(), label='$Y^{C}(P^{S})-Y^{S}(P^{S})$', color='dodgerblue', marker='o', linestyle='-')
-
-plt.errorbar(diff_proba_charity_censored.mean().index + offset_2/2, diff_proba_charity_censored.mean(), diff_proba_charity_censored.std(), ecolor = 'black', fmt='none', alpha=0.4)
-plt.plot(diff_proba_charity_censored.mean().index + offset_2/2, diff_proba_charity_censored.mean(), label='$Y^{S}(P^{C})-Y^{C}(P^{C})$', color='limegreen', marker='o', linestyle='-')
-
-plt.xlabel('Probability P of Non-Zero Payment')
-plt.ylabel('Difference in lottery valuation (trad - no trad)')
-plt.title('Valuation differences for censored subjects')
-plt.legend()
-plt.savefig('All Lottery difference Censored H1.png', dpi=1200)
-plt.show()
-
-
+# Importantly, we need to compare the valuation of lotteries with the same probability
 
 
 # %%
 # =============================================================================
-# ANALYSE DATA 
+# ANALYSE VALUATION DATA 
 # =============================================================================
 
-######## EXLEY REGRESSION 
+################################################
+# Verifying H1 through fixed effect regression models from Exley
+################################################
+
+# The regression model is taken from Exley (2015) whilst additionally taking
+# into account the case order
+
+def fixed_regression_model(data, dependent_var, independent_var):
+    # Add fixed effects of individuals and probabilities 
+    database = data
+    dummy_prob = pd.get_dummies(database['prob_option_A'], drop_first=True, dtype=int) # Create dummy variable for probabilities (+drop first to avoid multicollinearity)
+    dummy_ind = pd.get_dummies(database['number'], drop_first=True, dtype=int)  # Create dummy variable for individuals (+drop first to avoid multicollinearity)
+    database = pd.concat([database, dummy_ind, dummy_prob], axis=1)
+    
+    # Add controls (information of survey)
+    database = database.merge(survey, on='number', how='left')
+    control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
+                     ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
+    
+    # Create the design matrix and dependent variable
+    X = database[independent_var + list(dummy_prob.columns) + list(dummy_ind.columns)]
+    X = pd.concat([X, database[control_variables]], axis=1)
+    X = sm.add_constant(X, has_constant='add') # add a first column full of ones to account for intercept of regression
+    y = database[dependent_var]
+
+    # Fit the regression model using Ordinary Least Squares
+    model = sm.OLS(y, X).fit(cov_type='cluster', cov_kwds={'groups': database['number']}) # cluster at individual level
+    summary = model.summary2().tables[1]
+    print(summary)
+    return summary 
+
+
+# Principal Analysis
+fixed_model_principal = fixed_regression_model(data_principal, 'valuation', ['charity', 'tradeoff', 'interaction', 'case_order'])
+fixed_model_principal.to_csv('Principal analysis Fixed regression results.csv')
+
+# Adaptive subjects
+fixed_model_EDRP = fixed_regression_model(data_EDRP, 'valuation', ['charity', 'tradeoff', 'interaction', 'case_order'])
+fixed_model_EDRP.to_csv('Adaptive Fixed regression results.csv')
+
+# Censored subjects
+fixed_model_censored = fixed_regression_model(data_censored, 'valuation', ['charity', 'tradeoff', 'interaction', 'case_order'])
+fixed_model_censored.to_csv('Censored Fixed regression results.csv')
+
+# Principal Analysis and Censored subjects (replication of Exley)
+data_for_analysis_principal_and_censored = pd.concat([data_principal, data_censored], 
+                                                     ignore_index=True) # Data specifically for Principal Analysis and Censored subjects 
+fixed_model_principal_and_censored = fixed_regression_model(data_for_analysis_principal_and_censored, 'valuation', ['charity', 'tradeoff', 'interaction', 'case_order'])
+fixed_model_principal_and_censored.to_csv('Principal analysis and Censored Fixed regression results.csv')
+
+################################################
+# Heterogeneous effects of probabilities
+################################################
+
+# Although not part of H1, we observe heterogeneous effects of probabilities in 
+# the self and charity valuation difference (YCPS-YSPS and YSPC-YCPC respectively)
+# More specifically, in Principal Analysis, we observe that the valuation difference 
+# switches signs for high proba for the self valuation difference and for small 
+# prob for the charity valuation difference (and converges to 0 for Censored subjects)
+
+# PRINCIPAL ANALYSIS
+# For the no tradeoff difference YCPC-YSPS
+model_no_tradeoff_principal = fixed_regression_model(no_tradeoff_lottery_differences, 'valuation_ACPC_ASPS', [])
+model_no_tradeoff_principal.to_csv('No tradeoff principal analysis Fixed regression results.csv')
+
+# For the self lottery difference YCPS-YSPS
+model_self_principal = fixed_regression_model(self_lottery_differences, 'valuation_ACPS_ASPS', [])
+model_self_principal.to_csv('Self principal analysis Fixed regression results.csv')
+
+# For the charity lottery difference YSPC-YCPC
+model_charity_principal = fixed_regression_model(charity_lottery_differences, 'valuation_ASPC_ACPC', [])
+model_charity_principal.to_csv('Charity principal analysis Fixed regression results.csv')
+
+
+# CENSORED SUBJECTS
+# For the no tradeoff difference YCPC-YSPS
+model_no_tradeoff_censored = fixed_regression_model(no_tradeoff_lottery_differences_censored, 'valuation_ACPC_ASPS', [])
+model_no_tradeoff_censored.to_csv('No tradeoff censored subjects Fixed regression results.csv')
+
+# For the self lottery difference YCPS-YSPS
+model_self_censored = fixed_regression_model(self_lottery_differences_censored, 'valuation_ACPS_ASPS', [])
+model_self_censored.to_csv('Self censored subjects Fixed regression results.csv')
+
+# For the charity lottery difference YSPC-YCPC
+model_charity_censored = fixed_regression_model(charity_lottery_differences_censored, 'valuation_ASPC_ACPC', [])
+model_charity_censored.to_csv('Charity censored subjects Fixed regression results.csv')
 
-data_for_analysis = pd.concat([ASPS, ACPC, ASPC, ACPS], ignore_index=True)
-data_for_analysis_EDRP = pd.concat([ASPS_EDRP, ACPC_EDRP, ASPC_EDRP, ACPS_EDRP], ignore_index=True)
-data_for_analysis_censored = pd.concat([ASPS_censored, ACPC_censored, ASPC_censored, ACPS_censored], ignore_index=True)
-
-data_for_analysis_all_and_censored = pd.concat([ASPS, ACPC, ASPC, ACPS, ASPS_censored, ACPC_censored, ASPC_censored, ACPS_censored], ignore_index=True)
-
-
-# Add fixed effects
-dummy_ind = pd.get_dummies(data_for_analysis['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
-dummy_prob = pd.get_dummies(data_for_analysis['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
-data_for_analysis = pd.concat([data_for_analysis, dummy_ind, dummy_prob], axis=1)
-
-# Add controls 
-data_for_analysis = data_for_analysis.merge(survey, on='id', how='left')
-control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
-                 ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
-
-# Create the design matrix and dependent variable
-# X = data_for_analysis[['charity', 'tradeoff', 'interaction'] + list(dummy_ind.columns) + list(dummy_prob.columns)]
-X = data_for_analysis[['charity', 'tradeoff', 'interaction', 'case_order'] + list(dummy_ind.columns) + list(dummy_prob.columns)]
-X = pd.concat([X, data_for_analysis[control_variables]], axis=1)
-X = sm.add_constant(X, has_constant='add') # add a first column full of ones to account for intercept of regression
-y = data_for_analysis['valuation']
-
-# Fit the regression model using Ordinary Least Squares
-model = sm.OLS(y, X).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis['number']}) # cluster at individual level
-print(model.summary())
-
-
-md = smf.mixedlm("valuation ~ charity + tradeoff + interaction", data_for_analysis, groups=data_for_analysis["number"])
-mdf = md.fit()
-print(mdf.summary())
-
-
-
-# For EDRP 
-dummy_ind_EDRP = pd.get_dummies(data_for_analysis_EDRP['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
-dummy_prob_EDRP = pd.get_dummies(data_for_analysis_EDRP['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
-data_for_analysis_EDRP = pd.concat([data_for_analysis_EDRP, dummy_ind_EDRP, dummy_prob_EDRP], axis=1)
-
-# Add controls 
-data_for_analysis_EDRP = data_for_analysis_EDRP.merge(survey, on='id', how='left')
-control_variables_EDRP = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
-                 ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
-
-# Create the design matrix and dependent variable
-# X_EDRP = data_for_analysis_EDRP[['charity', 'tradeoff', 'interaction'] + list(dummy_ind.columns) + list(dummy_prob.columns)]
-X_EDRP = data_for_analysis_EDRP[['charity', 'tradeoff', 'interaction', 'case_order'] + list(dummy_ind_EDRP.columns) + list(dummy_prob_EDRP.columns)]
-X_EDRP = pd.concat([X_EDRP, data_for_analysis_EDRP[control_variables_EDRP]], axis=1)
-X_EDRP = sm.add_constant(X_EDRP, has_constant='add') # add a first column full of ones to account for intercept of regression
-y_EDRP = data_for_analysis_EDRP['valuation']
-
-# Fit the regression model using Ordinary Least Squares
-model_EDRP = sm.OLS(y_EDRP, X_EDRP).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis_EDRP['number']}) # cluster at individual level
-print(model_EDRP.summary())
-
-
-
-# For censored participants
-
-dummy_ind_censored = pd.get_dummies(data_for_analysis_censored['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
-dummy_prob_censored = pd.get_dummies(data_for_analysis_censored['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
-data_for_analysis_censored = pd.concat([data_for_analysis_censored, dummy_ind_censored, dummy_prob_censored], axis=1)
-
-# Add controls 
-data_for_analysis_censored = data_for_analysis_censored.merge(survey, on='id', how='left')
-control_variables_censored = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
-                 ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
-
-# Create the design matrix and dependent variable
-# X_censored = data_for_analysis_censored[['charity', 'tradeoff', 'interaction'] + list(dummy_ind_censored.columns) + list(dummy_prob_censored.columns)]
-X_censored = data_for_analysis_censored[['charity', 'tradeoff', 'interaction', 'case_order'] + list(dummy_ind_censored.columns) + list(dummy_prob_censored.columns)]
-X_censored = pd.concat([X_censored, data_for_analysis_censored[control_variables_censored]], axis=1)
-X_censored = sm.add_constant(X_censored, has_constant='add') # add a first column full of ones to account for intercept of regression
-y_censored = data_for_analysis_censored['valuation']
-
-# Fit the regression model using Ordinary Least Squares
-model_censored = sm.OLS(y_censored, X_censored).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis_censored['number']}) # cluster at individual level
-print(model_censored.summary())
-
-
-# All and censored
-dummy_ind_all_and_censored = pd.get_dummies(data_for_analysis_all_and_censored['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
-dummy_prob_all_and_censored = pd.get_dummies(data_for_analysis_all_and_censored['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
-data_for_analysis_all_and_censored = pd.concat([data_for_analysis_all_and_censored, dummy_ind_all_and_censored, dummy_prob_all_and_censored], axis=1)
-
-# Add controls 
-data_for_analysis_all_and_censored = data_for_analysis_all_and_censored.merge(survey, on='id', how='left')
-control_variables_all_and_censored = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
-                 ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
-
-# Create the design matrix and dependent variable
-X_all_and_censored = data_for_analysis_all_and_censored[['charity', 'tradeoff', 'interaction', 'case_order'] + list(dummy_ind.columns) + list(dummy_prob.columns)]
-X_all_and_censored = pd.concat([X_all_and_censored, data_for_analysis_all_and_censored[control_variables_all_and_censored]], axis=1)
-X_all_and_censored = sm.add_constant(X_all_and_censored, has_constant='add') # add a first column full of ones to account for intercept of regression
-
-# Same process but now dwell_time as dependent variable
-y_all_and_censored = data_for_analysis_all_and_censored['valuation']
-model_all_and_censored = sm.OLS(y_all_and_censored, X_all_and_censored).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis_all_and_censored['number']}) # cluster at individual level
-print(model_all_and_censored.summary())
-
-
-
-md_c = smf.mixedlm("valuation ~ charity + tradeoff + interaction", data_for_analysis_censored, groups=data_for_analysis_censored["number"])
-mdf_c = md_c.fit()
-print(mdf_c.summary())
-
-
-
-
-
-md_case = smf.mixedlm("valuation ~ case_order", data_for_analysis, groups=data_for_analysis["number"])
-mdf_case = md_case.fit()
-print(mdf_case.summary())
-
-
-# %%
-# =============================================================================
-# Look at differences for each probability
-# =============================================================================
-# FOR ALL 
-
-# for no tradeoff
-dummy_ind_proba_no_tradeoff = pd.get_dummies(no_tradeoff_lottery_differences['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
-dummy_prob_proba_no_tradeoff = pd.get_dummies(no_tradeoff_lottery_differences['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
-no_tradeoff_diff_reg = pd.concat([no_tradeoff_lottery_differences, dummy_ind_proba_no_tradeoff, dummy_prob_proba_no_tradeoff], axis=1)
-
-# Add controls 
-# no_tradeoff_diff_reg = no_tradeoff_diff_reg.merge(survey, on='number', how='left')
-# control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
-#                  ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
-
-# Create the design matrix and dependent variable
-X_proba_no_tradeoff = no_tradeoff_diff_reg[list(dummy_ind_proba_no_tradeoff.columns) + list(dummy_prob_proba_no_tradeoff.columns)]
-# X_proba_no_tradeoff = pd.concat([X_proba, no_tradeoff_lottery_differences[control_variables]], axis=1)
-X_proba_no_tradeoff = sm.add_constant(X_proba_no_tradeoff, has_constant='add') # add a first column full of ones to account for intercept of regression
-y_proba_no_tradeoff = no_tradeoff_diff_reg['valuation_ACPC_ASPS']
-
-# Fit the regression model using Ordinary Least Squares
-model_proba_no_tradeoff = sm.OLS(y_proba_no_tradeoff, X_proba_no_tradeoff).fit(cov_type='cluster', cov_kwds={'groups': no_tradeoff_diff_reg['number']}) # cluster at individual level
-print(model_proba_no_tradeoff.summary())
-
-# md_ = smf.mixedlm("valuation_ACPC_ASPS ~ prob_option_A", no_tradeoff_lottery_differences, groups=no_tradeoff_lottery_differences["number"])
-# mdf_ = md_.fit()
-# print(mdf_.summary())
-
-# for self diff
-dummy_ind_proba_self = pd.get_dummies(self_lottery_differences['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
-dummy_prob_proba_self = pd.get_dummies(self_lottery_differences['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
-self_diff_reg = pd.concat([self_lottery_differences, dummy_ind_proba_self, dummy_prob_proba_self], axis=1)
-
-# Add controls 
-# no_tradeoff_diff_reg = no_tradeoff_diff_reg.merge(survey, on='number', how='left')
-# control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
-#                  ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
-
-# Create the design matrix and dependent variable
-X_proba_self = self_diff_reg[list(dummy_ind_proba_self.columns) + list(dummy_prob_proba_self.columns)]
-X_proba_self = sm.add_constant(X_proba_self, has_constant='add') # add a first column full of ones to account for intercept of regression
-y_proba_self = self_diff_reg['valuation_ACPS_ASPS']
-
-# Fit the regression model using Ordinary Least Squares
-model_proba_self = sm.OLS(y_proba_self, X_proba_self).fit(cov_type='cluster', cov_kwds={'groups': self_diff_reg['number']}) # cluster at individual level
-print(model_proba_self.summary())
-
-
-
-# for charity diff
-dummy_ind_proba_charity = pd.get_dummies(charity_lottery_differences['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
-dummy_prob_proba_charity = pd.get_dummies(charity_lottery_differences['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
-charity_diff_reg = pd.concat([charity_lottery_differences, dummy_ind_proba_charity, dummy_prob_proba_charity], axis=1)
-
-# Add controls 
-# no_tradeoff_diff_reg = no_tradeoff_diff_reg.merge(survey, on='number', how='left')
-# control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
-#                  ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
-
-# Create the design matrix and dependent variable
-X_proba_charity = charity_diff_reg[list(dummy_ind_proba_charity.columns) + list(dummy_prob_proba_charity.columns)]
-X_proba_charity = sm.add_constant(X_proba_charity, has_constant='add') # add a first column full of ones to account for intercept of regression
-y_proba_charity = charity_diff_reg['valuation_ASPC_ACPC']
-
-# Fit the regression model using Ordinary Least Squares
-model_proba_charity = sm.OLS(y_proba_charity, X_proba_charity).fit(cov_type='cluster', cov_kwds={'groups': charity_diff_reg['number']}) # cluster at individual level
-print(model_proba_charity.summary())
-
-###################
-# FOR CENSORED
-
-
-# for no tradeoff
-dummy_ind_proba_no_tradeoff_censored = pd.get_dummies(no_tradeoff_lottery_differences_censored['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
-dummy_prob_proba_no_tradeoff_censored = pd.get_dummies(no_tradeoff_lottery_differences_censored['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
-no_tradeoff_diff_reg_censored = pd.concat([no_tradeoff_lottery_differences_censored, dummy_ind_proba_no_tradeoff_censored, dummy_prob_proba_no_tradeoff_censored], axis=1)
-
-# Add controls 
-# no_tradeoff_diff_reg = no_tradeoff_diff_reg.merge(survey, on='number', how='left')
-# control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
-#                  ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
-
-# Create the design matrix and dependent variable
-X_proba_no_tradeoff_censored = no_tradeoff_diff_reg_censored[list(dummy_ind_proba_no_tradeoff_censored.columns) + list(dummy_prob_proba_no_tradeoff_censored.columns)]
-X_proba_no_tradeoff_censored = sm.add_constant(X_proba_no_tradeoff_censored, has_constant='add') # add a first column full of ones to account for intercept of regression
-y_proba_no_tradeoff_censored = no_tradeoff_diff_reg_censored['valuation_ACPC_ASPS']
-
-# Fit the regression model using Ordinary Least Squares
-model_proba_no_tradeoff_censored = sm.OLS(y_proba_no_tradeoff_censored, X_proba_no_tradeoff_censored).fit(cov_type='cluster', cov_kwds={'groups': no_tradeoff_diff_reg_censored['number']}) # cluster at individual level
-print(model_proba_no_tradeoff_censored.summary())
-
-
-# for self diff
-dummy_ind_proba_self_censored = pd.get_dummies(self_lottery_differences_censored['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
-dummy_prob_proba_self_censored = pd.get_dummies(self_lottery_differences_censored['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
-self_diff_reg_censored = pd.concat([self_lottery_differences_censored, dummy_ind_proba_self_censored, dummy_prob_proba_self_censored], axis=1)
-
-# Add controls 
-# no_tradeoff_diff_reg = no_tradeoff_diff_reg.merge(survey, on='number', how='left')
-# control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
-#                  ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
-
-# Create the design matrix and dependent variable
-X_proba_self_censored = self_diff_reg_censored[list(dummy_ind_proba_self_censored.columns) + list(dummy_prob_proba_self_censored.columns)]
-X_proba_self_censored = sm.add_constant(X_proba_self_censored, has_constant='add') # add a first column full of ones to account for intercept of regression
-y_proba_self_censored = self_diff_reg_censored['valuation_ACPS_ASPS']
-
-# Fit the regression model using Ordinary Least Squares
-model_proba_self_censored = sm.OLS(y_proba_self_censored, X_proba_self_censored).fit(cov_type='cluster', cov_kwds={'groups': self_diff_reg_censored['number']}) # cluster at individual level
-print(model_proba_self_censored.summary())
-
-
-
-# for charity diff
-dummy_ind_proba_charity_censored = pd.get_dummies(charity_lottery_differences_censored['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
-dummy_prob_proba_charity_censored = pd.get_dummies(charity_lottery_differences_censored['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
-charity_diff_reg_censored = pd.concat([charity_lottery_differences_censored, dummy_ind_proba_charity_censored, dummy_prob_proba_charity_censored], axis=1)
-
-# Add controls 
-# no_tradeoff_diff_reg = no_tradeoff_diff_reg.merge(survey, on='number', how='left')
-# control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
-#                  ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
-
-# Create the design matrix and dependent variable
-X_proba_charity_censored = charity_diff_reg_censored[list(dummy_ind_proba_charity_censored.columns) + list(dummy_prob_proba_charity_censored.columns)]
-X_proba_charity_censored = sm.add_constant(X_proba_charity_censored, has_constant='add') # add a first column full of ones to account for intercept of regression
-y_proba_charity_censored = charity_diff_reg_censored['valuation_ASPC_ACPC']
-
-# Fit the regression model using Ordinary Least Squares
-model_proba_charity_censored = sm.OLS(y_proba_charity_censored, X_proba_charity_censored).fit(cov_type='cluster', cov_kwds={'groups': charity_diff_reg_censored['number']}) # cluster at individual level
-print(model_proba_charity_censored.summary())
 
 # %%
 # =============================================================================
 # Simulation with sample size of Exley and Garcia
 # =============================================================================
 
-data_for_analysis = pd.concat([ASPS, ACPC, ASPC, ACPS], ignore_index=True)
+iteration_number = 1000 # Number of iterations of simulation per sample size
+sample = 107 # Exley's sample size is 57 and Garcia et al's sample size is 107
+p_values = np.zeros(iteration_number) # variable to collect p-values for each sample
 
-# # Add fixed effects
-# dummy_ind = pd.get_dummies(data_for_analysis['number'], drop_first=True, dtype=int)  # Dummy variable for individuals (+drop first to avoid multicollinearity)
-# dummy_prob = pd.get_dummies(data_for_analysis['prob_option_A'], drop_first=True, dtype=int) # Dummy variable for probabilities (+drop first to avoid multicollinearity)
-# data_for_analysis = pd.concat([data_for_analysis, dummy_ind, dummy_prob], axis=1)
-
-# # Add controls 
-# data_for_analysis = data_for_analysis.merge(survey, on='id', how='left')
-# control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
-#                  ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
-
-# # Create the design matrix and dependent variable
-# # X = data_for_analysis[['charity', 'tradeoff', 'interaction'] + list(dummy_ind.columns) + list(dummy_prob.columns)]
-# X = data_for_analysis[['charity', 'tradeoff', 'interaction', 'case_order'] + list(dummy_ind.columns) + list(dummy_prob.columns)]
-# X = pd.concat([X, data_for_analysis[control_variables]], axis=1)
-# X = sm.add_constant(X, has_constant='add') # add a first column full of ones to account for intercept of regression
-# y = data_for_analysis['valuation']
-
-# # Fit the regression model using Ordinary Least Squares
-# model = sm.OLS(y, X).fit(cov_type='cluster', cov_kwds={'groups': data_for_analysis['number']}) # cluster at individual level
-# print(model.summary())
-
-
-iteration_number = 1000
-sample = 107
-p_values = np.zeros(iteration_number)
-
-for inter in range(1, iteration_number):
-    subjects_drawn = np.random.choice(range(1,data_for_analysis['number'].nunique()+1), sample)
+for inter in range(1, iteration_number): # run simulation for a set number of iterations
+    subjects_drawn = np.random.choice(np.unique(data_principal['number']), sample) # pick random subjects from our sample ("sample" number)
     data_drawn = []
     for subj in subjects_drawn:
-        subj_data = data_for_analysis.loc[data_for_analysis['number'] == subj, ['number', 'prob_option_A', 'valuation', 'charity', 'tradeoff', 'interaction']]
+        subj_data = data_principal.loc[data_principal['number'] == subj, ['number', 'prob_option_A', 'valuation', 'charity', 'tradeoff', 'interaction']]
         data_drawn.append(subj_data)
     data_drawn = pd.concat(data_drawn)
     
     try:
+        fixed_regression_model(data_drawn, 'valuation', ['charity', 'tradeoff', 'interaction'])
         
         # dummy_ind = pd.get_dummies(data_drawn['number'], drop_first=True, dtype=int) 
         # dummy_prob = pd.get_dummies(data_drawn['prob_option_A'], drop_first=True, dtype=int) 
