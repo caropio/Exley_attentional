@@ -11,6 +11,7 @@ import numpy as np
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 from scipy.stats import ttest_ind
+import statsmodels.formula.api as smf
 from matplotlib.patches import Patch
 import ast 
 
@@ -571,29 +572,29 @@ lottery_types_difference = ['$Y^{C}(P^{C})-Y^{S}(P^{S})$',
                             '$Y^{C}(P^{S})-Y^{S}(P^{S})$', 
                             '$Y^{S}(P^{C})-Y^{C}(P^{C})$']
 x = np.arange(len(lottery_types_difference))
+offset_2 = 0.02
 
 # 3 valuation differences and standard errors at ind level for Principal Analysis, Adaptive and Censored subjects
 # for Principal Analysis
 principal_means = [no_tradeoff_lottery_differences_principal['valuation_ACPC_ASPS'].mean(),
                    self_lottery_differences_principal['valuation_ACPS_ASPS'].mean(),
                    charity_lottery_differences_principal['valuation_ASPC_ACPC'].mean()]
-principal_errors = [0.825, 1.456, 1.991]                # CHANGER 
+principal_errors = [0.825, 1.456, 1.991]           ################## CHANGER 
 
 # for Adaptive subjects
 EDRP_means = [no_tradeoff_lottery_differences_EDRP['valuation_ACPC_ASPS'].mean(), 
               self_lottery_differences_EDRP['valuation_ACPS_ASPS'].mean(),
               charity_lottery_differences_EDRP['valuation_ASPC_ACPC'].mean()]
-EDRP_errors = [0.513, 0.565, 0.7405]                   # CHANGER 
+EDRP_errors = [0.513, 0.565, 0.7405]               ################## CHANGER 
 
 # for Censored subjects
 censored_means = [no_tradeoff_lottery_differences_censored['valuation_ACPC_ASPS'].mean(), 
                   self_lottery_differences_censored['valuation_ACPS_ASPS'].mean(),
                   charity_lottery_differences_censored['valuation_ASPC_ACPC'].mean()]
-censored_errors = [0.507, 0.611, 0.633]                  # CHANGER 
+censored_errors = [0.507, 0.611, 0.633]            ################## CHANGER 
 
 
 # Plot 3 Valuation differences for all probabilities (Principal Analysis)
-offset_2 = 0.02
 plt.axhline(y=0, color='grey', linestyle='--')
 diff_proba_no_tradeoff = no_tradeoff_lottery_differences_principal.groupby('prob_option_A')['valuation_ACPC_ASPS']
 diff_proba_self = self_lottery_differences_principal.groupby('prob_option_A')['valuation_ACPS_ASPS']
@@ -729,8 +730,10 @@ second_case = data_principal[data_principal['case_order']==2] # valuation from t
 third_case = data_principal[data_principal['case_order']==3] # valuation from the third case presented
 fourth_case = data_principal[data_principal['case_order']==4] # valuation from the fourth case presented
 
-case_order  = [first_case['valuation'].mean(), second_case['valuation'].mean(), third_case['valuation'].mean(), fourth_case['valuation'].mean()]
-case_order_std = [first_case['valuation'].std(), second_case['valuation'].std(), third_case['valuation'].std(), fourth_case['valuation'].std()]
+case_order  = [first_case['valuation'].mean(), second_case['valuation'].mean(), 
+               third_case['valuation'].mean(), fourth_case['valuation'].mean()]
+case_order_std = [first_case['valuation'].std(), second_case['valuation'].std(), 
+                  third_case['valuation'].std(), fourth_case['valuation'].std()]
 
 plt.bar(cases, case_order, color = ['dimgray', 'darkgray', 'silver', 'lightgrey']) 
 plt.errorbar(cases, case_order, case_order_std, ecolor = 'black', fmt='none', alpha=0.7, label = 'std')
@@ -739,6 +742,10 @@ plt.ylabel('Valuation (in %)')
 plt.title('Effect of case order on valuation (all cases combined)')
 plt.savefig('Valuation case order H1.png', dpi=1200)
 plt.show()
+
+# Effect of case order on attention using mixed effects model
+model_case_order = smf.mixedlm("vluation ~ case_order", data_principal, groups=data_principal["number"]).fit()
+print(model_case_order.summary())
 
 # We find that individuals generally value less lotteries in the following case
 # which suggest we should control for case order in analysis 
@@ -751,11 +758,16 @@ probabilities = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
 
 plt.plot(x_fit, y_fit, color='grey', label='Expected value')
 plt.plot(probabilities, valuation_per_proba.mean(), color='black', marker='o', linestyle='-')
+plt.errorbar(probabilities, valuation_per_proba.mean(), valuation_per_proba.std(), ecolor = 'black', fmt='none', alpha=0.7, label = 'std')
 plt.xlabel('Probability')
 plt.ylabel('Valuation (in %)')
 plt.title('Effect of probability on valuation (all cases combined)')
 plt.savefig('Valuation probability H1.png', dpi=1200)
 plt.show()
+
+# Effect of probability on valuation using mixed effects model
+model_proba = smf.mixedlm("valuation ~ prob_option_A", data_principal, groups=data_principal["number"]).fit()
+print(model_proba.summary())
 
 # We indeed find the standard empirical finding in risky decision-making that 
 # the valuation is superior to expected value for small probabilities and inferior
@@ -881,21 +893,21 @@ def fixed_regression_model(data, dependent_var, independent_var, want_print):
 
 # Principal Analysis
 fixed_model_principal = fixed_regression_model(data_principal, 'valuation', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
-fixed_model_principal.to_csv('Principal analysis Fixed regression results.csv')
+fixed_model_principal.to_csv('Principal analysis Fixed regression results H1.csv')
 
 # Adaptive subjects
 fixed_model_EDRP = fixed_regression_model(data_EDRP, 'valuation', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
-fixed_model_EDRP.to_csv('Adaptive Fixed regression results.csv')
+fixed_model_EDRP.to_csv('Adaptive Fixed regression results H1.csv')
 
 # Censored subjects
 fixed_model_censored = fixed_regression_model(data_censored, 'valuation', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
-fixed_model_censored.to_csv('Censored Fixed regression results.csv')
+fixed_model_censored.to_csv('Censored Fixed regression results H1.csv')
 
 # Principal Analysis and Censored subjects (replication of Exley)
 data_for_analysis_principal_and_censored = pd.concat([data_principal, data_censored], 
                                                      ignore_index=True) # Data specifically for Principal Analysis and Censored subjects 
 fixed_model_principal_and_censored = fixed_regression_model(data_for_analysis_principal_and_censored, 'valuation', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
-fixed_model_principal_and_censored.to_csv('Principal analysis and Censored Fixed regression results.csv')
+fixed_model_principal_and_censored.to_csv('Principal analysis and Censored Fixed regression results H1.csv')
 
 ################################################
 # Heterogeneous effects of probabilities
