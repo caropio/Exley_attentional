@@ -47,7 +47,7 @@ for i in range(len(data)):
 
 # %%
 # =============================================================================
-# REMOVING OUTLIERS 
+# REMOVING ATTENTIONAL OUTLIERS 
 # =============================================================================
 
 # We plot the histograms of attentional data before the removal of outliers
@@ -181,7 +181,7 @@ plt.show()
 
 # %%
 # =============================================================================
-# CATEGORISATION BETWEEN PRINCIPAL ANALYSIS AND CENSORED
+# CATEGORISATION OF PRINCIPAL ANALYSIS AND CENSORED
 # =============================================================================
 
 # Let's get our dataframe data but only for principal analysis and censored subjects
@@ -353,9 +353,9 @@ for i in data_principal['number'].unique():
         EDRP_self.append(i)
     elif self_diff.item() < - no_trade_diff.item() : # participant has YCPS-YSPS < - (YCPC-YSPS) on average across probabilities 
         altruistic_self.append(i)
-    if charity_diff.item() < - no_trade_diff.item() : # participant has YCPS-YCPC < - (YCPC-YSPS) on average across probabilities 
+    if charity_diff.item() < - no_trade_diff.item() : # participant has YSPC-YCPC < - (YCPC-YSPS) on average across probabilities 
         EDRP_charity.append(i)
-    if charity_diff.item() > no_trade_diff.item() : # participant has YCPS-YCPC > YCPC-YSPS on average across probabilities 
+    if charity_diff.item() > no_trade_diff.item() : # participant has YSPC-YCPC > YCPC-YSPS on average across probabilities 
         altruistic_charity.append(i)
 
 EDRP_total = np.intersect1d(EDRP_self, EDRP_charity) 

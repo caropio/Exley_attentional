@@ -48,7 +48,7 @@ for i in range(len(data)):
 
 # %%
 # =============================================================================
-# CATEGORISATION BETWEEN PRINCIPAL ANALYSIS AND CENSORED
+# CATEGORISATION OF PRINCIPAL ANALYSIS AND CENSORED
 # =============================================================================
 
 # Let's get our dataframe data but only for principal analysis and censored subjects
@@ -220,9 +220,9 @@ for i in data_principal['number'].unique():
         EDRP_self.append(i)
     elif self_diff.item() < - no_trade_diff.item() : # participant has YCPS-YSPS < - (YCPC-YSPS) on average across probabilities 
         altruistic_self.append(i)
-    if charity_diff.item() < - no_trade_diff.item() : # participant has YCPS-YCPC < - (YCPC-YSPS) on average across probabilities 
+    if charity_diff.item() < - no_trade_diff.item() : # participant has YSPC-YCPC < - (YCPC-YSPS) on average across probabilities 
         EDRP_charity.append(i)
-    if charity_diff.item() > no_trade_diff.item() : # participant has YCPS-YCPC > YCPC-YSPS on average across probabilities 
+    if charity_diff.item() > no_trade_diff.item() : # participant has YSPC-YCPC > YCPC-YSPS on average across probabilities 
         altruistic_charity.append(i)
     
 # Participants being both Excuse-driven for self and for charity -- called Adaptive subjects
@@ -274,7 +274,7 @@ samplesize_principal = len(data_autre_principal) # sample size of Principal Anal
 samplesize_adaptive = len(data_autre_EDRP) # sample size of Adaptive subjects
 samplesize_altruistic = len(data_autre_altruistic) # sample size of Altruistic subjects
 samplesize_censored = len(data_autre_censored) # sample size of Censored subjects
-
+samplesize_EDRP_censored = len(data_autre_EDRP) + len(data_autre_censored) # sample size of Adaptive and Censored subjects
 
 ################################################
 # Socio-demographic information 
