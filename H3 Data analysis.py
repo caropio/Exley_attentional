@@ -261,7 +261,7 @@ mean_attentions = [mean_attention_ASPS.mean(), mean_attention_ACPS.mean(),
                    mean_attention_ACPC.mean(), mean_attention_ASPC.mean()]
 
 ################################################
-# Elicit data specifically checking self, charity and no tradeoff differences of H2
+# Elicit data specifically checking self, charity and no tradeoff differences of H3
 ################################################
 
 # Self lottery difference is ACPS-ASPS, Charity lottery difference is ASPC-ACPC
@@ -400,9 +400,19 @@ ACPS_altruistic = data_altruistic[(data_altruistic['charity'] == 0) & (data_altr
 
 data_EDRP_censored = pd.concat([data_EDRP, data_censored], ignore_index=True)
 
-no_tradeoff_lottery_differences_EDRP_censored = pd.concat([no_tradeoff_lottery_differences_EDRP, no_tradeoff_lottery_differences_censored], ignore_index=True)
-self_lottery_differences_EDRP_censored = pd.concat([self_lottery_differences_EDRP, self_lottery_differences_censored], ignore_index=True)
-charity_lottery_differences_EDRP_censored = pd.concat([charity_lottery_differences_EDRP, charity_lottery_differences_censored], ignore_index=True)
+no_tradeoff_lottery_differences_EDRP_censored = pd.concat([no_tradeoff_lottery_differences_EDRP, 
+                                                           no_tradeoff_lottery_differences_censored], ignore_index=True)
+self_lottery_differences_EDRP_censored = pd.concat([self_lottery_differences_EDRP, 
+                                                    self_lottery_differences_censored], ignore_index=True)
+charity_lottery_differences_EDRP_censored = pd.concat([charity_lottery_differences_EDRP, 
+                                                       charity_lottery_differences_censored], ignore_index=True)
+
+# Principal Analysis and Censored Participants combined
+self_lottery_differences_principal_censored = pd.concat([self_lottery_differences_principal, self_lottery_differences_censored], 
+                                                     ignore_index=True) # Self differences specifically for Principal Analysis and Censored subjects 
+charity_lottery_differences_principal_censored = pd.concat([charity_lottery_differences_principal, charity_lottery_differences_censored], 
+                                                     ignore_index=True) # Charity differences specifically for Principal Analysis and Censored subjects 
+
 
 # Sample sizes
 samplesize_principal = len(data_autre_principal) # sample size of Principal Analysis
@@ -410,7 +420,7 @@ samplesize_adaptive = len(data_autre_EDRP) # sample size of Adaptive subjects
 samplesize_altruistic = len(data_autre_altruistic) # sample size of Altruistic subjects
 samplesize_censored = len(data_autre_censored) # sample size of Censored subjects
 samplesize_EDRP_censored = len(data_autre_EDRP) + len(data_autre_censored) # sample size of Adaptive and Censored subjects
-
+samplesize_principal_censored = len(data_autre_principal) + len(data_autre_censored) # sample size of Principal Analysis and Censored subjects
 
 
 
@@ -471,6 +481,10 @@ plot_corr_attention_valuation(charity_lottery_differences_censored, 'Censored', 
 plot_corr_attention_valuation(self_lottery_differences_EDRP_censored, 'Adaptive + Censored', samplesize_EDRP_censored)
 plot_corr_attention_valuation(charity_lottery_differences_EDRP_censored, 'Adaptive + Censored', samplesize_EDRP_censored)
 
+# Plot Attention vs Valuation difference for both Principal and Censored subjects
+plot_corr_attention_valuation(self_lottery_differences_principal_censored, 'Principal + Censored', samplesize_principal_censored)
+plot_corr_attention_valuation(charity_lottery_differences_principal_censored, 'Principal + Censored', samplesize_principal_censored)
+
 # We see a general trend that there is a small correlation between attention and
 # valuation, which is negative for the self lottery and positive for the charity 
 # lottery. We need to verify this statistically
@@ -523,18 +537,14 @@ print(reg_model_charity_EDRP_censored.summary())
 
 
 # Principal Analysis and Censored subjects
-self_lottery_differences_principal_censored = pd.concat([self_lottery_differences_principal, self_lottery_differences_censored], 
-                                                     ignore_index=True) # Self differences specifically for Principal Analysis and Censored subjects 
-self_lottery_differences_principal_censored = pd.concat([charity_lottery_differences_principal, charity_lottery_differences_censored], 
-                                                     ignore_index=True) # Charity differences specifically for Principal Analysis and Censored subjects 
 # For self lottery difference
-reg_model_self_principal_censored = sm.OLS(self_lottery_differences_EDRP_censored['valuation_ASPS_ACPS'], 
-                                      sm.add_constant(self_lottery_differences_EDRP_censored['dwell_time_ASPS_ACPS'])).fit()
+reg_model_self_principal_censored = sm.OLS(self_lottery_differences_principal_censored['valuation_ASPS_ACPS'], 
+                                      sm.add_constant(self_lottery_differences_principal_censored['dwell_time_ASPS_ACPS'])).fit()
 print(reg_model_self_principal_censored.summary())
 
 # For charity lottery difference
-reg_model_charity_principal_censored = sm.OLS(charity_lottery_differences_EDRP_censored['valuation_ACPC_ASPC'], 
-                                         sm.add_constant(charity_lottery_differences_EDRP_censored['dwell_time_ACPC_ASPC'])).fit()
+reg_model_charity_principal_censored = sm.OLS(charity_lottery_differences_principal_censored['valuation_ACPC_ASPC'], 
+                                         sm.add_constant(charity_lottery_differences_principal_censored['dwell_time_ACPC_ASPC'])).fit()
 print(reg_model_charity_principal_censored.summary())
 
 
