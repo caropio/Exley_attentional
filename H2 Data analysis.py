@@ -500,31 +500,31 @@ x = np.arange(len(lottery_types_difference_attention))
 principal_means_att = [no_tradeoff_lottery_differences_principal['dwell_time_ACPC_ASPS'].mean(), 
                    self_lottery_differences_principal['dwell_time_ACPS_ASPS'].mean(),
                    charity_lottery_differences_principal['dwell_time_ASPC_ACPC'].mean()]
-principal_errors_att = [0.343, 0.322, 0.4015]       ################# CHANGER 
+principal_errors_att = [0.338, 0.322, 0.389]       ################# CHANGER 
 
 # for Adaptive subjects
 EDRP_means_att = [no_tradeoff_lottery_differences_EDRP['dwell_time_ACPC_ASPS'].mean(), 
               self_lottery_differences_EDRP['dwell_time_ACPS_ASPS'].mean(),
               charity_lottery_differences_EDRP['dwell_time_ASPC_ACPC'].mean()]
-EDRP_errors_att = [0.513, 0.565, 0.7405]               ################## CHANGER 
+EDRP_errors_att = [0.531, 0.493, 0.621]               ################## CHANGER 
 
 # for Altruistic subjects
 altruistic_means_att = [no_tradeoff_lottery_differences_altruistic['dwell_time_ACPC_ASPS'].mean(), 
               self_lottery_differences_altruistic['dwell_time_ACPS_ASPS'].mean(),
               charity_lottery_differences_altruistic['dwell_time_ASPC_ACPC'].mean()]
-altruistic_errors_att = [0.723, 0.675, 0.786]              ################## CHANGER 
+altruistic_errors_att = [0.831, 0.825, 0.939]              ################## CHANGER 
 
 # for Censored subjects
 censored_means_att = [no_tradeoff_lottery_differences_censored['dwell_time_ACPC_ASPS'].mean(), 
                   self_lottery_differences_censored['dwell_time_ACPS_ASPS'].mean(),
                   charity_lottery_differences_censored['dwell_time_ASPC_ACPC'].mean()]
-censored_errors_att = [0.507, 0.611, 0.633]        ################## CHANGER 
+censored_errors_att = [0.547, 0.577, 0.616]        ################## CHANGER 
 
 # for Adaptive and Censored subjects
 EDRP_censored_means_att = [no_tradeoff_lottery_differences_EDRP_censored['dwell_time_ACPC_ASPS'].mean(), 
                   self_lottery_differences_EDRP_censored['dwell_time_ACPS_ASPS'].mean(),
                   charity_lottery_differences_EDRP_censored['dwell_time_ASPC_ACPC'].mean()]
-EDRP_censored_errors_att = [0.340, 0.407, 0.461]        ################## CHANGER 
+EDRP_censored_errors_att = [0.382, 0.384, 0.439]        ################## CHANGER 
 
 
 # Plot 3 Attention differences for all probabilities (Principal Analysis)

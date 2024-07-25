@@ -579,19 +579,19 @@ offset_2 = 0.02
 principal_means = [no_tradeoff_lottery_differences_principal['valuation_ACPC_ASPS'].mean(),
                    self_lottery_differences_principal['valuation_ACPS_ASPS'].mean(),
                    charity_lottery_differences_principal['valuation_ASPC_ACPC'].mean()]
-principal_errors = [0.825, 1.456, 1.991]           ################## CHANGER 
+principal_errors = [0.778, 1.385, 1.898]           ################## CHANGER 
 
 # for Adaptive subjects
 EDRP_means = [no_tradeoff_lottery_differences_EDRP['valuation_ACPC_ASPS'].mean(), 
               self_lottery_differences_EDRP['valuation_ACPS_ASPS'].mean(),
               charity_lottery_differences_EDRP['valuation_ASPC_ACPC'].mean()]
-EDRP_errors = [0.513, 0.565, 0.7405]               ################## CHANGER 
+EDRP_errors = [1.240, 2.317, 2.8548]               ################## CHANGER 
 
 # for Censored subjects
 censored_means = [no_tradeoff_lottery_differences_censored['valuation_ACPC_ASPS'].mean(), 
                   self_lottery_differences_censored['valuation_ACPS_ASPS'].mean(),
                   charity_lottery_differences_censored['valuation_ASPC_ACPC'].mean()]
-censored_errors = [0.507, 0.611, 0.633]            ################## CHANGER 
+censored_errors = [1.742, 3.042, 3.883]            ################## CHANGER 
 
 
 # Plot 3 Valuation differences for all probabilities (Principal Analysis)
@@ -744,7 +744,7 @@ plt.savefig('Valuation case order H1.png', dpi=1200)
 plt.show()
 
 # Effect of case order on attention using mixed effects model
-model_case_order = smf.mixedlm("vluation ~ case_order", data_principal, groups=data_principal["number"]).fit()
+model_case_order = smf.mixedlm("valuation ~ case_order", data_principal, groups=data_principal["number"]).fit()
 print(model_case_order.summary())
 
 # We find that individuals generally value less lotteries in the following case
@@ -952,71 +952,71 @@ model_charity_censored.to_csv('Charity censored subjects Fixed regression result
 # Simulation with sample size of Exley and Garcia
 # =============================================================================
 
-iteration_number = 100 # Number of iterations of simulation per sample size
-sample_Exley = 57 # Exley's sample size is 57
-sample_Garcia =107 #  Garcia et al's sample size is 107
+# iteration_number = 100 # Number of iterations of simulation per sample size
+# sample_Exley = 57 # Exley's sample size is 57
+# sample_Garcia =107 #  Garcia et al's sample size is 107
 
-def simulation_power_charity_coef(sample, iteration):
-    p_values = np.zeros(iteration) # variable to collect p-values for each iteration
-    for inter in range(1, iteration): # run simulation for a set number of iterations
-        # pick random subjects from our sample ("sample" number) - drawn with replacement (same subject can be drawn multiple times)    
-        subjects_drawn = np.random.choice(np.unique(data_principal['number']), sample) 
-        data_drawn = []
-        for subj in subjects_drawn:
-            # extract data from these randomly picjed subjects
-            subj_data = data_principal.loc[data_principal['number'] == subj, ['number', 'prob_option_A', 'valuation', 'charity', 'tradeoff', 'interaction']]
-            data_drawn.append(subj_data)
-        data_drawn = pd.concat(data_drawn)
+# def simulation_power_charity_coef(sample, iteration):
+#     p_values = np.zeros(iteration) # variable to collect p-values for each iteration
+#     for inter in range(1, iteration): # run simulation for a set number of iterations
+#         # pick random subjects from our sample ("sample" number) - drawn with replacement (same subject can be drawn multiple times)    
+#         subjects_drawn = np.random.choice(np.unique(data_principal['number']), sample) 
+#         data_drawn = []
+#         for subj in subjects_drawn:
+#             # extract data from these randomly picjed subjects
+#             subj_data = data_principal.loc[data_principal['number'] == subj, ['number', 'prob_option_A', 'valuation', 'charity', 'tradeoff', 'interaction']]
+#             data_drawn.append(subj_data)
+#         data_drawn = pd.concat(data_drawn)
         
-        try:
-            # to replicate exactly Exley's regression (not taking into account the order of case)
-            test = fixed_regression_model(data_drawn, 'valuation', ['charity', 'tradeoff', 'interaction'], 'no') 
-            coef_charity = test['P>|z|']['charity'] # extract for each sample size tested the p-value of the charity variable
-            p_values[inter] = coef_charity # collect this p-value for each iteration
+#         try:
+#             # to replicate exactly Exley's regression (not taking into account the order of case)
+#             test = fixed_regression_model(data_drawn, 'valuation', ['charity', 'tradeoff', 'interaction'], 'no') 
+#             coef_charity = test['P>|z|']['charity'] # extract for each sample size tested the p-value of the charity variable
+#             p_values[inter] = coef_charity # collect this p-value for each iteration
             
-        except np.linalg.LinAlgError:
-            print()
-            print("Singular matrix encountered.")
-            print()
-            p_values[inter] = 1
-        except ZeroDivisionError:
-            print()
-            print("Multicollinearity encountered.")
-            print()
-            p_values[inter] = 1  
+#         except np.linalg.LinAlgError:
+#             print()
+#             print("Singular matrix encountered.")
+#             print()
+#             p_values[inter] = 1
+#         except ZeroDivisionError:
+#             print()
+#             print("Multicollinearity encountered.")
+#             print()
+#             p_values[inter] = 1  
             
-    power_calculated = np.mean(p_values < 0.05) # we find the power by average significance level over iterations
-    return p_values, power_calculated
+#     power_calculated = np.mean(p_values < 0.05) # we find the power by average significance level over iterations
+#     return p_values, power_calculated
 
 
-# Power using Exley's sample size and our data
+# # Power using Exley's sample size and our data
 
-p_val_Exley, power_Exley = simulation_power_charity_coef(sample_Exley, iteration_number)
+# p_val_Exley, power_Exley = simulation_power_charity_coef(sample_Exley, iteration_number)
 
-print()
-print()
-print('Using Exley sample size, the charity coefficient is significant for ' 
-      + str(power_Exley*100) + '% of iterations')
-print()
+# print()
+# print()
+# print('Using Exley sample size, the charity coefficient is significant for ' 
+#       + str(power_Exley*100) + '% of iterations')
+# print()
 
-# Power using Garcia's sample size and our data
+# # Power using Garcia's sample size and our data
 
-p_val_Garcia, power_Garcia = simulation_power_charity_coef(sample_Garcia, iteration_number)
+# p_val_Garcia, power_Garcia = simulation_power_charity_coef(sample_Garcia, iteration_number)
 
-print()
-print()
-print('Using Garcia et al sample size, the charity coefficient is significant for ' 
-      + str(power_Exley*100) + '% of iterations')
-print()
+# print()
+# print()
+# print('Using Garcia et al sample size, the charity coefficient is significant for ' 
+#       + str(power_Exley*100) + '% of iterations')
+# print()
 
-# Power using our sample size and data
+# # Power using our sample size and data
 
-p_val_us, power_us = simulation_power_charity_coef(183, iteration_number)
+# p_val_us, power_us = simulation_power_charity_coef(183, iteration_number)
 
-print()
-print()
-print('Using our sample size, the charity coefficient is significant for ' 
-      + str(power_us*100) + '% of iterations')
-print()
+# print()
+# print()
+# print('Using our sample size, the charity coefficient is significant for ' 
+#       + str(power_us*100) + '% of iterations')
+# print()
 
 

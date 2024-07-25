@@ -13,8 +13,10 @@ import pandas as pd
 
 # Info to find data
 path = '/Users/carolinepioger/Desktop/ALL collection' # change to yours :)
-dates = ['2024-04-29','2024-04-30','2024-05-02', '2024-05-14', '2024-05-15']
-# dates = ['2024-05-15']
+# path = '/Users/carolinepioger/Desktop/test' # change to yours :)
+dates = ['2024-04-29','2024-04-30','2024-05-02', '2024-05-14', '2024-05-15', '2024-07-12', '2024-07-25']
+# dates = ['2024-07-12', '2024-07-25']
+# dates = ['2024-07-25']
 
 assoc_sum = pd.concat([pd.read_csv(path + '/EXLEY_ASSO_' + date + '.csv') for date in dates], ignore_index=True)
 assoc_sum = assoc_sum.drop(assoc_sum[assoc_sum['participant._current_page_name'] != 'prolific'].index)
