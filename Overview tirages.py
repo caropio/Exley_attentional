@@ -64,6 +64,8 @@ print(outcome_data['total charity'].mean())
 print()
 print('Charity choice:')
 print(outcome_data['charity choice'].value_counts())
-
+print()
+print('Charity donations recap:')
+print(outcome_data.groupby('charity choice')['total charity'].sum())
 
 
