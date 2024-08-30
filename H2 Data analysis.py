@@ -306,6 +306,11 @@ ACPC_censored = data_censored[(data_censored['charity'] == 1) & (data_censored['
 ASPC_censored = data_censored[(data_censored['charity'] == 1) & (data_censored['tradeoff'] == 1)]
 ACPS_censored = data_censored[(data_censored['charity'] == 0) & (data_censored['tradeoff'] == 1)]
 
+# mean_attentions_censored = [ASPS_censored.groupby('prob_option_A')['dwell_time_relative'].mean().mean(), 
+#                             ACPS_censored.groupby('prob_option_A')['dwell_time_relative'].mean().mean(), 
+#                             ACPC_censored.groupby('prob_option_A')['dwell_time_relative'].mean().mean(), 
+#                             ASPC_censored.groupby('prob_option_A')['dwell_time_relative'].mean().mean()]
+# print(mean_attentions_censored)
 
 ################################################
 # Elicit data specifically checking self, charity and no tradeoff differences of H1
@@ -373,6 +378,13 @@ ACPC_EDRP = data_EDRP[(data_EDRP['charity'] == 1) & (data_EDRP['tradeoff'] == 0)
 ASPC_EDRP = data_EDRP[(data_EDRP['charity'] == 1) & (data_EDRP['tradeoff'] == 1)] # YSPC for Adaptive subjects
 ACPS_EDRP = data_EDRP[(data_EDRP['charity'] == 0) & (data_EDRP['tradeoff'] == 1)] # YCPS for Adaptive subjects
 
+
+# mean_attentions_EDRP = [ASPS_EDRP.groupby('prob_option_A')['dwell_time_relative'].mean().mean(), 
+#                         ACPS_EDRP.groupby('prob_option_A')['dwell_time_relative'].mean().mean(), 
+#                         ACPC_EDRP.groupby('prob_option_A')['dwell_time_relative'].mean().mean(), 
+#                         ASPC_EDRP.groupby('prob_option_A')['dwell_time_relative'].mean().mean()]
+# print(mean_attentions_EDRP)
+
 # Participants not being Adaptive (Principal analysis without adaptive subjects)
 data_else_EDRP = data_principal[~data_principal['number'].isin(data_EDRP['number'])] # data of else than Adaptive subjects
 X_else_EDRP_total = data_autre_principal[~data_autre_principal['number'].isin(EDRP_total)] # X-values of else than Adaptive subjects
@@ -394,6 +406,16 @@ ASPC_altruistic = data_altruistic[(data_altruistic['charity'] == 1) & (data_altr
 ACPS_altruistic = data_altruistic[(data_altruistic['charity'] == 0) & (data_altruistic['tradeoff'] == 1)] # YCPS for Altruistic subjects
 
 # Adaptive and Censored Participants combined
+
+# ASPS_EDRP_censored = pd.concat([ASPS_EDRP, ASPS_censored], ignore_index=True)
+# ACPS_EDRP_censored = pd.concat([ACPS_EDRP, ACPS_censored], ignore_index=True)
+# ACPC_EDRP_censored = pd.concat([ACPC_EDRP, ACPC_censored], ignore_index=True)
+# ASPC_EDRP_censored = pd.concat([ASPC_EDRP, ASPC_censored], ignore_index=True)
+# mean_attentions_EDRP_censored = [ASPS_EDRP_censored.groupby('prob_option_A')['dwell_time_relative'].mean().mean(), 
+#                                  ACPS_EDRP_censored.groupby('prob_option_A')['dwell_time_relative'].mean().mean(), 
+#                                  ACPC_EDRP_censored.groupby('prob_option_A')['dwell_time_relative'].mean().mean(), 
+#                                  ASPC_EDRP_censored.groupby('prob_option_A')['dwell_time_relative'].mean().mean()]
+# print(mean_attentions_EDRP_censored)
 
 no_tradeoff_lottery_differences_EDRP_censored = pd.concat([no_tradeoff_lottery_differences_EDRP, no_tradeoff_lottery_differences_censored], ignore_index=True)
 self_lottery_differences_EDRP_censored = pd.concat([self_lottery_differences_EDRP, self_lottery_differences_censored], ignore_index=True)
