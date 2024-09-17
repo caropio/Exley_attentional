@@ -423,6 +423,66 @@ samplesize_EDRP_censored = len(data_autre_EDRP) + len(data_autre_censored) # sam
 samplesize_principal_censored = len(data_autre_principal) + len(data_autre_censored) # sample size of Principal Analysis and Censored subjects
 
 
+# %%
+# =============================================================================
+# ANALYSE CORRELATION DATA BETWEEN ATTENTION AND VALUATION 
+# =============================================================================
+
+################################################
+# Differentiating between self and charity lottery differences
+################################################
+
+# Using linear regression between attention and valuation differences
+
+# Adaptive subjects 
+# For self lottery difference
+reg_model_self_EDRP = sm.OLS(self_lottery_differences_EDRP['valuation_ASPS_ACPS'], 
+                                  sm.add_constant(self_lottery_differences_EDRP['dwell_time_ASPS_ACPS'])).fit()
+print(reg_model_self_EDRP.summary())
+
+# For charity lottery difference
+reg_model_charity_EDRP = sm.OLS(charity_lottery_differences_EDRP['valuation_ACPC_ASPC'], 
+                                     sm.add_constant(charity_lottery_differences_EDRP['dwell_time_ACPC_ASPC'])).fit()
+print(reg_model_charity_EDRP.summary())
+
+
+# Censored subjects
+# For self lottery difference
+reg_model_self_censored = sm.OLS(self_lottery_differences_censored['valuation_ASPS_ACPS'], 
+                                 sm.add_constant(self_lottery_differences_censored['dwell_time_ASPS_ACPS'])).fit()
+print(reg_model_self_censored.summary())
+
+# For charity lottery difference
+reg_model_charity_censored = sm.OLS(charity_lottery_differences_censored['valuation_ACPC_ASPC'], 
+                                    sm.add_constant(charity_lottery_differences_censored['dwell_time_ACPC_ASPC'])).fit()
+print(reg_model_charity_censored.summary())
+
+
+# Adaptive and Censored subjects
+# For self lottery difference
+reg_model_self_EDRP_censored = sm.OLS(self_lottery_differences_EDRP_censored['valuation_ASPS_ACPS'], 
+                                      sm.add_constant(self_lottery_differences_EDRP_censored['dwell_time_ASPS_ACPS'])).fit()
+print(reg_model_self_EDRP_censored.summary())
+
+# For charity lottery difference
+reg_model_charity_EDRP_censored = sm.OLS(charity_lottery_differences_EDRP_censored['valuation_ACPC_ASPC'], 
+                                         sm.add_constant(charity_lottery_differences_EDRP_censored['dwell_time_ACPC_ASPC'])).fit()
+print(reg_model_charity_EDRP_censored.summary())
+
+
+# Principal Analysis and Censored subjects
+# For self lottery difference
+reg_model_self_principal_censored = sm.OLS(self_lottery_differences_principal_censored['valuation_ASPS_ACPS'], 
+                                      sm.add_constant(self_lottery_differences_principal_censored['dwell_time_ASPS_ACPS'])).fit()
+print(reg_model_self_principal_censored.summary())
+
+# For charity lottery difference
+reg_model_charity_principal_censored = sm.OLS(charity_lottery_differences_principal_censored['valuation_ACPC_ASPC'], 
+                                         sm.add_constant(charity_lottery_differences_principal_censored['dwell_time_ACPC_ASPC'])).fit()
+print(reg_model_charity_principal_censored.summary())
+
+
+
 
 # %%
 # =============================================================================
@@ -488,66 +548,6 @@ plot_corr_attention_valuation(charity_lottery_differences_principal_censored, 'P
 # We see a general trend that there is a small correlation between attention and
 # valuation, which is negative for the self lottery and positive for the charity 
 # lottery. We need to verify this statistically
-
-# %%
-# =============================================================================
-# ANALYSE CORRELATION DATA BETWEEN ATTENTION AND VALUATION 
-# =============================================================================
-
-################################################
-# Differentiating between self and charity lottery differences
-################################################
-
-# Using linear regression between attention and valuation differences
-
-# Adaptive subjects 
-# For self lottery difference
-reg_model_self_EDRP = sm.OLS(self_lottery_differences_EDRP['valuation_ASPS_ACPS'], 
-                                  sm.add_constant(self_lottery_differences_EDRP['dwell_time_ASPS_ACPS'])).fit()
-print(reg_model_self_EDRP.summary())
-
-# For charity lottery difference
-reg_model_charity_EDRP = sm.OLS(charity_lottery_differences_EDRP['valuation_ACPC_ASPC'], 
-                                     sm.add_constant(charity_lottery_differences_EDRP['dwell_time_ACPC_ASPC'])).fit()
-print(reg_model_charity_EDRP.summary())
-
-
-# Censored subjects
-# For self lottery difference
-reg_model_self_censored = sm.OLS(self_lottery_differences_censored['valuation_ASPS_ACPS'], 
-                                 sm.add_constant(self_lottery_differences_censored['dwell_time_ASPS_ACPS'])).fit()
-print(reg_model_self_censored.summary())
-
-# For charity lottery difference
-reg_model_charity_censored = sm.OLS(charity_lottery_differences_censored['valuation_ACPC_ASPC'], 
-                                    sm.add_constant(charity_lottery_differences_censored['dwell_time_ACPC_ASPC'])).fit()
-print(reg_model_charity_censored.summary())
-
-
-# Adaptive and Censored subjects
-# For self lottery difference
-reg_model_self_EDRP_censored = sm.OLS(self_lottery_differences_EDRP_censored['valuation_ASPS_ACPS'], 
-                                      sm.add_constant(self_lottery_differences_EDRP_censored['dwell_time_ASPS_ACPS'])).fit()
-print(reg_model_self_EDRP_censored.summary())
-
-# For charity lottery difference
-reg_model_charity_EDRP_censored = sm.OLS(charity_lottery_differences_EDRP_censored['valuation_ACPC_ASPC'], 
-                                         sm.add_constant(charity_lottery_differences_EDRP_censored['dwell_time_ACPC_ASPC'])).fit()
-print(reg_model_charity_EDRP_censored.summary())
-
-
-# Principal Analysis and Censored subjects
-# For self lottery difference
-reg_model_self_principal_censored = sm.OLS(self_lottery_differences_principal_censored['valuation_ASPS_ACPS'], 
-                                      sm.add_constant(self_lottery_differences_principal_censored['dwell_time_ASPS_ACPS'])).fit()
-print(reg_model_self_principal_censored.summary())
-
-# For charity lottery difference
-reg_model_charity_principal_censored = sm.OLS(charity_lottery_differences_principal_censored['valuation_ACPC_ASPC'], 
-                                         sm.add_constant(charity_lottery_differences_principal_censored['dwell_time_ACPC_ASPC'])).fit()
-print(reg_model_charity_principal_censored.summary())
-
-
 
 
 

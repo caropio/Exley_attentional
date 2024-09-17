@@ -428,6 +428,79 @@ samplesize_altruistic = len(data_autre_altruistic) # sample size of Altruistic s
 samplesize_censored = len(data_autre_censored) # sample size of Censored subjects
 samplesize_EDRP_censored = len(data_autre_EDRP) + len(data_autre_censored) # sample size of Adaptive and Censored subjects
 
+
+# %%
+# =============================================================================
+# ANALYSE ATTENTION DATA 
+# =============================================================================
+
+################################################
+# Verifying H2 through fixed effect regression models inspired by Exley
+################################################
+
+# The regression model is taken from Exley (2015) whilst additionally taking
+# into account the case order
+
+def fixed_regression_model(data, dependent_var, independent_var, want_print):
+    # Add fixed effects of individuals and probabilities 
+    database = data
+    dummy_prob = pd.get_dummies(database['prob_option_A'], drop_first=True, dtype=int) # Create dummy variable for probabilities (+drop first to avoid multicollinearity)
+    dummy_ind = pd.get_dummies(database['number'], drop_first=True, dtype=int)  # Create dummy variable for individuals (+drop first to avoid multicollinearity)
+    database = pd.concat([database, dummy_ind, dummy_prob], axis=1)
+    
+    # Add controls (information of survey)
+    database = database.merge(survey, on='number', how='left')
+    control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
+                     ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
+    
+    # Create the design matrix and dependent variable
+    X = database[independent_var + list(dummy_prob.columns) + list(dummy_ind.columns)]
+    X = pd.concat([X, database[control_variables]], axis=1)
+    X = sm.add_constant(X, has_constant='add') # add a first column full of ones to account for intercept of regression
+    y = database[dependent_var]
+
+    # Fit the regression model using Ordinary Least Squares
+    model = sm.OLS(y, X).fit(cov_type='cluster', cov_kwds={'groups': database['number']}) # cluster at individual level
+    summary = model.summary2().tables[1]
+    if want_print == 'yes':
+        print(summary)
+    elif want_print == 'no':
+        pass
+    return summary 
+
+
+# Principal Analysis
+fixed_model_principal_attention = fixed_regression_model(data_principal, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
+fixed_model_principal_attention.to_csv('Principal analysis Fixed regression results Attention H2.csv')
+
+# Adaptive subjects
+fixed_model_EDRP_attention = fixed_regression_model(data_EDRP, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
+fixed_model_EDRP_attention.to_csv('Adaptive Fixed regression results H2.csv')
+
+# Altruistic subjects
+fixed_model_altruistic_attention = fixed_regression_model(data_altruistic, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
+fixed_model_altruistic_attention.to_csv('Altruistic Fixed regression results H2.csv')
+
+# Censored subjects
+fixed_model_censored_attention = fixed_regression_model(data_censored, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
+fixed_model_censored_attention.to_csv('Censored Fixed regression results H2.csv')
+
+# Principal analysis and censored subjects
+data_for_analysis_principal_and_censored = pd.concat([data_principal, data_censored], 
+                                                     ignore_index=True) # Data specifically for Principal Analysis and Censored subjects 
+fixed_model_principal_censored_attention = fixed_regression_model(data_for_analysis_principal_and_censored, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
+fixed_model_principal_censored_attention.to_csv('Principal analysis and Censored Fixed regression results H2.csv')
+
+
+# Adaptive and censored subjects
+data_for_analysis_EDRP_and_censored = pd.concat([data_EDRP, data_censored], 
+                                                     ignore_index=True) # Data specifically for Adaptive and Censored subjects 
+fixed_model_EDRP_censored_attention = fixed_regression_model(data_for_analysis_EDRP_and_censored, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
+fixed_model_EDRP_censored_attention.to_csv('Adaptive and Censored Fixed regression results H2.csv')
+
+
+
+
 # %%
 # =============================================================================
 # ATTENTION DATA VISUALIZATION
@@ -522,31 +595,43 @@ x = np.arange(len(lottery_types_difference_attention))
 principal_means_att = [no_tradeoff_lottery_differences_principal['dwell_time_ACPC_ASPS'].mean(), 
                    self_lottery_differences_principal['dwell_time_ACPS_ASPS'].mean(),
                    charity_lottery_differences_principal['dwell_time_ASPC_ACPC'].mean()]
-principal_errors_att = [0.338, 0.322, 0.389]       ################# CHANGER 
+principal_std_model_att = fixed_model_principal_attention['Std.Err.'][['charity', 'tradeoff', 'interaction']].to_numpy() # take std of 3 coef from model
+principal_errors_att = [principal_std_model_att[0], principal_std_model_att[1], 
+                    (principal_std_model_att[1]+principal_std_model_att[2])/2]   # the last std is the sum of beta2 and beta3 
+
 
 # for Adaptive subjects
 EDRP_means_att = [no_tradeoff_lottery_differences_EDRP['dwell_time_ACPC_ASPS'].mean(), 
               self_lottery_differences_EDRP['dwell_time_ACPS_ASPS'].mean(),
               charity_lottery_differences_EDRP['dwell_time_ASPC_ACPC'].mean()]
-EDRP_errors_att = [0.531, 0.493, 0.621]               ################## CHANGER 
+EDRP_std_model_att = fixed_model_EDRP_attention['Std.Err.'][['charity', 'tradeoff', 'interaction']].to_numpy() # take std of 3 coef from model
+EDRP_errors_att = [EDRP_std_model_att[0], EDRP_std_model_att[1], 
+                    (EDRP_std_model_att[1]+EDRP_std_model_att[2])/2]   # the last std is the sum of beta2 and beta3 
 
 # for Altruistic subjects
 altruistic_means_att = [no_tradeoff_lottery_differences_altruistic['dwell_time_ACPC_ASPS'].mean(), 
               self_lottery_differences_altruistic['dwell_time_ACPS_ASPS'].mean(),
               charity_lottery_differences_altruistic['dwell_time_ASPC_ACPC'].mean()]
-altruistic_errors_att = [0.831, 0.825, 0.939]              ################## CHANGER 
+altruistic_std_model_att = fixed_model_altruistic_attention['Std.Err.'][['charity', 'tradeoff', 'interaction']].to_numpy() # take std of 3 coef from model
+altruistic_errors_att = [altruistic_std_model_att[0], altruistic_std_model_att[1], 
+                    (altruistic_std_model_att[1]+altruistic_std_model_att[2])/2]   # the last std is the sum of beta2 and beta3 
 
 # for Censored subjects
 censored_means_att = [no_tradeoff_lottery_differences_censored['dwell_time_ACPC_ASPS'].mean(), 
                   self_lottery_differences_censored['dwell_time_ACPS_ASPS'].mean(),
                   charity_lottery_differences_censored['dwell_time_ASPC_ACPC'].mean()]
-censored_errors_att = [0.547, 0.577, 0.616]        ################## CHANGER 
+censored_std_model_att = fixed_model_censored_attention['Std.Err.'][['charity', 'tradeoff', 'interaction']].to_numpy() # take std of 3 coef from model
+censored_errors_att = [censored_std_model_att[0], censored_std_model_att[1], 
+                    (censored_std_model_att[1]+censored_std_model_att[2])/2]   # the last std is the sum of beta2 and beta3 
+
 
 # for Adaptive and Censored subjects
 EDRP_censored_means_att = [no_tradeoff_lottery_differences_EDRP_censored['dwell_time_ACPC_ASPS'].mean(), 
                   self_lottery_differences_EDRP_censored['dwell_time_ACPS_ASPS'].mean(),
                   charity_lottery_differences_EDRP_censored['dwell_time_ASPC_ACPC'].mean()]
-EDRP_censored_errors_att = [0.382, 0.384, 0.439]        ################## CHANGER 
+EDRP_censored_std_model_att = fixed_model_EDRP_censored_attention['Std.Err.'][['charity', 'tradeoff', 'interaction']].to_numpy() # take std of 3 coef from model
+EDRP_censored_errors_att = [EDRP_censored_std_model_att[0], EDRP_censored_std_model_att[1], 
+                    (EDRP_censored_std_model_att[1]+EDRP_censored_std_model_att[2])/2]   # the last std is the sum of beta2 and beta3 
 
 
 # Plot 3 Attention differences for all probabilities (Principal Analysis)
@@ -830,77 +915,6 @@ t_statistic_charity_att_EDRP_censored, p_value_charity_att_EDRP_censored = ttest
 print('Difference of magnitude of Charity Attention difference between Adaptive and censored (t-test, p value)')
 print(t_statistic_charity_att_EDRP_censored, p_value_charity_att_EDRP_censored)
 print()
-
-
-
-# %%
-# =============================================================================
-# ANALYSE ATTENTION DATA 
-# =============================================================================
-
-################################################
-# Verifying H2 through fixed effect regression models inspired by Exley
-################################################
-
-# The regression model is taken from Exley (2015) whilst additionally taking
-# into account the case order
-
-def fixed_regression_model(data, dependent_var, independent_var, want_print):
-    # Add fixed effects of individuals and probabilities 
-    database = data
-    dummy_prob = pd.get_dummies(database['prob_option_A'], drop_first=True, dtype=int) # Create dummy variable for probabilities (+drop first to avoid multicollinearity)
-    dummy_ind = pd.get_dummies(database['number'], drop_first=True, dtype=int)  # Create dummy variable for individuals (+drop first to avoid multicollinearity)
-    database = pd.concat([database, dummy_ind, dummy_prob], axis=1)
-    
-    # Add controls (information of survey)
-    database = database.merge(survey, on='number', how='left')
-    control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
-                     ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
-    
-    # Create the design matrix and dependent variable
-    X = database[independent_var + list(dummy_prob.columns) + list(dummy_ind.columns)]
-    X = pd.concat([X, database[control_variables]], axis=1)
-    X = sm.add_constant(X, has_constant='add') # add a first column full of ones to account for intercept of regression
-    y = database[dependent_var]
-
-    # Fit the regression model using Ordinary Least Squares
-    model = sm.OLS(y, X).fit(cov_type='cluster', cov_kwds={'groups': database['number']}) # cluster at individual level
-    summary = model.summary2().tables[1]
-    if want_print == 'yes':
-        print(summary)
-    elif want_print == 'no':
-        pass
-    return summary 
-
-
-# Principal Analysis
-fixed_model_principal_attention = fixed_regression_model(data_principal, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
-fixed_model_principal_attention.to_csv('Principal analysis Fixed regression results Attention H2.csv')
-
-# Adaptive subjects
-fixed_model_EDRP_attention = fixed_regression_model(data_EDRP, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
-fixed_model_EDRP_attention.to_csv('Adaptive Fixed regression results H2.csv')
-
-# Altruistic subjects
-fixed_model_altruistic_attention = fixed_regression_model(data_altruistic, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
-fixed_model_altruistic_attention.to_csv('Altruistic Fixed regression results H2.csv')
-
-# Censored subjects
-fixed_model_censored_attention = fixed_regression_model(data_censored, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
-fixed_model_censored_attention.to_csv('Censored Fixed regression results H2.csv')
-
-# Principal analysis and censored subjects
-data_for_analysis_principal_and_censored = pd.concat([data_principal, data_censored], 
-                                                     ignore_index=True) # Data specifically for Principal Analysis and Censored subjects 
-fixed_model_principal_censored = fixed_regression_model(data_for_analysis_principal_and_censored, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
-fixed_model_principal_censored.to_csv('Principal analysis and Censored Fixed regression results H2.csv')
-
-
-# Adaptive and censored subjects
-data_for_analysis_EDRP_and_censored = pd.concat([data_EDRP, data_censored], 
-                                                     ignore_index=True) # Data specifically for Adaptive and Censored subjects 
-fixed_model_EDRP_censored = fixed_regression_model(data_for_analysis_EDRP_and_censored, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
-fixed_model_EDRP_censored.to_csv('Adaptive and Censored Fixed regression results H2.csv')
 
 
 

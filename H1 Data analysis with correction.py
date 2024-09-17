@@ -154,10 +154,51 @@ def lottery_differences(database, var1, var2):
     return lottery_differences
     # gives lottery differences for each probability for both valuation and attention
 
+# Get string version of variable name using globals()
+def get_variable_name_from_globals(var):
+    globals_dict = globals()
+    for name, value in globals_dict.items():
+        if value is var:
+            return name
+    return None
+
+def lottery_correction_added(lottery, notradeoff):
+    if get_variable_name_from_globals(lottery).split('_')[0] == 'self':
+        var = '_ACPS_ASPS'
+        n = 1
+    elif get_variable_name_from_globals(lottery).split('_')[0] == 'charity':
+        var = '_ASPC_ACPC'
+        n = 0
+    lottery = lottery.merge(notradeoff[['number', 'prob_option_A', 'valuation_ACPC_ASPS']], 
+                            on=['number', 'prob_option_A'], how='left')
+    lottery [f'valuation{var}_corrected'] = (
+        lottery[f'valuation{var}'] + (-1)**n *lottery['valuation_ACPC_ASPS'])
+    return lottery
+    # creates a new column with substract or add if tge no tradeoff difference 
+    # in the self and charity differences respectively
+
 # Self lottery, charity lottery and no tradeoff differences for Principal Analysis
 self_lottery_differences_principal = lottery_differences(self_lottery_principal, 'ACPS', 'ASPS') # gives YCPS-YSPS and ACPS-ASPS
 charity_lottery_differences_principal = lottery_differences(charity_lottery_principal, 'ASPC', 'ACPC') # gives YSPC-YCPC and ASPC-ACPC
 no_tradeoff_lottery_differences_principal = lottery_differences(no_tradeoff_lottery_principal, 'ACPC', 'ASPS') # gives YCPC-YSPS and ACPC-ASPS
+
+self_lottery_differences_principal = lottery_correction_added(self_lottery_differences_principal, 
+                                                              no_tradeoff_lottery_differences_principal)
+charity_lottery_differences_principal = lottery_correction_added(charity_lottery_differences_principal, 
+                                                              no_tradeoff_lottery_differences_principal)
+
+# # Add a column of corrected valuation by integrating the no tradeoff difference
+# self_lottery_differences_principal = self_lottery_differences_principal.merge(
+#     no_tradeoff_lottery_differences_principal[['number', 'prob_option_A', 'valuation_ACPC_ASPS']], 
+#     on=['number', 'prob_option_A'], how='left')
+# self_lottery_differences_principal['valuation_ACPS_ASPS_corrected'] = (
+#     self_lottery_differences_principal['valuation_ACPS_ASPS'] - self_lottery_differences_principal['valuation_ACPC_ASPS'])
+
+# charity_lottery_differences_principal = charity_lottery_differences_principal.merge(
+#     no_tradeoff_lottery_differences_principal[['number', 'prob_option_A', 'valuation_ACPC_ASPS']], 
+#     on=['number', 'prob_option_A'], how='left')
+# charity_lottery_differences_principal['valuation_ASPC_ACPC_corrected'] = (
+#     charity_lottery_differences_principal['valuation_ASPC_ACPC'] + charity_lottery_differences_principal['valuation_ACPC_ASPS'])
 
 
 ################################################
@@ -428,102 +469,6 @@ print()
 
 # %%
 # =============================================================================
-# ANALYSE VALUATION DATA 
-# =============================================================================
-
-################################################
-# Verifying H1 through fixed effect regression models from Exley
-################################################
-
-# The regression model is taken from Exley (2015) whilst additionally taking
-# into account the case order
-
-def fixed_regression_model(data, dependent_var, independent_var, want_print):
-    # Add fixed effects of individuals and probabilities 
-    database = data
-    dummy_prob = pd.get_dummies(database['prob_option_A'], drop_first=True, dtype=int) # Create dummy variable for probabilities (+drop first to avoid multicollinearity)
-    dummy_ind = pd.get_dummies(database['number'], drop_first=True, dtype=int)  # Create dummy variable for individuals (+drop first to avoid multicollinearity)
-    database = pd.concat([database, dummy_ind, dummy_prob], axis=1)
-    
-    # Add controls (information of survey)
-    database = database.merge(survey, on='number', how='left')
-    control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
-                     ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
-    
-    # Create the design matrix and dependent variable
-    X = database[independent_var + list(dummy_prob.columns) + list(dummy_ind.columns)]
-    X = pd.concat([X, database[control_variables]], axis=1)
-    X = sm.add_constant(X, has_constant='add') # add a first column full of ones to account for intercept of regression
-    y = database[dependent_var]
-
-    # Fit the regression model using Ordinary Least Squares
-    model = sm.OLS(y, X).fit(cov_type='cluster', cov_kwds={'groups': database['number']}) # cluster at individual level
-    summary = model.summary2().tables[1]
-    if want_print == 'yes':
-        print(summary)
-    elif want_print == 'no':
-        pass
-    return summary 
-
-
-# Principal Analysis
-fixed_model_principal = fixed_regression_model(data_principal, 'valuation', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
-fixed_model_principal.to_csv('Principal analysis Fixed regression results H1.csv')
-
-# Adaptive subjects
-fixed_model_EDRP = fixed_regression_model(data_EDRP, 'valuation', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
-fixed_model_EDRP.to_csv('Adaptive Fixed regression results H1.csv')
-
-# Censored subjects
-fixed_model_censored = fixed_regression_model(data_censored, 'valuation', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
-fixed_model_censored.to_csv('Censored Fixed regression results H1.csv')
-
-# Principal Analysis and Censored subjects (replication of Exley)
-data_for_analysis_principal_and_censored = pd.concat([data_principal, data_censored], 
-                                                     ignore_index=True) # Data specifically for Principal Analysis and Censored subjects 
-fixed_model_principal_and_censored = fixed_regression_model(data_for_analysis_principal_and_censored, 'valuation', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
-fixed_model_principal_and_censored.to_csv('Principal analysis and Censored Fixed regression results H1.csv')
-
-################################################
-# Heterogeneous effects of probabilities
-################################################
-
-# Although not part of H1, we observe heterogeneous effects of probabilities in 
-# the self and charity valuation difference (YCPS-YSPS and YSPC-YCPC respectively)
-# More specifically, in Principal Analysis, we observe that the valuation difference 
-# switches signs for high proba for the self valuation difference and for small 
-# prob for the charity valuation difference (and converges to 0 for Censored subjects)
-
-# PRINCIPAL ANALYSIS
-# For the no tradeoff difference YCPC-YSPS
-model_no_tradeoff_principal = fixed_regression_model(no_tradeoff_lottery_differences_principal, 'valuation_ACPC_ASPS', [], 'yes')
-model_no_tradeoff_principal.to_csv('No tradeoff principal analysis Fixed regression results.csv')
-
-# For the self lottery difference YCPS-YSPS
-model_self_principal = fixed_regression_model(self_lottery_differences_principal, 'valuation_ACPS_ASPS', [], 'yes')
-model_self_principal.to_csv('Self principal analysis Fixed regression results.csv')
-
-# For the charity lottery difference YSPC-YCPC
-model_charity_principal = fixed_regression_model(charity_lottery_differences_principal, 'valuation_ASPC_ACPC', [], 'yes')
-model_charity_principal.to_csv('Charity principal analysis Fixed regression results.csv')
-
-
-# CENSORED SUBJECTS
-# For the no tradeoff difference YCPC-YSPS
-model_no_tradeoff_censored = fixed_regression_model(no_tradeoff_lottery_differences_censored, 'valuation_ACPC_ASPS', [], 'yes')
-model_no_tradeoff_censored.to_csv('No tradeoff censored subjects Fixed regression results.csv')
-
-# For the self lottery difference YCPS-YSPS
-model_self_censored = fixed_regression_model(self_lottery_differences_censored, 'valuation_ACPS_ASPS', [], 'yes')
-model_self_censored.to_csv('Self censored subjects Fixed regression results.csv')
-
-# For the charity lottery difference YSPC-YCPC
-model_charity_censored = fixed_regression_model(charity_lottery_differences_censored, 'valuation_ASPC_ACPC', [], 'yes')
-model_charity_censored.to_csv('Charity censored subjects Fixed regression results.csv')
-
-
-# %%
-# =============================================================================
 # VALUATION DATA VISUALIZATION
 # =============================================================================
 
@@ -675,25 +620,19 @@ offset_2 = 0.02
 principal_means = [no_tradeoff_lottery_differences_principal['valuation_ACPC_ASPS'].mean(),
                    self_lottery_differences_principal['valuation_ACPS_ASPS'].mean(),
                    charity_lottery_differences_principal['valuation_ASPC_ACPC'].mean()]
-principal_std_model = fixed_model_principal['Std.Err.'][['charity', 'tradeoff', 'interaction']].to_numpy() # take std of 3 coef from model
-principal_errors = [principal_std_model[0], principal_std_model[1], 
-                    (principal_std_model[1]+principal_std_model[2])/2]   # the last std is the sum of beta2 and beta3 
+principal_errors = [0.778, 1.385, 1.898]           ################## CHANGER 
 
 # for Adaptive subjects
 EDRP_means = [no_tradeoff_lottery_differences_EDRP['valuation_ACPC_ASPS'].mean(), 
               self_lottery_differences_EDRP['valuation_ACPS_ASPS'].mean(),
               charity_lottery_differences_EDRP['valuation_ASPC_ACPC'].mean()]
-EDRP_std_model = fixed_model_EDRP['Std.Err.'][['charity', 'tradeoff', 'interaction']].to_numpy() # take std of 3 coef from model
-EDRP_errors = [EDRP_std_model[0], EDRP_std_model[1], 
-                    (EDRP_std_model[1]+EDRP_std_model[2])/2]   # the last std is the sum of beta2 and beta3 
+EDRP_errors = [1.240, 2.317, 2.8548]               ################## CHANGER 
 
 # for Censored subjects
 censored_means = [no_tradeoff_lottery_differences_censored['valuation_ACPC_ASPS'].mean(), 
                   self_lottery_differences_censored['valuation_ACPS_ASPS'].mean(),
                   charity_lottery_differences_censored['valuation_ASPC_ACPC'].mean()]
-censored_std_model = fixed_model_censored['Std.Err.'][['charity', 'tradeoff', 'interaction']].to_numpy() # take std of 3 coef from model
-censored_errors = [censored_std_model[0], censored_std_model[1], 
-                    (censored_std_model[1]+censored_std_model[2])/2]   # the last std is the sum of beta2 and beta3 
+censored_errors = [1.742, 3.042, 3.883]            ################## CHANGER 
 
 
 # Plot 3 Valuation differences for all probabilities (Principal Analysis)
@@ -712,6 +651,24 @@ plt.ylabel('Valuation difference in %')
 plt.title('Valuation differences for Principal Analysis')
 plt.legend()
 plt.savefig('All Lottery difference plot Principal H1.png', dpi=1200)
+plt.show()
+
+# Plot 3 Valuation differences for all probabilities (Principal Analysis corrected)
+plt.axhline(y=0, color='grey', linestyle='--')
+diff_proba_no_tradeoff = no_tradeoff_lottery_differences_principal.groupby('prob_option_A')['valuation_ACPC_ASPS']
+diff_proba_self_corrected = self_lottery_differences_principal.groupby('prob_option_A')['valuation_ACPS_ASPS_corrected']
+diff_proba_charity_corrected = charity_lottery_differences_principal.groupby('prob_option_A')['valuation_ASPC_ACPC_corrected']
+#plt.errorbar(diff_proba_no_tradeoff.mean().index - offset_2/2, diff_proba_no_tradeoff.mean(), diff_proba_no_tradeoff.std(), ecolor = 'black', fmt='none', alpha=0.4, label='std')
+plt.plot(diff_proba_no_tradeoff.mean().index - offset_2/2, diff_proba_no_tradeoff.mean(), label=lottery_types_difference[0], color='bisque', marker='o', linestyle='-')
+#plt.errorbar(diff_proba_self.mean().index, diff_proba_self.mean(), diff_proba_self.std(), ecolor = 'black', fmt='none', alpha=0.4)
+plt.plot(diff_proba_self.mean().index, diff_proba_self.mean(), label=lottery_types_difference[1], color='dodgerblue', marker='o', linestyle='-')
+#plt.errorbar(diff_proba_charity.mean().index + offset_2/2, diff_proba_charity.mean(), diff_proba_charity.std(), ecolor = 'black', fmt='none', alpha=0.4)
+plt.plot(diff_proba_charity.mean().index + offset_2/2, diff_proba_charity.mean(), label=lottery_types_difference[2], color='limegreen', marker='o', linestyle='-')
+plt.xlabel('Probability P of Non-Zero Amount')
+plt.ylabel('Valuation difference in %')
+plt.title('Valuation differences for Principal Analysis Corrected')
+plt.legend()
+plt.savefig('All Lottery difference plot Principal H1 Corrected.png', dpi=1200)
 plt.show()
 
 # Plot 3 Valuation differences for all probabilities (Censored subjects)
@@ -951,6 +908,102 @@ t_statistic_charity_EDRP_censored, p_value_charity_EDRP_censored = ttest_ind(cha
 print('Difference of magnitude of Charity difference between Adaptive and censored (t-test, p value)')
 print(t_statistic_charity_EDRP_censored, p_value_charity_EDRP_censored)
 print()
+
+
+# %%
+# =============================================================================
+# ANALYSE VALUATION DATA 
+# =============================================================================
+
+################################################
+# Verifying H1 through fixed effect regression models from Exley
+################################################
+
+# The regression model is taken from Exley (2015) whilst additionally taking
+# into account the case order
+
+def fixed_regression_model(data, dependent_var, independent_var, want_print):
+    # Add fixed effects of individuals and probabilities 
+    database = data
+    dummy_prob = pd.get_dummies(database['prob_option_A'], drop_first=True, dtype=int) # Create dummy variable for probabilities (+drop first to avoid multicollinearity)
+    dummy_ind = pd.get_dummies(database['number'], drop_first=True, dtype=int)  # Create dummy variable for individuals (+drop first to avoid multicollinearity)
+    database = pd.concat([database, dummy_ind, dummy_prob], axis=1)
+    
+    # Add controls (information of survey)
+    database = database.merge(survey, on='number', how='left')
+    control_variables = [['Demog_AGE', 'Demog_Sex', 'Demog_Field', 'Demog_High_Ed_Lev'] + ['NEP_' + str(i) for i in range(1, 16)] + 
+                     ['Charity_' + str(j) for j in ['LIKE', 'TRUST', 'LIKELY', 'DONATION_DONE']]][0]
+    
+    # Create the design matrix and dependent variable
+    X = database[independent_var + list(dummy_prob.columns) + list(dummy_ind.columns)]
+    X = pd.concat([X, database[control_variables]], axis=1)
+    X = sm.add_constant(X, has_constant='add') # add a first column full of ones to account for intercept of regression
+    y = database[dependent_var]
+
+    # Fit the regression model using Ordinary Least Squares
+    model = sm.OLS(y, X).fit(cov_type='cluster', cov_kwds={'groups': database['number']}) # cluster at individual level
+    summary = model.summary2().tables[1]
+    if want_print == 'yes':
+        print(summary)
+    elif want_print == 'no':
+        pass
+    return summary 
+
+
+# Principal Analysis
+fixed_model_principal = fixed_regression_model(data_principal, 'valuation', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
+fixed_model_principal.to_csv('Principal analysis Fixed regression results H1.csv')
+
+# Adaptive subjects
+fixed_model_EDRP = fixed_regression_model(data_EDRP, 'valuation', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
+fixed_model_EDRP.to_csv('Adaptive Fixed regression results H1.csv')
+
+# Censored subjects
+fixed_model_censored = fixed_regression_model(data_censored, 'valuation', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
+fixed_model_censored.to_csv('Censored Fixed regression results H1.csv')
+
+# Principal Analysis and Censored subjects (replication of Exley)
+data_for_analysis_principal_and_censored = pd.concat([data_principal, data_censored], 
+                                                     ignore_index=True) # Data specifically for Principal Analysis and Censored subjects 
+fixed_model_principal_and_censored = fixed_regression_model(data_for_analysis_principal_and_censored, 'valuation', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
+fixed_model_principal_and_censored.to_csv('Principal analysis and Censored Fixed regression results H1.csv')
+
+################################################
+# Heterogeneous effects of probabilities
+################################################
+
+# Although not part of H1, we observe heterogeneous effects of probabilities in 
+# the self and charity valuation difference (YCPS-YSPS and YSPC-YCPC respectively)
+# More specifically, in Principal Analysis, we observe that the valuation difference 
+# switches signs for high proba for the self valuation difference and for small 
+# prob for the charity valuation difference (and converges to 0 for Censored subjects)
+
+# PRINCIPAL ANALYSIS
+# For the no tradeoff difference YCPC-YSPS
+model_no_tradeoff_principal = fixed_regression_model(no_tradeoff_lottery_differences_principal, 'valuation_ACPC_ASPS', [], 'yes')
+model_no_tradeoff_principal.to_csv('No tradeoff principal analysis Fixed regression results.csv')
+
+# For the self lottery difference YCPS-YSPS
+model_self_principal = fixed_regression_model(self_lottery_differences_principal, 'valuation_ACPS_ASPS', [], 'yes')
+model_self_principal.to_csv('Self principal analysis Fixed regression results.csv')
+
+# For the charity lottery difference YSPC-YCPC
+model_charity_principal = fixed_regression_model(charity_lottery_differences_principal, 'valuation_ASPC_ACPC', [], 'yes')
+model_charity_principal.to_csv('Charity principal analysis Fixed regression results.csv')
+
+
+# CENSORED SUBJECTS
+# For the no tradeoff difference YCPC-YSPS
+model_no_tradeoff_censored = fixed_regression_model(no_tradeoff_lottery_differences_censored, 'valuation_ACPC_ASPS', [], 'yes')
+model_no_tradeoff_censored.to_csv('No tradeoff censored subjects Fixed regression results.csv')
+
+# For the self lottery difference YCPS-YSPS
+model_self_censored = fixed_regression_model(self_lottery_differences_censored, 'valuation_ACPS_ASPS', [], 'yes')
+model_self_censored.to_csv('Self censored subjects Fixed regression results.csv')
+
+# For the charity lottery difference YSPC-YCPC
+model_charity_censored = fixed_regression_model(charity_lottery_differences_censored, 'valuation_ASPC_ACPC', [], 'yes')
+model_charity_censored.to_csv('Charity censored subjects Fixed regression results.csv')
 
 
 # %%
