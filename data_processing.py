@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Apr 21 00:00:45 2024
+Created on Tue Sep 17 15:58:29 2024
 
 @author: carolinepioger
 """
+
 
 
 import pandas as pd
@@ -14,7 +15,6 @@ import matplotlib.pyplot as plt
 import statsmodels.formula.api as smf
 from scipy.stats import ttest_ind
 from matplotlib.patches import Patch
-import matplotlib.cm as cm
 import ast 
 
 # =============================================================================
@@ -54,30 +54,31 @@ for i in range(len(data)):
 # We plot the histograms of attentional data before the removal of outliers
 data_before_removal = data
 
-plt.hist(data_before_removal['dwell_time_absolute'], bins=50)
-plt.axvline(x=data_before_removal['dwell_time_absolute'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data_before_removal['dwell_time_absolute'].mean(), 1)))
-plt.xlabel('Attention in s')
-plt.ylabel('Frequency')
-plt.title('Histogram of total time spent revealing urn BEFORE removal of outliers')
-plt.legend()
-plt.show()
-
-plt.hist(data_before_removal['total_time_spent_s'], bins=50)
-plt.axvline(x=data_before_removal['total_time_spent_s'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data_before_removal['total_time_spent_s'].mean(), 1)))
-plt.xlabel('Attention in s')
-plt.ylabel('Frequency')
-plt.title('Histogram of total time spent on price list BEFORE removal of outliers')
-plt.legend()
-plt.show()
-
-
-plt.hist(data_before_removal['dwell_time_relative'], bins=50)
-plt.axvline(x=data_before_removal['dwell_time_relative'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data_before_removal['dwell_time_relative'].mean(), 1)))
-plt.xlabel('Attention in %')
-plt.ylabel('Frequency')
-plt.title('Histogram of attention allocation towards risk information BEFORE removal of outliers')
-plt.legend()
-plt.show()
+if __name__ == "__main__": # to only print when running script and not when imported
+    plt.hist(data_before_removal['dwell_time_absolute'], bins=50)
+    plt.axvline(x=data_before_removal['dwell_time_absolute'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data_before_removal['dwell_time_absolute'].mean(), 1)))
+    plt.xlabel('Attention in s')
+    plt.ylabel('Frequency')
+    plt.title('Histogram of total time spent revealing urn BEFORE removal of outliers')
+    plt.legend()
+    plt.show()
+    
+    plt.hist(data_before_removal['total_time_spent_s'], bins=50)
+    plt.axvline(x=data_before_removal['total_time_spent_s'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data_before_removal['total_time_spent_s'].mean(), 1)))
+    plt.xlabel('Attention in s')
+    plt.ylabel('Frequency')
+    plt.title('Histogram of total time spent on price list BEFORE removal of outliers')
+    plt.legend()
+    plt.show()
+    
+    
+    plt.hist(data_before_removal['dwell_time_relative'], bins=50)
+    plt.axvline(x=data_before_removal['dwell_time_relative'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data_before_removal['dwell_time_relative'].mean(), 1)))
+    plt.xlabel('Attention in %')
+    plt.ylabel('Frequency')
+    plt.title('Histogram of attention allocation towards risk information BEFORE removal of outliers')
+    plt.legend()
+    plt.show()
 
 # We remove outliers from attentional data (which was pre-registered) using the
 # following criteria: attentional data 3 standard deviations away from the general
@@ -155,30 +156,30 @@ data = data.drop(remove_all)
 data = data.reset_index(drop=True)
 
 # We plot the histograms of attentional data after the removal of outliers
-plt.hist(data['dwell_time_absolute'], bins=50)
-plt.axvline(x=data['dwell_time_absolute'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data['dwell_time_absolute'].mean(), 1)))
-plt.xlabel('Attention in s')
-plt.ylabel('Frequency')
-plt.title('Histogram of total time spent revealing urn AFTER removal of outliers')
-plt.legend()
-plt.show()
-
-plt.hist(data['total_time_spent_s'], bins=50)
-plt.axvline(x=data['total_time_spent_s'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data['total_time_spent_s'].mean(), 1)))
-plt.xlabel('Attention in s')
-plt.ylabel('Frequency')
-plt.title('Histogram of total time spent on price list AFTER removal of outliers')
-plt.legend()
-plt.show()
-
-
-plt.hist(data['dwell_time_relative'], bins=50)
-plt.axvline(x=data['dwell_time_relative'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data['dwell_time_relative'].mean(), 1)))
-plt.xlabel('Attention in %')
-plt.ylabel('Frequency')
-plt.title('Histogram of attention allocation towards risk information AFTER removal of outliers')
-plt.legend()
-plt.show()
+if __name__ == "__main__": # to only print when running script and not when imported    plt.hist(data['dwell_time_absolute'], bins=50)
+    plt.axvline(x=data['dwell_time_absolute'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data['dwell_time_absolute'].mean(), 1)))
+    plt.xlabel('Attention in s')
+    plt.ylabel('Frequency')
+    plt.title('Histogram of total time spent revealing urn AFTER removal of outliers')
+    plt.legend()
+    plt.show()
+    
+    plt.hist(data['total_time_spent_s'], bins=50)
+    plt.axvline(x=data['total_time_spent_s'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data['total_time_spent_s'].mean(), 1)))
+    plt.xlabel('Attention in s')
+    plt.ylabel('Frequency')
+    plt.title('Histogram of total time spent on price list AFTER removal of outliers')
+    plt.legend()
+    plt.show()
+    
+    
+    plt.hist(data['dwell_time_relative'], bins=50)
+    plt.axvline(x=data['dwell_time_relative'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data['dwell_time_relative'].mean(), 1)))
+    plt.xlabel('Attention in %')
+    plt.ylabel('Frequency')
+    plt.title('Histogram of attention allocation towards risk information AFTER removal of outliers')
+    plt.legend()
+    plt.show()
 
 # %%
 # =============================================================================
@@ -244,6 +245,22 @@ ACPC_principal = data_principal[(data_principal['charity'] == 1) & (data_princip
 ASPC_principal = data_principal[(data_principal['charity'] == 1) & (data_principal['tradeoff'] == 1)] # YSPC
 ACPS_principal = data_principal[(data_principal['charity'] == 0) & (data_principal['tradeoff'] == 1)] # YCPS
 
+# We group the valuations according to the probabilies involved in the lotteries (7 probabilies)
+valuation_ASPS = ASPS_principal.groupby('prob_option_A')['valuation']
+valuation_ACPS = ACPS_principal.groupby('prob_option_A')['valuation']
+valuation_ACPC = ACPC_principal.groupby('prob_option_A')['valuation']
+valuation_ASPC = ASPC_principal.groupby('prob_option_A')['valuation']
+
+# We find the means of valuations for each probability (for each case) 
+mean_valuation_ASPS = valuation_ASPS.mean()
+mean_valuation_ACPC = valuation_ACPC.mean()
+mean_valuation_ACPS = valuation_ACPS.mean()
+mean_valuation_ASPC = valuation_ASPC.mean()
+
+# We group these means together
+mean_valuations = [mean_valuation_ASPS.mean(), mean_valuation_ACPS.mean(), 
+                   mean_valuation_ACPC.mean(), mean_valuation_ASPC.mean()]
+
 # We group the attentions according to the probabilies involved in the lotteries (7 probabilies)
 attention_ASPS = ASPS_principal.groupby('prob_option_A')['dwell_time_relative']
 attention_ACPS = ACPS_principal.groupby('prob_option_A')['dwell_time_relative']
@@ -261,7 +278,7 @@ mean_attentions = [mean_attention_ASPS.mean(), mean_attention_ACPS.mean(),
                    mean_attention_ACPC.mean(), mean_attention_ASPC.mean()]
 
 ################################################
-# Elicit data specifically checking self, charity and no tradeoff differences of H3
+# Elicit data specifically checking self, charity and no tradeoff differences of H2
 ################################################
 
 # Self lottery difference is ACPS-ASPS, Charity lottery difference is ASPC-ACPC
@@ -289,8 +306,8 @@ def lottery_differences(database, var1, var2):
     # gives lottery differences for each probability for both valuation and attention
 
 # Self lottery, charity lottery and no tradeoff differences for Principal Analysis
-self_lottery_differences_principal = lottery_differences(self_lottery_principal, 'ASPS', 'ACPS') # gives YSPS-YCPS and ASPS-ACPS
-charity_lottery_differences_principal = lottery_differences(charity_lottery_principal, 'ACPC', 'ASPC') # gives YCPC-YSPC and ACPC-ASPC
+self_lottery_differences_principal = lottery_differences(self_lottery_principal, 'ACPS', 'ASPS') # gives YCPS-YSPS and ACPS-ASPS
+charity_lottery_differences_principal = lottery_differences(charity_lottery_principal, 'ASPC', 'ACPC') # gives YSPC-YCPC and ASPC-ACPC
 no_tradeoff_lottery_differences_principal = lottery_differences(no_tradeoff_lottery_principal, 'ACPC', 'ASPS') # gives YCPC-YSPS and ACPC-ASPS
 
 
@@ -320,14 +337,14 @@ charity_lottery_censored = pd.concat([ACPC_censored, ASPC_censored], ignore_inde
 no_tradeoff_lottery_censored = pd.concat([ASPS_censored, ACPC_censored], ignore_index=True)
 
 # Self lottery, charity lottery and no tradeoff differences for Censored subjects
-self_lottery_differences_censored = lottery_differences(self_lottery_censored, 'ASPS', 'ACPS') # gives YSPS-YCPS and ASPS-ACPS
-charity_lottery_differences_censored = lottery_differences(charity_lottery_censored, 'ACPC', 'ASPC') # gives YCPC-YSPC and ACPC-ASPC
+self_lottery_differences_censored = lottery_differences(self_lottery_censored, 'ACPS', 'ASPS') # gives YCPS-YSPS and ACPS-ASPS
+charity_lottery_differences_censored = lottery_differences(charity_lottery_censored, 'ASPC', 'ACPC') # gives YSPC-YCPC and ASPC-ACPC
 no_tradeoff_lottery_differences_censored = lottery_differences(no_tradeoff_lottery_censored, 'ACPC', 'ASPS') # gives YCPC-YSPS and ACPC-ASPS
 
 
 # %%
 # =============================================================================
-# CATEGORISATION OF ADAPTIVE & ALTRUISTIC SUBJECTS (!!! SPECIFIC to H3 !!!)
+# CATEGORISATION OF ADAPTIVE & ALTRUISTIC SUBJECTS 
 # =============================================================================
 
 # Within principal analysis, we want to find subjects that have Excuse-driven 
@@ -345,20 +362,18 @@ EDRP_charity = [] # participant having YCPS-YCPC < - (YCPC-YSPS) (Excuse-driven 
 altruistic_self = [] # participant having YCPS-YSPS < - (YCPC-YSPS) (Altruistic for self)
 altruistic_charity = [] # participant having YCPS-YCPC > YCPC-YSPS (Altruistic for charity)
 
-# Notice that the inequalities are differented and suited for the new representation
-# of self_lottery and charity_lottery which are inversed
 for i in data_principal['number'].unique():
-    self_diff = self_lottery_differences_principal.loc[self_lottery_differences_principal['number'] == i,['valuation_ASPS_ACPS']].mean() # mean across probabilities
-    charity_diff = charity_lottery_differences_principal.loc[charity_lottery_differences_principal['number'] == i,['valuation_ACPC_ASPC']].mean() # mean across probabilities
+    self_diff = self_lottery_differences_principal.loc[self_lottery_differences_principal['number'] == i,['valuation_ACPS_ASPS']].mean() # mean across probabilities
+    charity_diff = charity_lottery_differences_principal.loc[charity_lottery_differences_principal['number'] == i,['valuation_ASPC_ACPC']].mean() # mean across probabilities
     no_trade_diff = no_tradeoff_lottery_differences_principal.loc[no_tradeoff_lottery_differences_principal['number'] == i,['valuation_ACPC_ASPS']].mean() # mean across probabilities
 
-    if self_diff.item() < - no_trade_diff.item() : # participant has YSPS-YCPS < - (YCPC-YSPS) on average across probabilities 
+    if self_diff.item() > no_trade_diff.item() : # participant has YCPS-YSPS > YCPC-YSPS on average across probabilities 
         EDRP_self.append(i)
-    elif self_diff.item() > no_trade_diff.item() : # participant has YSPS-YCPS > YCPC-YSPS on average across probabilities 
+    elif self_diff.item() < - no_trade_diff.item() : # participant has YCPS-YSPS < - (YCPC-YSPS) on average across probabilities 
         altruistic_self.append(i)
-    if charity_diff.item() > no_trade_diff.item() : # participant has YCPC-YSPC > YCPC-YSPS on average across probabilities 
+    if charity_diff.item() < - no_trade_diff.item() : # participant has YSPC-YCPC < - (YCPC-YSPS) on average across probabilities 
         EDRP_charity.append(i)
-    if charity_diff.item() < - no_trade_diff.item() : # participant has YCPC-YSPC < - (YCPC-YSPS) on average across probabilities 
+    if charity_diff.item() > no_trade_diff.item() : # participant has YSPC-YCPC > YCPC-YSPS on average across probabilities 
         altruistic_charity.append(i)
 
 EDRP_total = np.intersect1d(EDRP_self, EDRP_charity) 
@@ -375,6 +390,13 @@ ASPS_EDRP = data_EDRP[(data_EDRP['charity'] == 0) & (data_EDRP['tradeoff'] == 0)
 ACPC_EDRP = data_EDRP[(data_EDRP['charity'] == 1) & (data_EDRP['tradeoff'] == 0)] # YCPC for Adaptive subjects
 ASPC_EDRP = data_EDRP[(data_EDRP['charity'] == 1) & (data_EDRP['tradeoff'] == 1)] # YSPC for Adaptive subjects
 ACPS_EDRP = data_EDRP[(data_EDRP['charity'] == 0) & (data_EDRP['tradeoff'] == 1)] # YCPS for Adaptive subjects
+
+
+# mean_attentions_EDRP = [ASPS_EDRP.groupby('prob_option_A')['dwell_time_relative'].mean().mean(), 
+#                         ACPS_EDRP.groupby('prob_option_A')['dwell_time_relative'].mean().mean(), 
+#                         ACPC_EDRP.groupby('prob_option_A')['dwell_time_relative'].mean().mean(), 
+#                         ASPC_EDRP.groupby('prob_option_A')['dwell_time_relative'].mean().mean()]
+# print(mean_attentions_EDRP)
 
 # Participants not being Adaptive (Principal analysis without adaptive subjects)
 data_else_EDRP = data_principal[~data_principal['number'].isin(data_EDRP['number'])] # data of else than Adaptive subjects
@@ -408,13 +430,18 @@ charity_lottery_differences_EDRP_censored = pd.concat([charity_lottery_differenc
                                                        charity_lottery_differences_censored], ignore_index=True)
 
 # Principal Analysis and Censored Participants combined
+no_tradeoff_lottery_differences_principal_censored = pd.concat([no_tradeoff_lottery_differences_principal, # specifically for Principal Analysis and Censored subjects 
+                                                           no_tradeoff_lottery_differences_censored], ignore_index=True)
 self_lottery_differences_principal_censored = pd.concat([self_lottery_differences_principal, self_lottery_differences_censored], 
                                                      ignore_index=True) # Self differences specifically for Principal Analysis and Censored subjects 
 charity_lottery_differences_principal_censored = pd.concat([charity_lottery_differences_principal, charity_lottery_differences_censored], 
                                                      ignore_index=True) # Charity differences specifically for Principal Analysis and Censored subjects 
 
 
+################################################
 # Sample sizes
+################################################
+
 samplesize_principal = len(data_autre_principal) # sample size of Principal Analysis
 samplesize_adaptive = len(data_autre_EDRP) # sample size of Adaptive subjects
 samplesize_altruistic = len(data_autre_altruistic) # sample size of Altruistic subjects
@@ -423,131 +450,158 @@ samplesize_EDRP_censored = len(data_autre_EDRP) + len(data_autre_censored) # sam
 samplesize_principal_censored = len(data_autre_principal) + len(data_autre_censored) # sample size of Principal Analysis and Censored subjects
 
 
-# %%
-# =============================================================================
-# ANALYSE CORRELATION DATA BETWEEN ATTENTION AND VALUATION 
-# =============================================================================
-
 ################################################
-# Differentiating between self and charity lottery differences
+# Socio-demographic information 
 ################################################
 
-# Using linear regression between attention and valuation differences
+if __name__ == "__main__": # to only print when running script and not when imported
 
-# Adaptive subjects 
-# For self lottery difference
-reg_model_self_EDRP = sm.OLS(self_lottery_differences_EDRP['valuation_ASPS_ACPS'], 
-                                  sm.add_constant(self_lottery_differences_EDRP['dwell_time_ASPS_ACPS'])).fit()
-print(reg_model_self_EDRP.summary())
-
-# For charity lottery difference
-reg_model_charity_EDRP = sm.OLS(charity_lottery_differences_EDRP['valuation_ACPC_ASPC'], 
-                                     sm.add_constant(charity_lottery_differences_EDRP['dwell_time_ACPC_ASPC'])).fit()
-print(reg_model_charity_EDRP.summary())
-
-
-# Censored subjects
-# For self lottery difference
-reg_model_self_censored = sm.OLS(self_lottery_differences_censored['valuation_ASPS_ACPS'], 
-                                 sm.add_constant(self_lottery_differences_censored['dwell_time_ASPS_ACPS'])).fit()
-print(reg_model_self_censored.summary())
-
-# For charity lottery difference
-reg_model_charity_censored = sm.OLS(charity_lottery_differences_censored['valuation_ACPC_ASPC'], 
-                                    sm.add_constant(charity_lottery_differences_censored['dwell_time_ACPC_ASPC'])).fit()
-print(reg_model_charity_censored.summary())
-
-
-# Adaptive and Censored subjects
-# For self lottery difference
-reg_model_self_EDRP_censored = sm.OLS(self_lottery_differences_EDRP_censored['valuation_ASPS_ACPS'], 
-                                      sm.add_constant(self_lottery_differences_EDRP_censored['dwell_time_ASPS_ACPS'])).fit()
-print(reg_model_self_EDRP_censored.summary())
-
-# For charity lottery difference
-reg_model_charity_EDRP_censored = sm.OLS(charity_lottery_differences_EDRP_censored['valuation_ACPC_ASPC'], 
-                                         sm.add_constant(charity_lottery_differences_EDRP_censored['dwell_time_ACPC_ASPC'])).fit()
-print(reg_model_charity_EDRP_censored.summary())
-
-
-# Principal Analysis and Censored subjects
-# For self lottery difference
-reg_model_self_principal_censored = sm.OLS(self_lottery_differences_principal_censored['valuation_ASPS_ACPS'], 
-                                      sm.add_constant(self_lottery_differences_principal_censored['dwell_time_ASPS_ACPS'])).fit()
-print(reg_model_self_principal_censored.summary())
-
-# For charity lottery difference
-reg_model_charity_principal_censored = sm.OLS(charity_lottery_differences_principal_censored['valuation_ACPC_ASPC'], 
-                                         sm.add_constant(charity_lottery_differences_principal_censored['dwell_time_ACPC_ASPC'])).fit()
-print(reg_model_charity_principal_censored.summary())
-
-
-
+# For Adaptive subjects
+    survey_EDRP = pd.merge(data_EDRP[['id']], survey, on='id', how='inner')
+    
+    print()
+    print('ADAPTIVE SUBJECTS')
+    print('The mean age is ' + str(survey_EDRP['Demog_AGE'].mean()))
+    print('There is ' 
+          + str(round(100*len(survey_EDRP[survey_EDRP['Demog_Sex']==1])/
+                      (len(survey_EDRP[survey_EDRP['Demog_Sex']==1])+len(survey_EDRP[survey_EDRP['Demog_Sex']==2])), 1))
+                            + ' % of women')
+    print('The mean highest education level is ' + 
+          str(['A level', 'Bsci', 'Msci', 'Phd', 'RNS'][round(survey_EDRP['Demog_High_Ed_Lev'].mean())-1]))
+    print()
+    
+    # For Altruistic subjects
+    survey_altruistic = pd.merge(data_altruistic[['id']], survey, on='id', how='inner')
+    
+    print()
+    print('ALTRUISTIC SUBJECTS')
+    print('The mean age is ' + str(survey_altruistic['Demog_AGE'].mean()))
+    print('There is ' 
+          + str(round(100*len(survey_altruistic[survey_altruistic['Demog_Sex']==1])/
+                      (len(survey_altruistic[survey_altruistic['Demog_Sex']==1])+len(survey_altruistic[survey_altruistic['Demog_Sex']==2])), 1))
+                            + ' % of women')
+    print('The mean highest education level is ' + 
+          str(['A level', 'Bsci', 'Msci', 'Phd', 'RNS'][round(survey_altruistic['Demog_High_Ed_Lev'].mean())-1]))
+    print()
+    
+    # Adapted and Censored subjects
+    
+    survey_censored = pd.merge(data_autre_censored[['id']], survey, on='id', how='inner')
+    survey_adapted_censored = pd.concat([survey_EDRP, survey_censored], ignore_index = True)
+    
+    print()
+    print('ADAPTIVE AND CENSORED  SUBJECTS')
+    print('The mean age is ' + str(survey_adapted_censored['Demog_AGE'].mean()))
+    print('There is ' 
+          + str(round(100*len(survey_adapted_censored[survey_adapted_censored['Demog_Sex']==1])/
+                      (len(survey_adapted_censored[survey_adapted_censored['Demog_Sex']==1])+len(survey_adapted_censored[survey_adapted_censored['Demog_Sex']==2])), 1))
+                            + ' % of women')
+    print('The mean highest education level is ' + 
+          str(['A level', 'Bsci', 'Msci', 'Phd', 'RNS'][round(survey_adapted_censored['Demog_High_Ed_Lev'].mean())-1]))
+    
 
 # %%
 # =============================================================================
-# VISUALISE CORRELATION DATA BETWEEN ATTENTION AND VALUATION
+# Participant-specific X values Analysis
 # =============================================================================
 
-# Define function that assigns a different color for each individual
-def color_by_ind(database):
-    individuals = database['number'].unique()
-    colors = cm.rainbow(np.linspace(0, 1, len(individuals)))
-    individual_color_map = dict(zip(individuals, colors))
-    return database['number'].map(individual_color_map)
+################################################
+# Distribution of X values
+################################################
 
-# Get string version of variable name using globals()
-def get_variable_name_from_globals(var):
-    globals_dict = globals()
-    for name, value in globals_dict.items():
-        if value is var:
-            return name
-    return None
+if __name__ == "__main__": # to only print when running script and not when imported
 
-# Define function of plots of correlation between Attention and Valuation differences
-def plot_corr_attention_valuation(database, pop, samplesize):
-    if get_variable_name_from_globals(database).split('_')[0] == 'self':
-        x = '_ASPS_ACPS'
-    elif get_variable_name_from_globals(database).split('_')[0] == 'charity':
-        x = '_ACPC_ASPC'
-    
-    # scatter plot with each participant having a different color 
-    plt.scatter(database[f'dwell_time{x}'], database[f'valuation{x}'],  c=color_by_ind(database))
-    
-    # adding regression line in red
-    coef = np.polyfit(database[f'dwell_time{x}'], database[f'valuation{x}'], 1)
-    poly1d_fn = np.poly1d(coef)
-    plt.plot(database[f'dwell_time{x}'], poly1d_fn(database[f'dwell_time{x}']), 
-                 color='red', linewidth=2, label='Regression Line')
+# We plot the different ditribution of participant-specific X values 
 
-    plt.xlabel('Attention difference in %')
-    plt.ylabel('Valuation difference in %')
-    plt.title('Attention vs Valuation differences ' 
-              + str(get_variable_name_from_globals(database).split('_')[0]) 
-              + ' / ' + str(pop) + f' n = {samplesize}')
-    plt.legend()
-    # plt.grid(True)
+    # Distribution for all subjects
+    plt.hist(data_autre['charity_calibration'], bins=20, color = 'lightcoral') 
+    plt.axvline(x=data_autre['charity_calibration'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data_autre['charity_calibration'].mean(), 1)))
+    plt.axvline(x=data_autre['charity_calibration'].median(), color='gainsboro', linestyle='--', label = 'Median = '+ str(np.round(data_autre['charity_calibration'].median(), 1)))
+    samplesize = len(data_autre)
+    plt.text(0.15, 0.9, f'n = {samplesize}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
+    plt.xlabel('Participant-specific X')
+    plt.ylabel('Frequency')
+    plt.title('Distribution of participant-specific X values (all subjects)')
     plt.show()
-  
-# Plot Attention vs Valuation difference for Adaptive subjects
-plot_corr_attention_valuation(self_lottery_differences_EDRP, 'Adaptive', samplesize_adaptive)
-plot_corr_attention_valuation(charity_lottery_differences_EDRP, 'Adaptive', samplesize_adaptive)
+    
+    # Distribution for Principal analysis 
+    plt.hist(data_autre_principal['charity_calibration'], bins=20, color = 'lightcoral') 
+    plt.xlabel('X values')
+    plt.ylabel('Frequency')
+    plt.title('Distribution of participant-specific X values (Principal Analysis)')
+    plt.axvline(x=data_autre_principal['charity_calibration'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data_autre_principal['charity_calibration'].mean(), 1)))
+    plt.axvline(x=data_autre_principal['charity_calibration'].median(), color='gainsboro', linestyle='--', label = 'Median = '+ str(np.round(data_autre_principal['charity_calibration'].median(), 1)))
+    plt.text(0.15, 0.9, f'n = {samplesize_principal}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
+    plt.legend()
+    plt.savefig('X values distribution Principal analysis.png', dpi=1200)
+    plt.show()
+    
+    # Replication figure Exley (Distribution of Principal Analysis)
+    hist, bins, _ = plt.hist(data_autre_principal['charity_calibration'], bins=16, color='black', density=True) 
+    hist_percentage = hist * 100
+    bar_width = np.diff(bins) * 0.8
+    bin_centers = bins[:-1] + np.diff(bins) * 0.1
+    plt.bar(bin_centers, hist_percentage, width=bar_width, edgecolor='black', align='center', color='black')
+    plt.xlabel('X values')
+    plt.ylabel('Percentage')
+    plt.title('Distribution of participant-specific X values (Exley replication)')
+    mean_val = np.round(data_autre_principal['charity_calibration'].mean(), 1)
+    median_val = np.round(data_autre_principal['charity_calibration'].median(), 1)
+    plt.text(0.27, 0.85, f'Mean = {mean_val}, Median = {median_val}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
+    plt.savefig('X values distribution Principal analysis EXLEY.png', dpi=1200)
+    plt.show()
+    
+    # Distribution for Adaptive subjects  
+    plt.hist(X_EDRP_total['charity_calibration'], bins=20, color = 'lightcoral') 
+    plt.xlabel('X values')
+    plt.ylabel('Frequency')
+    plt.title('Distribution of X values of Adaptive subjects')
+    plt.axvline(x=X_EDRP_total['charity_calibration'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(X_EDRP_total['charity_calibration'].mean(), 1)))
+    plt.axvline(x=X_EDRP_total['charity_calibration'].median(), color='gainsboro', linestyle='--', label = 'Median = '+ str(np.round(X_EDRP_total['charity_calibration'].median(), 1)))
+    plt.text(0.15, 0.9, f'n = {samplesize_adaptive}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
+    plt.legend()
+    plt.savefig('X values distribution ADAPTIVE.png', dpi=1200)
+    plt.show()
+    
+    # Distribution for Altruistic subjects  
+    plt.hist(X_altruistic['charity_calibration'], bins=20, color = 'lightcoral') 
+    plt.xlabel('X values')
+    plt.ylabel('Frequency')
+    plt.title('Distribution of X values of Altruistic subjects')
+    plt.axvline(x=X_altruistic['charity_calibration'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(X_altruistic['charity_calibration'].mean(), 1)))
+    plt.axvline(x=X_altruistic['charity_calibration'].median(), color='gainsboro', linestyle='--', label = 'Median = '+ str(np.round(X_altruistic['charity_calibration'].median(), 1)))
+    plt.text(0.85, 0.9, f'n = {samplesize_altruistic}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
+    plt.legend()
+    plt.savefig('X values distribution for ALTRUISTIC.png', dpi=1200)
+    plt.show()
 
-# Plot Attention vs Valuation difference for Censored subjects
-plot_corr_attention_valuation(self_lottery_differences_censored, 'Censored', samplesize_censored)
-plot_corr_attention_valuation(charity_lottery_differences_censored, 'Censored', samplesize_censored)
 
-# Plot Attention vs Valuation difference for both Adaptive and Censored subjects
-plot_corr_attention_valuation(self_lottery_differences_EDRP_censored, 'Adaptive + Censored', samplesize_EDRP_censored)
-plot_corr_attention_valuation(charity_lottery_differences_EDRP_censored, 'Adaptive + Censored', samplesize_EDRP_censored)
+################################################
+# Comparison of X-values
+################################################
 
-# Plot Attention vs Valuation difference for both Principal and Censored subjects
-plot_corr_attention_valuation(self_lottery_differences_principal_censored, 'Principal + Censored', samplesize_principal_censored)
-plot_corr_attention_valuation(charity_lottery_differences_principal_censored, 'Principal + Censored', samplesize_principal_censored)
+# We compare the ditribution of participant-specific X values between different groups of subjects
 
-# We see a general trend that there is a small correlation between attention and
-# valuation, which is negative for the self lottery and positive for the charity 
-# lottery. We need to verify this statistically
+if __name__ == "__main__": # to only print when running script and not when imported
 
-
+    # BETWEEN Adaptive and Principal Analysis
+    print('BETWEEN Adaptive and Principal Analysis ')
+    t_statistic_X, p_value_X = ttest_ind(X_EDRP_total['charity_calibration'], data_autre_principal['charity_calibration'])
+    print('Difference of X values between Adaptive and Principal Analysis (t-test, p value) : ')
+    print(t_statistic_X, p_value_X)
+    print()
+    
+    # BETWEEN Adaptive vs Altruistic
+    print('BETWEEN Adaptive and Altruistic subjects ')
+    t_statistic_X_2, p_value_X_2 = ttest_ind(X_EDRP_total['charity_calibration'], X_altruistic['charity_calibration'])
+    print('Difference of X values between Adaptive and Altruistic subjects (t-test, p value) : ')
+    print(t_statistic_X_2, p_value_X_2)
+    print()
+    
+    # BETWEEN Altruistic vs Principal Analysis
+    print('BETWEEN Altruistic and Principal Analysis ')
+    t_statistic_X_3, p_value_X_3 = ttest_ind(X_altruistic['charity_calibration'], data_autre_principal['charity_calibration'])
+    print('Difference of X values between Altruistic and Principal Analysis (t-test, p value) : ')
+    print(t_statistic_X_3, p_value_X_3)
+    print()
 

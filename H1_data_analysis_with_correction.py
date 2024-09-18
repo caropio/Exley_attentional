@@ -45,6 +45,113 @@ for i in range(len(data)):
     data['order of cases'][i] = ast.literal_eval(data['order of cases'][i])
     
 
+# %%
+# =============================================================================
+# REMOVING ATTENTIONAL OUTLIERS 
+# =============================================================================
+
+# We plot the histograms of attentional data before the removal of outliers
+data_before_removal = data
+
+plt.hist(data_before_removal['dwell_time_absolute'], bins=50)
+plt.axvline(x=data_before_removal['dwell_time_absolute'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data_before_removal['dwell_time_absolute'].mean(), 1)))
+plt.xlabel('Attention in s')
+plt.ylabel('Frequency')
+plt.title('Histogram of total time spent revealing urn BEFORE removal of outliers')
+plt.legend()
+plt.show()
+
+plt.hist(data_before_removal['total_time_spent_s'], bins=50)
+plt.axvline(x=data_before_removal['total_time_spent_s'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data_before_removal['total_time_spent_s'].mean(), 1)))
+plt.xlabel('Attention in s')
+plt.ylabel('Frequency')
+plt.title('Histogram of total time spent on price list BEFORE removal of outliers')
+plt.legend()
+plt.show()
+
+
+plt.hist(data_before_removal['dwell_time_relative'], bins=50)
+plt.axvline(x=data_before_removal['dwell_time_relative'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data_before_removal['dwell_time_relative'].mean(), 1)))
+plt.xlabel('Attention in %')
+plt.ylabel('Frequency')
+plt.title('Histogram of attention allocation towards risk information BEFORE removal of outliers')
+plt.legend()
+plt.show()
+
+# We remove outliers from attentional data (which was pre-registered) using the
+# following criteria: attentional data 3 standard deviations away from the general
+# attentional data for 1) total time spent revealing urn, 2) total time spent 
+# on price list and 3) attention allocation towards risk information (final measure)
+
+# 1) Data 3 std away from total time spent revealing urn - dwell_time_absolute
+dwell_mean = data['dwell_time_absolute'].mean()
+dwell_std = np.std(data['dwell_time_absolute'])
+outliers_data = data[(data['dwell_time_absolute'] < dwell_mean - 3 * dwell_std)
+                         | (data['dwell_time_absolute'] > dwell_mean + 3 * dwell_std)]
+
+# 2) Data 3 std away from total time spent on price list - total_time_spent_s
+dwell_mean_total = data['total_time_spent_s'].mean()
+dwell_std_total = np.std(data['total_time_spent_s'])
+outliers_data_total = data[(data['total_time_spent_s'] < dwell_mean_total - 3 * dwell_std_total)
+                         | (data['total_time_spent_s'] > dwell_mean_total + 3 * dwell_std_total)]
+
+# 3) Data 3 std away from attention allocation towards risk information - dwell_time_relative
+dwell_mean_relative = data['dwell_time_relative'].mean()
+dwell_std_relative = np.std(data['dwell_time_relative'])
+outliers_data_relative = data[(data['dwell_time_relative'] < dwell_mean_relative - 3 * dwell_std_relative)
+                         | (data['dwell_time_relative'] > dwell_mean_relative + 3 * dwell_std_relative)]
+
+# Intersect these outlier data
+outliers_all = np.union1d(outliers_data.index, np.union1d(outliers_data_total.index, outliers_data_relative.index))
+
+# We also need to remove attentional data associated to the outliers
+# Because we study attentional differences for the same lottery, we need to 
+# removed the associated data from the same lottery which was rendered useless 
+# without a comparator. For example if the attentional datapoint of individual 
+# i for self lottery with self certain amounts for P = 0.05 was removed as an 
+# outlier, we also removed the attentional datapoint of individual i for self 
+# lottery with charity certain amounts for P = 0.05.
+
+associated_outliers = []
+
+for index in outliers_all:
+    outlier_row = data.iloc[index]
+
+    if outlier_row['case'] == 'ASPS':
+        corresponding_row = data[
+            (data['case'] == 'ACPS') &
+            (data['number'] == outlier_row['number']) & 
+            (data['prob_option_A'] == outlier_row['prob_option_A'])
+        ]
+    elif outlier_row['case'] == 'ACPS' :
+        corresponding_row = data[
+            (data['case'] == 'ASPS') &
+            (data['number'] == outlier_row['number']) & 
+            (data['prob_option_A'] == outlier_row['prob_option_A'])
+        ]
+    elif outlier_row['case'] == 'ACPC' :
+        corresponding_row = data[
+            (data['case'] == 'ASPC') &
+            (data['number'] == outlier_row['number']) & 
+            (data['prob_option_A'] == outlier_row['prob_option_A'])
+        ]
+    elif outlier_row['case'] == 'ASPC':
+        corresponding_row = data[
+            (data['case'] == 'ACPC') &
+            (data['number'] == outlier_row['number']) & 
+            (data['prob_option_A'] == outlier_row['prob_option_A'])
+        ]
+
+    associated_outliers.append(corresponding_row.index[0])
+
+# Note that we remove associated data from self and charity attentional differences
+# so we discard associated data from no tradeoff attention differences (since it
+# isn't part of H2)
+
+# We merge both outliers and associated data and remove it from our data
+remove_all = np.union1d(associated_outliers,outliers_all)
+data = data.drop(remove_all)
+data = data.reset_index(drop=True)
 
 # %%
 # =============================================================================
@@ -162,6 +269,9 @@ def get_variable_name_from_globals(var):
             return name
     return None
 
+#################
+#################
+
 def lottery_correction_added(lottery, notradeoff):
     if get_variable_name_from_globals(lottery).split('_')[0] == 'self':
         var = '_ACPS_ASPS'
@@ -177,15 +287,20 @@ def lottery_correction_added(lottery, notradeoff):
     # creates a new column with substract or add if tge no tradeoff difference 
     # in the self and charity differences respectively
 
+#################
+#################
+
 # Self lottery, charity lottery and no tradeoff differences for Principal Analysis
 self_lottery_differences_principal = lottery_differences(self_lottery_principal, 'ACPS', 'ASPS') # gives YCPS-YSPS and ACPS-ASPS
 charity_lottery_differences_principal = lottery_differences(charity_lottery_principal, 'ASPC', 'ACPC') # gives YSPC-YCPC and ASPC-ACPC
 no_tradeoff_lottery_differences_principal = lottery_differences(no_tradeoff_lottery_principal, 'ACPC', 'ASPS') # gives YCPC-YSPS and ACPC-ASPS
 
+#################
 self_lottery_differences_principal = lottery_correction_added(self_lottery_differences_principal, 
                                                               no_tradeoff_lottery_differences_principal)
 charity_lottery_differences_principal = lottery_correction_added(charity_lottery_differences_principal, 
                                                               no_tradeoff_lottery_differences_principal)
+#################
 
 # # Add a column of corrected valuation by integrating the no tradeoff difference
 # self_lottery_differences_principal = self_lottery_differences_principal.merge(
@@ -748,7 +863,7 @@ plt.ylabel('Difference in valuation in %')
 plt.title('Difference in valuation for Adaptive and Censored subjects H1')
 plt.xticks(x, lottery_types_difference)
 plt.axhline(y=0, color='grey', linestyle='--')
-proxy_artists = [Patch(facecolor='white', edgecolor='black', label=f'Adaptive n = {samplesize_censored}'),
+proxy_artists = [Patch(facecolor='white', edgecolor='black', label=f'Adaptive n = {samplesize_adaptive}'),
                  Patch(facecolor='white', edgecolor='black', hatch="//", label=f'Censored n = {samplesize_censored}')]
 plt.legend(handles=proxy_artists)
 plt.savefig('Merged Valuation Adaptive and Censored H1.png', dpi=1200)

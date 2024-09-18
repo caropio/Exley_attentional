@@ -16,414 +16,17 @@ from matplotlib.patches import Patch
 import ast 
 
 
-# =============================================================================
-# UPLOADING DATA
-# =============================================================================
-
-# Paths information to upload data
-path = '/Users/carolinepioger/Desktop/ALL collection' # change to yours :)
-
-# Upload dataframes
-data = pd.read_csv(path + '/dataset.csv' ) # pooled data for analysis
-data_autre = pd.read_csv(path + '/criterion info data.csv') # participant-specific info
-survey = pd.read_csv(path + '/survey data.csv') # survey information 
-
-
-################################################
-# Take care of string issues
-################################################
-
-# Rewrite censored_calibration from string to float 
-for i in range(len(data_autre)):
-    if data_autre['censored_calibration'][i] == 'MSP':
-        pass
-    elif isinstance(data_autre['censored_calibration'][i], str):
-        data_autre['censored_calibration'][i] = ast.literal_eval(data_autre['censored_calibration'][i])
-
-# Rewrite order of cases from string to arrays
-for i in range(len(data)):
-    data['order of cases'][i] = ast.literal_eval(data['order of cases'][i])
-    
-
-
-# %%
-# =============================================================================
-# CATEGORISATION OF PRINCIPAL ANALYSIS AND CENSORED
-# =============================================================================
-
-# Let's get our dataframe data but only for principal analysis and censored subjects
-data_principal = data
-
-# Get id of censored participants
-censored_participants = data_autre.loc[data_autre['censored_calibration'] == 1, 'id'] 
-
-# Use their id to get dataframe (data) specifically of censored participants
-data_censored = data[data['id'].isin(censored_participants) == True]
-data_censored = data_censored.reset_index(drop=True)
-
-# Remove data from censored participants (in part 2) from data_principal 
-data_principal = data_principal.drop(data_principal[data_principal['id'].isin(censored_participants) == True].index)
-data_principal = data_principal.reset_index(drop=True)
-
-
-# Remove data from MSP participants (in part 2) from data_principal 
-
-MSP_participants = data_autre.loc[data_autre['censored_calibration'] == 'MSP', 'id'] 
-
-data_principal = data_principal.drop(data_principal[data_principal['id'].isin(MSP_participants) == True].index)
-data_principal = data_principal.reset_index(drop=True)
-
-
-# Get data (data_autre) for Principal analysis (not including participants with MSP and being censored in calibration price list)
-data_autre_principal = data_autre.loc[data_autre['censored_calibration'] == 0] 
-data_autre_principal = data_autre_principal.reset_index(drop=True)
-
-# Get data (data_autre) with specifically censored participants 
-data_autre_censored = data_autre.loc[data_autre['censored_calibration'] == 1] 
-data_autre_censored = data_autre_censored.reset_index(drop=True)
-
-
-# The dataframe data_principal gives all information for analysis 
-# specifically for principal analysis and data_censored specifically for 
-# censored individuals 
-
-# The dataframe data_autre_principal gives participant-specific information 
-# specifically for principal analysis and data_autre_censored specifically for 
-# censored individuals
-
-
-# %%
-# =============================================================================
-# GET DIFFERENT CATEGORIES OF DATA 
-# =============================================================================
-
-################################################
-# FOR PRINCIPAL ANALYSIS
-################################################
-
-################################################
-# Elicit different cases (YSPS/YCPC/etc)
-################################################
-
-ASPS_principal = data_principal[(data_principal['charity'] == 0) & (data_principal['tradeoff'] == 0)] # YSPS
-ACPC_principal = data_principal[(data_principal['charity'] == 1) & (data_principal['tradeoff'] == 0)] # YCPC
-ASPC_principal = data_principal[(data_principal['charity'] == 1) & (data_principal['tradeoff'] == 1)] # YSPC
-ACPS_principal = data_principal[(data_principal['charity'] == 0) & (data_principal['tradeoff'] == 1)] # YCPS
-
-# We group the valuations according to the probabilies involved in the lotteries (7 probabilies)
-valuation_ASPS = ASPS_principal.groupby('prob_option_A')['valuation']
-valuation_ACPS = ACPS_principal.groupby('prob_option_A')['valuation']
-valuation_ACPC = ACPC_principal.groupby('prob_option_A')['valuation']
-valuation_ASPC = ASPC_principal.groupby('prob_option_A')['valuation']
-
-# We find the means of valuations for each probability (for each case) 
-mean_valuation_ASPS = valuation_ASPS.mean()
-mean_valuation_ACPC = valuation_ACPC.mean()
-mean_valuation_ACPS = valuation_ACPS.mean()
-mean_valuation_ASPC = valuation_ASPC.mean()
-
-# We group these means together
-mean_valuations = [mean_valuation_ASPS.mean(), mean_valuation_ACPS.mean(), 
-                   mean_valuation_ACPC.mean(), mean_valuation_ASPC.mean()]
-
-################################################
-# Elicit data specifically checking self, charity and no tradeoff differences of H1
-################################################
-
-# Self lottery difference is YCPS-YSPS, Charity lottery difference is YSPC-YCPC
-# and No Tradeoff difference is YCPC-YSPS
-
-self_lottery_principal = pd.concat([ASPS_principal, ACPS_principal], ignore_index = True)
-charity_lottery_principal = pd.concat([ACPC_principal, ASPC_principal], ignore_index=True)
-no_tradeoff_lottery_principal = pd.concat([ASPS_principal, ACPC_principal], ignore_index=True)
-
-def lottery_differences(database, var1, var2):
-    lottery_differences = pd.DataFrame(columns=['number', 'prob_option_A'])
-    for i in database['number'].unique():
-        individual = database.loc[database['number'] == i, ['case', 'prob_option_A', 'valuation', 'dwell_time_relative']] 
-        individual_difference = individual.pivot(index='prob_option_A', columns='case')
-        try: 
-            individual_difference[f'valuation_{var1}_{var2}'] = individual_difference['valuation'][var1] - individual_difference['valuation'][var2]
-            individual_difference[f'dwell_time_{var1}_{var2}'] = individual_difference['dwell_time_relative'][var1] - individual_difference['dwell_time_relative'][var2]
-            individual_difference['number'] = i
-            individual_difference.reset_index(inplace=True)
-            individual_difference.columns = individual_difference.columns.droplevel(1)
-            lottery_differences = pd.concat([lottery_differences, individual_difference[['number', 'prob_option_A', f'valuation_{var1}_{var2}', f'dwell_time_{var1}_{var2}']]], ignore_index=True)
-        except KeyError: # since we don't remove for ACPC vs ASPS, sometimes it may give error
-            pass
-    return lottery_differences
-    # gives lottery differences for each probability for both valuation and attention
-
-# Self lottery, charity lottery and no tradeoff differences for Principal Analysis
-self_lottery_differences_principal = lottery_differences(self_lottery_principal, 'ACPS', 'ASPS') # gives YCPS-YSPS and ACPS-ASPS
-charity_lottery_differences_principal = lottery_differences(charity_lottery_principal, 'ASPC', 'ACPC') # gives YSPC-YCPC and ASPC-ACPC
-no_tradeoff_lottery_differences_principal = lottery_differences(no_tradeoff_lottery_principal, 'ACPC', 'ASPS') # gives YCPC-YSPS and ACPC-ASPS
-
-
-################################################
-# FOR CENSORED SUBJECTS
-################################################
-
-################################################
-# Elicit different cases (YSPS/YCPC/etc)
-################################################
-
-ASPS_censored = data_censored[(data_censored['charity'] == 0) & (data_censored['tradeoff'] == 0)]
-ACPC_censored = data_censored[(data_censored['charity'] == 1) & (data_censored['tradeoff'] == 0)]
-ASPC_censored = data_censored[(data_censored['charity'] == 1) & (data_censored['tradeoff'] == 1)]
-ACPS_censored = data_censored[(data_censored['charity'] == 0) & (data_censored['tradeoff'] == 1)]
-
-
-################################################
-# Elicit data specifically checking self, charity and no tradeoff differences of H1
-################################################
-
-# Self lottery difference is YCPS-YSPS, Charity lottery difference is YSPC-YCPC
-# and No Tradeoff difference is YCPC-YSPS
-
-self_lottery_censored = pd.concat([ASPS_censored, ACPS_censored], ignore_index = True)
-charity_lottery_censored = pd.concat([ACPC_censored, ASPC_censored], ignore_index=True)
-no_tradeoff_lottery_censored = pd.concat([ASPS_censored, ACPC_censored], ignore_index=True)
-
-# Self lottery, charity lottery and no tradeoff differences for Censored subjects
-self_lottery_differences_censored = lottery_differences(self_lottery_censored, 'ACPS', 'ASPS') # gives YCPS-YSPS and ACPS-ASPS
-charity_lottery_differences_censored = lottery_differences(charity_lottery_censored, 'ASPC', 'ACPC') # gives YSPC-YCPC and ASPC-ACPC
-no_tradeoff_lottery_differences_censored = lottery_differences(no_tradeoff_lottery_censored, 'ACPC', 'ASPS') # gives YCPC-YSPS and ACPC-ASPS
-
-
-# %%
-# =============================================================================
-# CATEGORISATION OF ADAPTIVE & ALTRUISTIC SUBJECTS and X VALUES
-# =============================================================================
-
-# Within principal analysis, we want to find subjects that have Excuse-driven 
-# risk preferences (EDRP), which we refer to as "Adaptive" subjects
-# Thus we want participants with YCPS-YSPS > 0 and YCPS-YCPC < 0 whilst 
-# taking into account the no tradeoff difference YCPC-YSPS =/= 0
-
-# We also categorise participants with risk preferences that are the opposite of H1
-# so with YCPS-YSPS < 0 and YCPS-YCPC > 0 whilst also
-# taking into account the no tradeoff difference YCPC-YSPS =/= 0
-
-EDRP_self = [] # participant having YCPS-YSPS > YCPC-YSPS (Excuse-driven for self)
-EDRP_charity = [] # participant having YCPS-YCPC < - (YCPC-YSPS) (Excuse-driven for charity)
-
-altruistic_self = [] # participant having YCPS-YSPS < - (YCPC-YSPS) (Altruistic for self)
-altruistic_charity = [] # participant having YCPS-YCPC > YCPC-YSPS (Altruistic for charity)
-
-for i in data_principal['number'].unique():
-    self_diff = self_lottery_differences_principal.loc[self_lottery_differences_principal['number'] == i,['valuation_ACPS_ASPS']].mean() # mean across probabilities
-    charity_diff = charity_lottery_differences_principal.loc[charity_lottery_differences_principal['number'] == i,['valuation_ASPC_ACPC']].mean() # mean across probabilities
-    no_trade_diff = no_tradeoff_lottery_differences_principal.loc[no_tradeoff_lottery_differences_principal['number'] == i,['valuation_ACPC_ASPS']].mean() # mean across probabilities
-
-    if self_diff.item() > no_trade_diff.item() : # participant has YCPS-YSPS > YCPC-YSPS on average across probabilities 
-        EDRP_self.append(i)
-    elif self_diff.item() < - no_trade_diff.item() : # participant has YCPS-YSPS < - (YCPC-YSPS) on average across probabilities 
-        altruistic_self.append(i)
-    if charity_diff.item() < - no_trade_diff.item() : # participant has YSPC-YCPC < - (YCPC-YSPS) on average across probabilities 
-        EDRP_charity.append(i)
-    if charity_diff.item() > no_trade_diff.item() : # participant has YSPC-YCPC > YCPC-YSPS on average across probabilities 
-        altruistic_charity.append(i)
-    
-# Participants being both Excuse-driven for self and for charity -- called Adaptive subjects
-EDRP_total = np.intersect1d(EDRP_self, EDRP_charity) 
-print()
-print('Excuse-driven for self : ' + str(len(EDRP_self)))
-print('Excuse-driven for charity : ' + str(len(EDRP_charity)))
-print('Adaptive subjects : ' + str(len(EDRP_total)))
-
-data_EDRP = data_principal[data_principal['number'].isin(EDRP_total)] # data of Adaptive subjects
-data_autre_EDRP = data_autre_principal[data_autre_principal['number'].isin(EDRP_total)] # data_autre of Adaptive subjects
-X_EDRP_total = data_autre_principal[data_autre_principal['number'].isin(EDRP_total)] # X-values of Adaptive subjects
-
-no_tradeoff_lottery_differences_EDRP = no_tradeoff_lottery_differences_principal[no_tradeoff_lottery_differences_principal['number'].isin(EDRP_total)] # no tradeoff diff of Adaptive subjecs
-self_lottery_differences_EDRP = self_lottery_differences_principal[self_lottery_differences_principal['number'].isin(EDRP_total)] # self lottery diff of Adaptive subjecs
-charity_lottery_differences_EDRP = charity_lottery_differences_principal[charity_lottery_differences_principal['number'].isin(EDRP_total)] # charity lottery diff of Adaptive subjecs
-
-ASPS_EDRP = data_EDRP[(data_EDRP['charity'] == 0) & (data_EDRP['tradeoff'] == 0)] # YSPS for Adaptive subjects
-ACPC_EDRP = data_EDRP[(data_EDRP['charity'] == 1) & (data_EDRP['tradeoff'] == 0)] # YCPC for Adaptive subjects
-ASPC_EDRP = data_EDRP[(data_EDRP['charity'] == 1) & (data_EDRP['tradeoff'] == 1)] # YSPC for Adaptive subjects
-ACPS_EDRP = data_EDRP[(data_EDRP['charity'] == 0) & (data_EDRP['tradeoff'] == 1)] # YCPS for Adaptive subjects
-
-
-# Participants not being Adaptive (Principal analysis without adaptive subjects)
-data_else_EDRP = data_principal[~data_principal['number'].isin(data_EDRP['number'])] # data of else than Adaptive subjects
-X_else_EDRP_total = data_autre_principal[~data_autre_principal['number'].isin(EDRP_total)] # X-values of else than Adaptive subjects
-
-# Participants being both Altruistic for self and for charity -- called Altruistic subjects
-altruistic_total = np.intersect1d(altruistic_self, altruistic_charity)
-print()
-print('Altruistic for self : ' + str(len(altruistic_self)))
-print('Altruistic for charity : ' + str(len(altruistic_charity)))
-print('Altruistic subjects : ' + str(len(altruistic_total)))
-
-data_altruistic = data_principal[data_principal['number'].isin(altruistic_total)] # data of Altruistic subjects
-data_autre_altruistic = data_autre_principal[data_autre_principal['number'].isin(altruistic_total)] # data_autre of Altruistic subjects
-X_altruistic = data_autre_principal[data_autre_principal['number'].isin(altruistic_total)] # X-values of Altruistic subjects
-
-# Participants being neither Adaptive or Altruistic subjects (the rest)
-no_EDRP = np.setdiff1d(data_principal['number'].unique(), np.union1d(EDRP_total, altruistic_total))
-print()
-print('Subjects that are neither adaptive and altruistic: ' + str(len(no_EDRP)))
-
-data_no_EDRP = data_principal[data_principal['number'].isin(no_EDRP)] # X-values of subjects being neither Adaptive or Altruistic
-X_no_EDRP_total = data_autre_principal[data_autre_principal['number'].isin(no_EDRP)] # data of subjects being neither Adaptive or Altruistic
-
-# Sample sizes
-samplesize_principal = len(data_autre_principal) # sample size of Principal Analysis
-samplesize_adaptive = len(data_autre_EDRP) # sample size of Adaptive subjects
-samplesize_altruistic = len(data_autre_altruistic) # sample size of Altruistic subjects
-samplesize_censored = len(data_autre_censored) # sample size of Censored subjects
-samplesize_EDRP_censored = len(data_autre_EDRP) + len(data_autre_censored) # sample size of Adaptive and Censored subjects
-
-################################################
-# Socio-demographic information 
-################################################
-
-# For Adaptive subjects
-survey_EDRP = pd.merge(data_EDRP[['id']], survey, on='id', how='inner')
-
-print()
-print('ADAPTIVE SUBJECTS')
-print('The mean age is ' + str(survey_EDRP['Demog_AGE'].mean()))
-print('There is ' 
-      + str(round(100*len(survey_EDRP[survey_EDRP['Demog_Sex']==1])/
-                  (len(survey_EDRP[survey_EDRP['Demog_Sex']==1])+len(survey_EDRP[survey_EDRP['Demog_Sex']==2])), 1))
-                        + ' % of women')
-print('The mean highest education level is ' + 
-      str(['A level', 'Bsci', 'Msci', 'Phd', 'RNS'][round(survey_EDRP['Demog_High_Ed_Lev'].mean())-1]))
-print()
-
-# For Altruistic subjects
-survey_altruistic = pd.merge(data_altruistic[['id']], survey, on='id', how='inner')
-
-print()
-print('ALTRUISTIC SUBJECTS')
-print('The mean age is ' + str(survey_altruistic['Demog_AGE'].mean()))
-print('There is ' 
-      + str(round(100*len(survey_altruistic[survey_altruistic['Demog_Sex']==1])/
-                  (len(survey_altruistic[survey_altruistic['Demog_Sex']==1])+len(survey_altruistic[survey_altruistic['Demog_Sex']==2])), 1))
-                        + ' % of women')
-print('The mean highest education level is ' + 
-      str(['A level', 'Bsci', 'Msci', 'Phd', 'RNS'][round(survey_altruistic['Demog_High_Ed_Lev'].mean())-1]))
-print()
-
-# Adapted and Censored subjects
-
-survey_censored = pd.merge(data_autre_censored[['id']], survey, on='id', how='inner')
-survey_adapted_censored = pd.concat([survey_EDRP, survey_censored], ignore_index = True)
-
-print()
-print('ADAPTIVE AND CENSORED  SUBJECTS')
-print('The mean age is ' + str(survey_adapted_censored['Demog_AGE'].mean()))
-print('There is ' 
-      + str(round(100*len(survey_adapted_censored[survey_adapted_censored['Demog_Sex']==1])/
-                  (len(survey_adapted_censored[survey_adapted_censored['Demog_Sex']==1])+len(survey_adapted_censored[survey_adapted_censored['Demog_Sex']==2])), 1))
-                        + ' % of women')
-print('The mean highest education level is ' + 
-      str(['A level', 'Bsci', 'Msci', 'Phd', 'RNS'][round(survey_adapted_censored['Demog_High_Ed_Lev'].mean())-1]))
-
-
-# %%
-# =============================================================================
-# Participant-specific X values Analysis
-# =============================================================================
-
-################################################
-# Distribution of X values
-################################################
-
-# We plot the different ditribution of participant-specific X values 
-
-# Distribution for all subjects
-plt.hist(data_autre['charity_calibration'], bins=20, color = 'lightcoral') 
-plt.axvline(x=data_autre['charity_calibration'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data_autre['charity_calibration'].mean(), 1)))
-plt.axvline(x=data_autre['charity_calibration'].median(), color='gainsboro', linestyle='--', label = 'Median = '+ str(np.round(data_autre['charity_calibration'].median(), 1)))
-samplesize = len(data_autre)
-plt.text(0.15, 0.9, f'n = {samplesize}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
-plt.xlabel('Participant-specific X')
-plt.ylabel('Frequency')
-plt.title('Distribution of participant-specific X values (all subjects)')
-plt.show()
-
-# Distribution for Principal analysis 
-plt.hist(data_autre_principal['charity_calibration'], bins=20, color = 'lightcoral') 
-plt.xlabel('X values')
-plt.ylabel('Frequency')
-plt.title('Distribution of participant-specific X values (Principal Analysis)')
-plt.axvline(x=data_autre_principal['charity_calibration'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(data_autre_principal['charity_calibration'].mean(), 1)))
-plt.axvline(x=data_autre_principal['charity_calibration'].median(), color='gainsboro', linestyle='--', label = 'Median = '+ str(np.round(data_autre_principal['charity_calibration'].median(), 1)))
-plt.text(0.15, 0.9, f'n = {samplesize_principal}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
-plt.legend()
-plt.savefig('X values distribution Principal analysis.png', dpi=1200)
-plt.show()
-
-# Replication figure Exley (Distribution of Principal Analysis)
-hist, bins, _ = plt.hist(data_autre_principal['charity_calibration'], bins=16, color='black', density=True) 
-hist_percentage = hist * 100
-bar_width = np.diff(bins) * 0.8
-bin_centers = bins[:-1] + np.diff(bins) * 0.1
-plt.bar(bin_centers, hist_percentage, width=bar_width, edgecolor='black', align='center', color='black')
-plt.xlabel('X values')
-plt.ylabel('Percentage')
-plt.title('Distribution of participant-specific X values (Exley replication)')
-mean_val = np.round(data_autre_principal['charity_calibration'].mean(), 1)
-median_val = np.round(data_autre_principal['charity_calibration'].median(), 1)
-plt.text(0.27, 0.85, f'Mean = {mean_val}, Median = {median_val}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
-plt.savefig('X values distribution Principal analysis EXLEY.png', dpi=1200)
-plt.show()
-
-# Distribution for Adaptive subjects  
-plt.hist(X_EDRP_total['charity_calibration'], bins=20, color = 'lightcoral') 
-plt.xlabel('X values')
-plt.ylabel('Frequency')
-plt.title('Distribution of X values of Adaptive subjects')
-plt.axvline(x=X_EDRP_total['charity_calibration'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(X_EDRP_total['charity_calibration'].mean(), 1)))
-plt.axvline(x=X_EDRP_total['charity_calibration'].median(), color='gainsboro', linestyle='--', label = 'Median = '+ str(np.round(X_EDRP_total['charity_calibration'].median(), 1)))
-plt.text(0.15, 0.9, f'n = {samplesize_adaptive}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
-plt.legend()
-plt.savefig('X values distribution ADAPTIVE.png', dpi=1200)
-plt.show()
-
-# Distribution for Altruistic subjects  
-plt.hist(X_altruistic['charity_calibration'], bins=20, color = 'lightcoral') 
-plt.xlabel('X values')
-plt.ylabel('Frequency')
-plt.title('Distribution of X values of Altruistic subjects')
-plt.axvline(x=X_altruistic['charity_calibration'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(X_altruistic['charity_calibration'].mean(), 1)))
-plt.axvline(x=X_altruistic['charity_calibration'].median(), color='gainsboro', linestyle='--', label = 'Median = '+ str(np.round(X_altruistic['charity_calibration'].median(), 1)))
-plt.text(0.85, 0.9, f'n = {samplesize_altruistic}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
-plt.legend()
-plt.savefig('X values distribution for ALTRUISTIC.png', dpi=1200)
-plt.show()
-
-
-################################################
-# Comparison of X-values
-################################################
-
-# We compare the ditribution of participant-specific X values between different groups of subjects
-
-# BETWEEN Adaptive and Principal Analysis
-print('BETWEEN Adaptive and Principal Analysis ')
-t_statistic_X, p_value_X = ttest_ind(X_EDRP_total['charity_calibration'], data_autre_principal['charity_calibration'])
-print('Difference of X values between Adaptive and Principal Analysis (t-test, p value) : ')
-print(t_statistic_X, p_value_X)
-print()
-
-# BETWEEN Adaptive vs Altruistic
-print('BETWEEN Adaptive and Altruistic subjects ')
-t_statistic_X_2, p_value_X_2 = ttest_ind(X_EDRP_total['charity_calibration'], X_altruistic['charity_calibration'])
-print('Difference of X values between Adaptive and Altruistic subjects (t-test, p value) : ')
-print(t_statistic_X_2, p_value_X_2)
-print()
-
-# BETWEEN Altruistic vs Principal Analysis
-print('BETWEEN Altruistic and Principal Analysis ')
-t_statistic_X_3, p_value_X_3 = ttest_ind(X_altruistic['charity_calibration'], data_autre_principal['charity_calibration'])
-print('Difference of X values between Altruistic and Principal Analysis (t-test, p value) : ')
-print(t_statistic_X_3, p_value_X_3)
-print()
+from data_processing import (survey, data_principal, data_EDRP, data_censored, data_altruistic,
+                                no_tradeoff_lottery_differences_principal, self_lottery_differences_principal, charity_lottery_differences_principal, 
+                                no_tradeoff_lottery_differences_censored, self_lottery_differences_censored, charity_lottery_differences_censored,
+                                no_tradeoff_lottery_differences_EDRP, self_lottery_differences_EDRP, charity_lottery_differences_EDRP,
+                                no_tradeoff_lottery_differences_altruistic, self_lottery_differences_altruistic, charity_lottery_differences_altruistic,
+                                no_tradeoff_lottery_differences_EDRP_censored, self_lottery_differences_EDRP_censored, charity_lottery_differences_EDRP_censored,
+                                valuation_ASPS, valuation_ACPS, valuation_ACPC, valuation_ASPC,
+                                ASPS_principal, ACPS_principal, ACPC_principal, ASPC_principal, 
+                                mean_valuations, 
+                                samplesize_principal, samplesize_adaptive, samplesize_altruistic, samplesize_censored, 
+                                samplesize_EDRP_censored, samplesize_principal_censored)
 
 
 # %%
@@ -484,42 +87,42 @@ data_for_analysis_principal_and_censored = pd.concat([data_principal, data_censo
 fixed_model_principal_and_censored = fixed_regression_model(data_for_analysis_principal_and_censored, 'valuation', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
 fixed_model_principal_and_censored.to_csv('Principal analysis and Censored Fixed regression results H1.csv')
 
-################################################
-# Heterogeneous effects of probabilities
-################################################
+# ################################################
+# # Heterogeneous effects of probabilities
+# ################################################
 
-# Although not part of H1, we observe heterogeneous effects of probabilities in 
-# the self and charity valuation difference (YCPS-YSPS and YSPC-YCPC respectively)
-# More specifically, in Principal Analysis, we observe that the valuation difference 
-# switches signs for high proba for the self valuation difference and for small 
-# prob for the charity valuation difference (and converges to 0 for Censored subjects)
+# # Although not part of H1, we observe heterogeneous effects of probabilities in 
+# # the self and charity valuation difference (YCPS-YSPS and YSPC-YCPC respectively)
+# # More specifically, in Principal Analysis, we observe that the valuation difference 
+# # switches signs for high proba for the self valuation difference and for small 
+# # prob for the charity valuation difference (and converges to 0 for Censored subjects)
 
-# PRINCIPAL ANALYSIS
-# For the no tradeoff difference YCPC-YSPS
-model_no_tradeoff_principal = fixed_regression_model(no_tradeoff_lottery_differences_principal, 'valuation_ACPC_ASPS', [], 'yes')
-model_no_tradeoff_principal.to_csv('No tradeoff principal analysis Fixed regression results.csv')
+# # PRINCIPAL ANALYSIS
+# # For the no tradeoff difference YCPC-YSPS
+# model_no_tradeoff_principal = fixed_regression_model(no_tradeoff_lottery_differences_principal, 'valuation_ACPC_ASPS', [], 'yes')
+# model_no_tradeoff_principal.to_csv('No tradeoff principal analysis Fixed regression results.csv')
 
-# For the self lottery difference YCPS-YSPS
-model_self_principal = fixed_regression_model(self_lottery_differences_principal, 'valuation_ACPS_ASPS', [], 'yes')
-model_self_principal.to_csv('Self principal analysis Fixed regression results.csv')
+# # For the self lottery difference YCPS-YSPS
+# model_self_principal = fixed_regression_model(self_lottery_differences_principal, 'valuation_ACPS_ASPS', [], 'yes')
+# model_self_principal.to_csv('Self principal analysis Fixed regression results.csv')
 
-# For the charity lottery difference YSPC-YCPC
-model_charity_principal = fixed_regression_model(charity_lottery_differences_principal, 'valuation_ASPC_ACPC', [], 'yes')
-model_charity_principal.to_csv('Charity principal analysis Fixed regression results.csv')
+# # For the charity lottery difference YSPC-YCPC
+# model_charity_principal = fixed_regression_model(charity_lottery_differences_principal, 'valuation_ASPC_ACPC', [], 'yes')
+# model_charity_principal.to_csv('Charity principal analysis Fixed regression results.csv')
 
 
-# CENSORED SUBJECTS
-# For the no tradeoff difference YCPC-YSPS
-model_no_tradeoff_censored = fixed_regression_model(no_tradeoff_lottery_differences_censored, 'valuation_ACPC_ASPS', [], 'yes')
-model_no_tradeoff_censored.to_csv('No tradeoff censored subjects Fixed regression results.csv')
+# # CENSORED SUBJECTS
+# # For the no tradeoff difference YCPC-YSPS
+# model_no_tradeoff_censored = fixed_regression_model(no_tradeoff_lottery_differences_censored, 'valuation_ACPC_ASPS', [], 'yes')
+# model_no_tradeoff_censored.to_csv('No tradeoff censored subjects Fixed regression results.csv')
 
-# For the self lottery difference YCPS-YSPS
-model_self_censored = fixed_regression_model(self_lottery_differences_censored, 'valuation_ACPS_ASPS', [], 'yes')
-model_self_censored.to_csv('Self censored subjects Fixed regression results.csv')
+# # For the self lottery difference YCPS-YSPS
+# model_self_censored = fixed_regression_model(self_lottery_differences_censored, 'valuation_ACPS_ASPS', [], 'yes')
+# model_self_censored.to_csv('Self censored subjects Fixed regression results.csv')
 
-# For the charity lottery difference YSPC-YCPC
-model_charity_censored = fixed_regression_model(charity_lottery_differences_censored, 'valuation_ASPC_ACPC', [], 'yes')
-model_charity_censored.to_csv('Charity censored subjects Fixed regression results.csv')
+# # For the charity lottery difference YSPC-YCPC
+# model_charity_censored = fixed_regression_model(charity_lottery_differences_censored, 'valuation_ASPC_ACPC', [], 'yes')
+# model_charity_censored.to_csv('Charity censored subjects Fixed regression results.csv')
 
 
 # %%
@@ -791,7 +394,7 @@ plt.ylabel('Difference in valuation in %')
 plt.title('Difference in valuation for Adaptive and Censored subjects H1')
 plt.xticks(x, lottery_types_difference)
 plt.axhline(y=0, color='grey', linestyle='--')
-proxy_artists = [Patch(facecolor='white', edgecolor='black', label=f'Adaptive n = {samplesize_censored}'),
+proxy_artists = [Patch(facecolor='white', edgecolor='black', label=f'Adaptive n = {samplesize_adaptive}'),
                  Patch(facecolor='white', edgecolor='black', hatch="//", label=f'Censored n = {samplesize_censored}')]
 plt.legend(handles=proxy_artists)
 plt.savefig('Merged Valuation Adaptive and Censored H1.png', dpi=1200)
