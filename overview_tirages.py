@@ -12,11 +12,10 @@ import pandas as pd
 
 
 # Info to find data
-path = '/Users/carolinepioger/Desktop/ALL collection' # change to yours :)
-# path = '/Users/carolinepioger/Desktop/test' # change to yours :)
-dates = ['2024-04-29','2024-04-30','2024-05-02', '2024-05-14', '2024-05-15', '2024-07-12', '2024-07-25']
-# dates = ['2024-07-12', '2024-07-25']
-# dates = ['2024-07-25']
+# path = '/Users/carolinepioger/Desktop/ALL collection' # change to yours :)
+path = '/Users/carolinepioger/Desktop/STAGE SACHA/pretests' # change to yours :)
+# dates = ['2024-04-29','2024-04-30','2024-05-02', '2024-05-14', '2024-05-15', '2024-07-12', '2024-07-25']
+dates = ['2024-03-10', '2024-03-11', '2024-03-22', '2024-03-23', '2024-03-25', '2024-03-28', '2024-04-03', ]
 
 assoc_sum = pd.concat([pd.read_csv(path + '/EXLEY_ASSO_' + date + '.csv') for date in dates], ignore_index=True)
 assoc_sum = assoc_sum.drop(assoc_sum[assoc_sum['participant._current_page_name'] != 'prolific'].index)
@@ -38,6 +37,7 @@ columns_mapping = {
     'player.TOTAL_PAIEMENT_CHARITY': 'total charity' # total outcome for charity
 }
 
+
 outcome_data = outcome_data.rename(columns=columns_mapping)[list(columns_mapping.values())]
 outcome_data = outcome_data.reset_index(drop=True)
 
@@ -47,6 +47,8 @@ outcome_data.insert(outcome_data.columns.get_loc('total self') + 1, 'self reward
 outcome_data['total spent'] = [outcome_data['total self'][i] + outcome_data['total charity'][i] for i in range(len(outcome_data))]
 
 outcome_data = outcome_data.merge(assoc, on='id', how='left')
+
+outcome_data = outcome_data.drop_duplicates()
 
 # Save the concatenated dataset
 data_path = path + '/resultats_overview.csv'

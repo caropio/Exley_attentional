@@ -140,8 +140,14 @@ def color_by_ind(database):
     return database['number'].map(individual_color_map)
 
 
+
+# plt.scatter(charity_lottery_censored['dwell_time_relative'], charity_lottery_censored['valuation'])
+# plt.show()
+# sm.OLS(charity_lottery_censored['valuation'], 
+#                                      sm.add_constant(charity_lottery_censored['dwell_time_relative'])).fit().summary()
+
 # Define function of plots of correlation between Attention and Valuation differences
-def plot_corr_attention_valuation(database, pop, samplesize):
+def plot_corr_attention_valuation(database, pop, samplesize, reg):
     if get_variable_name_from_globals(database).split('_')[0] == 'self':
         x = '_ASPS_ACPS_H3'
     elif get_variable_name_from_globals(database).split('_')[0] == 'charity':
@@ -156,30 +162,37 @@ def plot_corr_attention_valuation(database, pop, samplesize):
     plt.plot(database[f'dwell_time{x}'], poly1d_fn(database[f'dwell_time{x}']), 
                  color='red', linewidth=2, label='Regression Line')
 
+    # get info of slope and p-value of regression
+    slope = np.round(reg.summary2().tables[1]['Coef.'][f'dwell_time{x}'], 3)
+    pval = np.round(reg.summary2().tables[1]['P>|t|'][f'dwell_time{x}'], 3)
+
     plt.xlabel('Attention difference in %')
     plt.ylabel('Valuation difference in %')
     plt.title('Attention vs Valuation differences ' 
               + str(get_variable_name_from_globals(database).split('_')[0]) 
               + ' / ' + str(pop) + f' n = {samplesize}')
+    
+    plt.text(0.25, 0.9, f'a = {slope}, p = {pval}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=10)
+
     plt.legend()
     # plt.grid(True)
     plt.show()
   
 # Plot Attention vs Valuation difference for Adaptive subjects
-plot_corr_attention_valuation(self_lottery_differences_EDRP, 'Adaptive', samplesize_adaptive)
-plot_corr_attention_valuation(charity_lottery_differences_EDRP, 'Adaptive', samplesize_adaptive)
+plot_corr_attention_valuation(self_lottery_differences_EDRP, 'Adaptive', samplesize_adaptive, reg_model_self_EDRP)
+plot_corr_attention_valuation(charity_lottery_differences_EDRP, 'Adaptive', samplesize_adaptive, reg_model_charity_EDRP)
 
 # Plot Attention vs Valuation difference for Censored subjects
-plot_corr_attention_valuation(self_lottery_differences_censored, 'Censored', samplesize_censored)
-plot_corr_attention_valuation(charity_lottery_differences_censored, 'Censored', samplesize_censored)
+plot_corr_attention_valuation(self_lottery_differences_censored, 'Censored', samplesize_censored, reg_model_self_censored)
+plot_corr_attention_valuation(charity_lottery_differences_censored, 'Censored', samplesize_censored, reg_model_charity_censored)
 
 # Plot Attention vs Valuation difference for both Adaptive and Censored subjects
-plot_corr_attention_valuation(self_lottery_differences_EDRP_censored, 'Adaptive + Censored', samplesize_EDRP_censored)
-plot_corr_attention_valuation(charity_lottery_differences_EDRP_censored, 'Adaptive + Censored', samplesize_EDRP_censored)
+plot_corr_attention_valuation(self_lottery_differences_EDRP_censored, 'Adaptive + Censored', samplesize_EDRP_censored, reg_model_self_EDRP_censored)
+plot_corr_attention_valuation(charity_lottery_differences_EDRP_censored, 'Adaptive + Censored', samplesize_EDRP_censored, reg_model_charity_EDRP_censored)
 
 # Plot Attention vs Valuation difference for both Principal and Censored subjects
-plot_corr_attention_valuation(self_lottery_differences_principal_censored, 'Principal + Censored', samplesize_principal_censored)
-plot_corr_attention_valuation(charity_lottery_differences_principal_censored, 'Principal + Censored', samplesize_principal_censored)
+plot_corr_attention_valuation(self_lottery_differences_principal_censored, 'Principal + Censored', samplesize_principal_censored, reg_model_self_principal_censored)
+plot_corr_attention_valuation(charity_lottery_differences_principal_censored, 'Principal + Censored', samplesize_principal_censored, reg_model_charity_principal_censored)
 
 # We see a general trend that there is a small correlation between attention and
 # valuation, which is negative for the self lottery and positive for the charity 
