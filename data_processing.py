@@ -22,7 +22,7 @@ import ast
 # =============================================================================
 
 # Paths information to upload data
-path = '/Users/carolinepioger/Desktop/ALL collection' # change to yours :)
+path = '/Users/carolinepioger/Desktop/EXLEY ATT/ALL collection' # change to yours :)
 
 # Upload dataframes
 data = pd.read_csv(path + '/dataset.csv' ) # pooled data for analysis
