@@ -605,3 +605,25 @@ if __name__ == "__main__": # to only print when running script and not when impo
     print(t_statistic_X_3, p_value_X_3)
     print()
 
+
+# %%
+# =============================================================================
+# Desired variables for exporting 
+# =============================================================================
+
+
+__all__ = [
+    'survey', 'data_principal', 'data_EDRP', 'data_censored', 'data_altruistic',
+    'no_tradeoff_lottery_differences_principal', 'self_lottery_differences_principal', 'charity_lottery_differences_principal', 
+    'no_tradeoff_lottery_differences_censored', 'self_lottery_differences_censored', 'charity_lottery_differences_censored',
+    'no_tradeoff_lottery_differences_EDRP', 'self_lottery_differences_EDRP', 'charity_lottery_differences_EDRP',
+    'no_tradeoff_lottery_differences_altruistic', 'self_lottery_differences_altruistic', 'charity_lottery_differences_altruistic',
+    'no_tradeoff_lottery_differences_EDRP_censored', 'self_lottery_differences_EDRP_censored', 'charity_lottery_differences_EDRP_censored',
+    'no_tradeoff_lottery_differences_principal_censored', 'self_lottery_differences_principal_censored', 'charity_lottery_differences_principal_censored', 
+    'valuation_ASPS', 'valuation_ACPS', 'valuation_ACPC', 'valuation_ASPC',
+    'ASPS_principal', 'ACPS_principal', 'ACPC_principal', 'ASPC_principal', 
+    'mean_valuations', 
+    'samplesize_principal', 'samplesize_adaptive', 'samplesize_altruistic', 'samplesize_censored', 
+    'samplesize_EDRP_censored', 'samplesize_principal_censored'
+]
+

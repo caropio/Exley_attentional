@@ -17,18 +17,8 @@ from matplotlib.patches import Patch
 import matplotlib.cm as cm
 import ast 
 
-from data_processing import (survey, data_principal, data_EDRP, data_censored, data_altruistic,
-                                no_tradeoff_lottery_differences_principal, self_lottery_differences_principal, charity_lottery_differences_principal, 
-                                no_tradeoff_lottery_differences_censored, self_lottery_differences_censored, charity_lottery_differences_censored,
-                                no_tradeoff_lottery_differences_EDRP, self_lottery_differences_EDRP, charity_lottery_differences_EDRP,
-                                no_tradeoff_lottery_differences_altruistic, self_lottery_differences_altruistic, charity_lottery_differences_altruistic,
-                                no_tradeoff_lottery_differences_EDRP_censored, self_lottery_differences_EDRP_censored, charity_lottery_differences_EDRP_censored,
-                                no_tradeoff_lottery_differences_principal_censored, self_lottery_differences_principal_censored, charity_lottery_differences_principal_censored, 
-                                valuation_ASPS, valuation_ACPS, valuation_ACPC, valuation_ASPC,
-                                ASPS_principal, ACPS_principal, ACPC_principal, ASPC_principal, 
-                                mean_valuations, 
-                                samplesize_principal, samplesize_adaptive, samplesize_altruistic, samplesize_censored, 
-                                samplesize_EDRP_censored, samplesize_principal_censored)
+from data_processing import * # import all desired variables from the data_processing file (described at end of script)
+
 
 
 # Get string version of variable name using globals()
