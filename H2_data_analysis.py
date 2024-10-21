@@ -18,7 +18,8 @@ import os
 
 from data_processing import * # import all desired variables from the data_processing file (described at end of script)
 
-os.chdir('/Users/carolinepioger/Desktop/EXLEY ATT/Exley_attentional/results')
+path = '/Users/carolinepioger/Desktop/EXLEY ATT' # change to yours :)
+os.chdir(path + '/Exley_attentional/results')
 
 # %%
 # =============================================================================
