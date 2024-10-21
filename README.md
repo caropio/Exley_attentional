@@ -4,7 +4,7 @@ Python code to analyse our behavioral data
 Each ```H*_data_analysis.py scripts``` script in the main folder begins by calling ```data_processing.py```.
 
 Before running the ```H*_data_analysis.py``` scripts, ensure that the ```/data``` folder contains the outputs ```criterion info data.csv```, 
-```dataset.csv``` and ```survey data.csv``` from running the ```data_brushing.py``` script. Additionally, 
+```dataset.csv``` and ```survey data.csv``` from running the ```data_brushing.py``` script.  
 
 Here is a description of the different variables of the ```dataset.csv``` file which are of interest in the analysis
 
