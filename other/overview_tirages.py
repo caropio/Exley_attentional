@@ -6,7 +6,6 @@ Created on Tue Mar 12 14:12:34 2024
 @author: carolinepioger
 """
 
-### AJOUTER UN SORTE DE CLEAR ALL 
 
 import pandas as pd
 
@@ -14,7 +13,6 @@ import pandas as pd
 # Info to find data
 # path = '/Users/carolinepioger/Desktop/EXLEY ATT/ALL collection' # change to yours :)
 path = '/Users/carolinepioger/Desktop/STAGE SACHA/pretests' # change to yours :)
-# dates = ['2024-04-29','2024-04-30','2024-05-02', '2024-05-14', '2024-05-15', '2024-07-12', '2024-07-25']
 dates = ['2024-03-10', '2024-03-11', '2024-03-22', '2024-03-23', '2024-03-25', '2024-03-28', '2024-04-03', ]
 
 assoc_sum = pd.concat([pd.read_csv(path + '/EXLEY_ASSO_' + date + '.csv') for date in dates], ignore_index=True)

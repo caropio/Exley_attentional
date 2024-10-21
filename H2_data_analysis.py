@@ -14,10 +14,11 @@ import statsmodels.formula.api as smf
 from scipy.stats import ttest_ind
 from matplotlib.patches import Patch
 import ast 
+import os
 
 from data_processing import * # import all desired variables from the data_processing file (described at end of script)
 
-
+os.chdir('/Users/carolinepioger/Desktop/EXLEY ATT/Exley_attentional/results')
 
 # %%
 # =============================================================================

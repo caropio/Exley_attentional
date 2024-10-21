@@ -16,9 +16,11 @@ from scipy.stats import ttest_ind
 from matplotlib.patches import Patch
 import matplotlib.cm as cm
 import ast 
+import os 
 
 from data_processing import * # import all desired variables from the data_processing file (described at end of script)
 
+os.chdir('/Users/carolinepioger/Desktop/EXLEY ATT/Exley_attentional/results')
 
 
 # Get string version of variable name using globals()
