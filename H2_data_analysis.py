@@ -71,6 +71,10 @@ fixed_model_EDRP_attention.to_csv('Adaptive Fixed regression results H2.csv')
 fixed_model_altruistic_attention = fixed_regression_model(data_altruistic, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
 fixed_model_altruistic_attention.to_csv('Altruistic Fixed regression results H2.csv')
 
+# Normal subjects
+fixed_model_normal_attention = fixed_regression_model(data_normal, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
+fixed_model_normal_attention.to_csv('Normal Fixed regression results H2.csv')
+
 # Censored subjects
 fixed_model_censored_attention = fixed_regression_model(data_censored, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
 fixed_model_censored_attention.to_csv('Censored Fixed regression results H2.csv')
@@ -205,6 +209,14 @@ altruistic_means_att = [no_tradeoff_lottery_differences_altruistic['dwell_time_A
 altruistic_std_model_att = fixed_model_altruistic_attention['Std.Err.'][['charity', 'tradeoff', 'interaction']].to_numpy() # take std of 3 coef from model
 altruistic_errors_att = [altruistic_std_model_att[0], altruistic_std_model_att[1], 
                     (altruistic_std_model_att[1] + altruistic_std_model_att[2])/2]   # the last std is the sum of beta2 and beta3 
+
+# for Normal subjects
+normal_means_att = [no_tradeoff_lottery_differences_normal['dwell_time_ACPC_ASPS'].mean(), 
+              self_lottery_differences_normal['dwell_time_ACPS_ASPS'].mean(),
+              charity_lottery_differences_normal['dwell_time_ASPC_ACPC'].mean()]
+normal_std_model_att = fixed_model_normal_attention['Std.Err.'][['charity', 'tradeoff', 'interaction']].to_numpy() # take std of 3 coef from model
+normal_errors_att = [normal_std_model_att[0], normal_std_model_att[1], 
+                    (normal_std_model_att[1] + normal_std_model_att[2])/2]   # the last std is the sum of beta2 and beta3 
 
 # for Censored subjects
 censored_means_att = [no_tradeoff_lottery_differences_censored['dwell_time_ACPC_ASPS'].mean(), 
@@ -351,6 +363,18 @@ plt.title('Attention differences for Altruistic subjects')
 plt.savefig('Lottery differences Altruistic H2.png', dpi=1200)
 plt.show()
 
+# Plot 3 Attention differences with probabilities combined (Normal subjects)
+plt.bar(lottery_types_difference_attention, normal_means_att, color = ['bisque', 'lightskyblue', 'lightgreen']) 
+plt.errorbar(lottery_types_difference_attention, normal_means_att, normal_errors_att, ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
+plt.axhline(y=0, color='grey', linestyle='--')
+plt.xlabel('Lottery differences')
+plt.ylabel('Attention difference in %')
+plt.text(0.15, 0.9, f'n = {samplesize_normal}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
+plt.legend()
+plt.title('Attention differences for Normal subjects')
+plt.savefig('Lottery differences Normal H2.png', dpi=1200)
+plt.show()
+
 # Plot 3 Attention differences with probabilities combined (Censored subjects)
 plt.bar(lottery_types_difference_attention, censored_means_att, color = ['bisque', 'lightskyblue', 'lightgreen']) 
 plt.errorbar(lottery_types_difference_attention, censored_means_att, censored_errors_att, ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
@@ -428,16 +452,28 @@ print(model_case_order_att.summary())
 # Check the effect of probability on attention of lotteries 
 
 # We group attention according to probabilities (regardless of case and order)
-attention_per_proba = data_principal.groupby('prob_option_A')['dwell_time_relative']
 probabilities = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
 
-plt.plot(probabilities, attention_per_proba.mean(), color='black', marker='o', linestyle='-')
-plt.errorbar(probabilities, attention_per_proba.mean(), attention_per_proba.std(), ecolor = 'black', fmt='none', alpha=0.7, label = 'std')
-plt.xlabel('Probability')
-plt.ylabel('Attention (in %)')
-plt.title('Effect of probability on attention (all cases combined)')
-plt.savefig('Attention probability H2.png', dpi=1200)
-plt.show()
+def plot_atten_per_proba(database, population):
+    
+    attention_per_proba = database.groupby('prob_option_A')['dwell_time_relative']
+
+    plt.plot(probabilities, attention_per_proba.mean(), color='black', marker='o', linestyle='-')
+    plt.errorbar(probabilities, attention_per_proba.mean(), attention_per_proba.std(), ecolor = 'black', fmt='none', alpha=0.7, label = 'std')
+    plt.xlabel('Probability')
+    plt.ylabel('Attention (in %)')
+    plt.title(f'Attention for {population} (all cases combined)')
+    plt.savefig(f'Attention probability {population} H2.png', dpi=1200)
+    plt.show()
+
+
+plot_atten_per_proba(data_principal, 'Principal Analysis') # For Principal Analysis
+plot_atten_per_proba(data_EDRP, 'Adaptive') # For Adaptive
+plot_atten_per_proba(data_altruistic, 'Altruistic') # For Altruistic
+plot_atten_per_proba(data_normal, 'Normal') # For Normal
+plot_atten_per_proba(data_censored, 'Censored') # For Censored
+
+
 
 # Effect of probability on attention using mixed effects model
 model_proba_att = smf.mixedlm("dwell_time_relative ~ prob_option_A", data_principal, groups=data_principal["number"]).fit()

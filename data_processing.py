@@ -22,7 +22,7 @@ import ast
 # =============================================================================
 
 # Paths information to upload data
-path = '/Users/carolinepioger/Desktop/EXLEY ATT/ALL collection' # change to yours :)
+path = '/Users/carolinepioger/Desktop/EXLEY ATT/Exley_attentional/data' # change to yours :)
 
 # Upload dataframes
 data = pd.read_csv(path + '/dataset.csv' ) # pooled data for analysis
@@ -291,15 +291,16 @@ no_tradeoff_lottery_principal = pd.concat([ASPS_principal, ACPC_principal], igno
 def lottery_differences(database, var1, var2):
     lottery_differences = pd.DataFrame(columns=['number', 'prob_option_A'])
     for i in database['number'].unique():
-        individual = database.loc[database['number'] == i, ['case', 'prob_option_A', 'valuation', 'dwell_time_relative']] 
+        individual = database.loc[database['number'] == i, ['case', 'prob_option_A', 'valuation', 'dwell_time_relative', 'dwell_time_absolute']] 
         individual_difference = individual.pivot(index='prob_option_A', columns='case')
         try: 
             individual_difference[f'valuation_{var1}_{var2}'] = individual_difference['valuation'][var1] - individual_difference['valuation'][var2]
             individual_difference[f'dwell_time_{var1}_{var2}'] = individual_difference['dwell_time_relative'][var1] - individual_difference['dwell_time_relative'][var2]
+            individual_difference[f'dwell_time_absolute_{var1}_{var2}'] = individual_difference['dwell_time_absolute'][var1] - individual_difference['dwell_time_absolute'][var2]
             individual_difference['number'] = i
             individual_difference.reset_index(inplace=True)
             individual_difference.columns = individual_difference.columns.droplevel(1)
-            lottery_differences = pd.concat([lottery_differences, individual_difference[['number', 'prob_option_A', f'valuation_{var1}_{var2}', f'dwell_time_{var1}_{var2}']]], ignore_index=True)
+            lottery_differences = pd.concat([lottery_differences, individual_difference[['number', 'prob_option_A', f'valuation_{var1}_{var2}', f'dwell_time_{var1}_{var2}', f'dwell_time_absolute_{var1}_{var2}']]], ignore_index=True)
         except KeyError: # since we don't remove for ACPC vs ASPS, sometimes it may give error
             pass
     return lottery_differences
@@ -344,23 +345,30 @@ no_tradeoff_lottery_differences_censored = lottery_differences(no_tradeoff_lotte
 
 # %%
 # =============================================================================
-# CATEGORISATION OF ADAPTIVE & ALTRUISTIC SUBJECTS 
+# CATEGORISATION OF ADAPTIVE & ALTRUISTIC & NORMAL SUBJECTS 
 # =============================================================================
 
 # Within principal analysis, we want to find subjects that have Excuse-driven 
 # risk preferences (EDRP), which we refer to as "Adaptive" subjects
-# Thus we want participants with YCPS-YSPS > 0 and YCPS-YCPC < 0 whilst 
+# Thus we want participants with YCPS-YSPS > 0 and YSPC-YCPC < 0 whilst 
 # taking into account the no tradeoff difference YCPC-YSPS =/= 0
 
 # We also categorise participants with risk preferences that are the opposite of H1
-# so with YCPS-YSPS < 0 and YCPS-YCPC > 0 whilst also
+# so with YCPS-YSPS < 0 and YSPC-YCPC > 0 whilst also
 # taking into account the no tradeoff difference YCPC-YSPS =/= 0
 
+# We are also interested in categorising individuals who don't have differences 
+# between the tradeoff and notradeoff valuations (individuals that don't adapt
+# their risk preferences)
+
 EDRP_self = [] # participant having YCPS-YSPS > YCPC-YSPS (Excuse-driven for self)
-EDRP_charity = [] # participant having YCPS-YCPC < - (YCPC-YSPS) (Excuse-driven for charity)
+EDRP_charity = [] # participant having YSPC-YCPC < - (YCPC-YSPS) (Excuse-driven for charity)
 
 altruistic_self = [] # participant having YCPS-YSPS < - (YCPC-YSPS) (Altruistic for self)
-altruistic_charity = [] # participant having YCPS-YCPC > YCPC-YSPS (Altruistic for charity)
+altruistic_charity = [] # participant having YSPC-YCPC > YCPC-YSPS (Altruistic for charity)
+
+normal_self = [] # participants having - (YCPC-YSPS) ≤ YCPS-YSPS ≤ YCPC-YSPS 
+normal_charity = []  # participants having - (YCPC-YSPS) ≤ YSPC-YCPC ≤ YCPC-YSPS 
 
 for i in data_principal['number'].unique():
     self_diff = self_lottery_differences_principal.loc[self_lottery_differences_principal['number'] == i,['valuation_ACPS_ASPS']].mean() # mean across probabilities
@@ -368,13 +376,25 @@ for i in data_principal['number'].unique():
     no_trade_diff = no_tradeoff_lottery_differences_principal.loc[no_tradeoff_lottery_differences_principal['number'] == i,['valuation_ACPC_ASPS']].mean() # mean across probabilities
 
     if self_diff.item() > no_trade_diff.item() : # participant has YCPS-YSPS > YCPC-YSPS on average across probabilities 
+    # if self_diff.item() > 0: # if we replicate exactly Exley's categorization
         EDRP_self.append(i)
     elif self_diff.item() < - no_trade_diff.item() : # participant has YCPS-YSPS < - (YCPC-YSPS) on average across probabilities 
+    # elift self_diff.item() < 0: # if we replicate exactly Exley's categorization
         altruistic_self.append(i)
+    else: # participant has - (YCPC-YSPS) ≤ YCPS-YSPS ≤ YCPC-YSPS 
+        normal_self.append(i)
     if charity_diff.item() < - no_trade_diff.item() : # participant has YSPC-YCPC < - (YCPC-YSPS) on average across probabilities 
+    # if charity_diff.item() < 0: # if we replicate exactly Exley's categorization
         EDRP_charity.append(i)
-    if charity_diff.item() > no_trade_diff.item() : # participant has YSPC-YCPC > YCPC-YSPS on average across probabilities 
+    elif charity_diff.item() > no_trade_diff.item() : # participant has YSPC-YCPC > YCPC-YSPS on average across probabilities 
+    # elif charity_diff.item() > 0: # if we replicate exactly Exley's categorization
         altruistic_charity.append(i)
+    else: # participant has - (YCPC-YSPS) ≤ YSPC-YCPC ≤ YCPC-YSPS
+        normal_charity.append(i)
+
+# =============================================================================
+# ADAPTIVE 
+# =============================================================================
 
 EDRP_total = np.intersect1d(EDRP_self, EDRP_charity) 
 
@@ -402,6 +422,10 @@ ACPS_EDRP = data_EDRP[(data_EDRP['charity'] == 0) & (data_EDRP['tradeoff'] == 1)
 data_else_EDRP = data_principal[~data_principal['number'].isin(data_EDRP['number'])] # data of else than Adaptive subjects
 X_else_EDRP_total = data_autre_principal[~data_autre_principal['number'].isin(EDRP_total)] # X-values of else than Adaptive subjects
 
+# =============================================================================
+# ALTRUISTIC 
+# =============================================================================
+
 # Participants being both Altruistic for self and for charity -- called Altruistic subjects
 altruistic_total = np.intersect1d(altruistic_self, altruistic_charity)
 
@@ -417,6 +441,30 @@ ASPS_altruistic = data_altruistic[(data_altruistic['charity'] == 0) & (data_altr
 ACPC_altruistic = data_altruistic[(data_altruistic['charity'] == 1) & (data_altruistic['tradeoff'] == 0)] # YCPC for Altruistic subjects
 ASPC_altruistic = data_altruistic[(data_altruistic['charity'] == 1) & (data_altruistic['tradeoff'] == 1)] # YSPC for Altruistic subjects
 ACPS_altruistic = data_altruistic[(data_altruistic['charity'] == 0) & (data_altruistic['tradeoff'] == 1)] # YCPS for Altruistic subjects
+
+# =============================================================================
+# NORMAL  
+# =============================================================================
+
+# Participants being both normal for self and for charity -- called normal subjects
+normal_total = np.intersect1d(normal_self, normal_charity)
+
+data_normal = data_principal[data_principal['number'].isin(normal_total)] # data of normal subjects
+data_autre_normal = data_autre_principal[data_autre_principal['number'].isin(normal_total)] # data_autre of normal subjects
+X_normal = data_autre_principal[data_autre_principal['number'].isin(normal_total)] # X-values of normal subjects
+
+no_tradeoff_lottery_differences_normal = no_tradeoff_lottery_differences_principal[no_tradeoff_lottery_differences_principal['number'].isin(normal_total)] # no tradeoff diff of normal subjecs
+self_lottery_differences_normal = self_lottery_differences_principal[self_lottery_differences_principal['number'].isin(normal_total)] # self lottery diff of normal subjecs
+charity_lottery_differences_normal = charity_lottery_differences_principal[charity_lottery_differences_principal['number'].isin(normal_total)] # charity lottery diff of normal subjecs
+
+ASPS_normal = data_normal[(data_normal['charity'] == 0) & (data_normal['tradeoff'] == 0)] # YSPS for normal subjects
+ACPC_normal = data_normal[(data_normal['charity'] == 1) & (data_normal['tradeoff'] == 0)] # YCPC for normal subjects
+ASPC_normal = data_normal[(data_normal['charity'] == 1) & (data_normal['tradeoff'] == 1)] # YSPC for normal subjects
+ACPS_normal = data_normal[(data_normal['charity'] == 0) & (data_normal['tradeoff'] == 1)] # YCPS for normal subjects
+
+# =============================================================================
+# ELSE
+# =============================================================================
 
 # Adaptive and Censored Participants combined
 
@@ -445,6 +493,7 @@ charity_lottery_differences_principal_censored = pd.concat([charity_lottery_diff
 samplesize_principal = len(data_autre_principal) # sample size of Principal Analysis
 samplesize_adaptive = len(data_autre_EDRP) # sample size of Adaptive subjects
 samplesize_altruistic = len(data_autre_altruistic) # sample size of Altruistic subjects
+samplesize_normal = len(data_autre_normal) # sample size of normal subjects
 samplesize_censored = len(data_autre_censored) # sample size of Censored subjects
 samplesize_EDRP_censored = len(data_autre_EDRP) + len(data_autre_censored) # sample size of Adaptive and Censored subjects
 samplesize_principal_censored = len(data_autre_principal) + len(data_autre_censored) # sample size of Principal Analysis and Censored subjects
@@ -614,16 +663,18 @@ if __name__ == "__main__": # to only print when running script and not when impo
 
 __all__ = [
     'survey', 'data_principal', 'data_EDRP', 'data_censored', 'data_altruistic',
+    'data_normal',
     'no_tradeoff_lottery_differences_principal', 'self_lottery_differences_principal', 'charity_lottery_differences_principal', 
     'no_tradeoff_lottery_differences_censored', 'self_lottery_differences_censored', 'charity_lottery_differences_censored',
     'no_tradeoff_lottery_differences_EDRP', 'self_lottery_differences_EDRP', 'charity_lottery_differences_EDRP',
     'no_tradeoff_lottery_differences_altruistic', 'self_lottery_differences_altruistic', 'charity_lottery_differences_altruistic',
+    'no_tradeoff_lottery_differences_normal', 'self_lottery_differences_normal', 'charity_lottery_differences_normal',
     'no_tradeoff_lottery_differences_EDRP_censored', 'self_lottery_differences_EDRP_censored', 'charity_lottery_differences_EDRP_censored',
     'no_tradeoff_lottery_differences_principal_censored', 'self_lottery_differences_principal_censored', 'charity_lottery_differences_principal_censored', 
     'valuation_ASPS', 'valuation_ACPS', 'valuation_ACPC', 'valuation_ASPC',
     'ASPS_principal', 'ACPS_principal', 'ACPC_principal', 'ASPC_principal', 
     'mean_valuations', 
-    'samplesize_principal', 'samplesize_adaptive', 'samplesize_altruistic', 'samplesize_censored', 
-    'samplesize_EDRP_censored', 'samplesize_principal_censored'
+    'samplesize_principal', 'samplesize_adaptive', 'samplesize_altruistic', 'samplesize_normal',
+    'samplesize_censored', 'samplesize_EDRP_censored', 'samplesize_principal_censored'
 ]
 

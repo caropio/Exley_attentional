@@ -18,10 +18,11 @@ from scipy.stats import ttest_ind
 
 # Paths information to upload data
 path = '/Users/carolinepioger/Desktop/EXLEY ATT/ALL collection' # change to yours :)
-# path = '/Users/carolinepioger/Desktop/test' 
 # dates = ['2024-03-28', '2024-03-25', '2024-04-03'] # dates of pilot data collection (to remove)
 dates = ['2024-04-29','2024-04-30','2024-05-02', 
           '2024-05-14', '2024-05-15', '2024-07-12', '2024-07-25'] # different dates of data collection 
+
+path2 = '/Users/carolinepioger/Desktop/EXLEY ATT/Exley_attentional/data'
 
 ################################################
 # Upload data that will be used for analysis (data)
@@ -476,17 +477,17 @@ survey = survey.reset_index(drop=True)
 # =============================================================================
 
 # Save data as "dataset.csv"
-data_path = path + '/dataset.csv'
+data_path = path2 + '/dataset.csv'
 data.to_csv(data_path, index=False)
 # this file pools all the data of interest for the analysis (apart from survey info)
 
 # Save data_autre as "criterion info data.csv"
-data_path_2 = path + '/criterion info data.csv'
+data_path_2 = path2 + '/criterion info data.csv'
 data_autre.to_csv(data_path_2, index=False)
 # this file combines all participant specific information 
 
 # Save survey as "survey data.csv"
-data_path_3 = path + '/survey data.csv'
+data_path_3 = path2 + '/survey data.csv'
 survey.to_csv(data_path_3, index=False)
 # this file gathers all of the survey information (used for controls in regressions)
 
