@@ -9,7 +9,9 @@ Created on Mon Jun 17 15:18:21 2024
 # This script is the same as the H2_data_analysis.py one but replacing all the 
 # relative dwell times (in %) by absolute ones (in s)
 
-H2_relative_time = '/Users/carolinepioger/Desktop/EXLEY ATT/Exley_attentional/H2_data_analysis.py'
+path = '/Users/carolinepioger/Desktop/EXLEY ATT' # change to yours
+
+H2_relative_time = path + '/Exley_attentional/H2_data_analysis.py'
 
 with open(H2_relative_time, 'r') as file:
     script_content = file.read()

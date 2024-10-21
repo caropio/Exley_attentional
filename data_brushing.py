@@ -17,12 +17,14 @@ from scipy.stats import ttest_ind
 # =============================================================================
 
 # Paths information to upload data
-path = '/Users/carolinepioger/Desktop/EXLEY ATT/ALL collection' # change to yours :)
+path_0 = '/Users/carolinepioger/Desktop/EXLEY ATT' # change to yours
+path = path_0 + '/raw_data' # paths to the raw data
+
 # dates = ['2024-03-28', '2024-03-25', '2024-04-03'] # dates of pilot data collection (to remove)
 dates = ['2024-04-29','2024-04-30','2024-05-02', 
           '2024-05-14', '2024-05-15', '2024-07-12', '2024-07-25'] # different dates of data collection 
 
-path2 = '/Users/carolinepioger/Desktop/EXLEY ATT/Exley_attentional/data'
+path2 = path_0 + '/Exley_attentional/data' # saving the brushed up data in the data folder of the main folder
 
 ################################################
 # Upload data that will be used for analysis (data)

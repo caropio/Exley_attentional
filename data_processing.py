@@ -22,12 +22,12 @@ import ast
 # =============================================================================
 
 # Paths information to upload data
-path = '/Users/carolinepioger/Desktop/EXLEY ATT/Exley_attentional/data' # change to yours :)
+path = '/Users/carolinepioger/Desktop/EXLEY ATT' # change to yours :)
 
 # Upload dataframes
-data = pd.read_csv(path + '/dataset.csv' ) # pooled data for analysis
-data_autre = pd.read_csv(path + '/criterion info data.csv') # participant-specific info
-survey = pd.read_csv(path + '/survey data.csv') # survey information 
+data = pd.read_csv(path + '/Exley_attentional/data/dataset.csv' ) # pooled data for analysis
+data_autre = pd.read_csv(path + '/Exley_attentional/data/criterion info data.csv') # participant-specific info
+survey = pd.read_csv(path + 'Exley_attentional/data//survey data.csv') # survey information 
 
 
 ################################################
