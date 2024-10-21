@@ -387,7 +387,7 @@ plt.ylabel('Difference in valuation in %')
 plt.title('Difference in valuation for Adaptive and Censored subjects H1')
 plt.xticks(x, lottery_types_difference)
 plt.axhline(y=0, color='grey', linestyle='--')
-proxy_artists = [Patch(facecolor='white', edgecolor='black', label=f'Adaptive n = {samplesize_adaptive}'),
+proxy_artists = [Patch(facecolor='white', edgecolor='black', label=f'Adaptive n = {samplesize_EDRP}'),
                  Patch(facecolor='white', edgecolor='black', hatch="//", label=f'Censored n = {samplesize_censored}')]
 plt.legend(handles=proxy_artists)
 plt.savefig('Merged Valuation Adaptive and Censored H1.png', dpi=1200)
