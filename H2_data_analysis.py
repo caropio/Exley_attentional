@@ -81,6 +81,15 @@ fixed_model_normal_attention.to_csv('Normal Fixed regression results H2.csv')
 fixed_model_censored_attention = fixed_regression_model(data_censored, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
 fixed_model_censored_attention.to_csv('Censored Fixed regression results H2.csv')
 
+# Positive subjects
+fixed_model_positive_attention = fixed_regression_model(data_positive, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
+fixed_model_positive_attention.to_csv('Positive Fixed regression results H2.csv')
+
+# Negative subjects
+fixed_model_negative_attention = fixed_regression_model(data_negative, 'dwell_time_relative', ['charity', 'tradeoff', 'interaction', 'case_order'], 'yes')
+fixed_model_negative_attention.to_csv('Negative Fixed regression results H2.csv')
+
+
 # Principal analysis and censored subjects
 data_for_analysis_principal_and_censored = pd.concat([data_principal, data_censored], 
                                                      ignore_index=True) # Data specifically for Principal Analysis and Censored subjects 
@@ -186,56 +195,34 @@ x = np.arange(len(lottery_types_difference_attention))
 # To verify for H2, we check for negative differences 
 
 
-# 3 attention differences and standard errors at ind level for Principal Analysis, Adaptive, Altruistic and Censored subjects
-# for Principal Analysis
-principal_means_att = [no_tradeoff_lottery_differences_principal['dwell_time_ACPC_ASPS'].mean(), 
-                   self_lottery_differences_principal['dwell_time_ACPS_ASPS'].mean(),
-                   charity_lottery_differences_principal['dwell_time_ASPC_ACPC'].mean()]
-principal_std_model_att = fixed_model_principal_attention['Std.Err.'][['charity', 'tradeoff', 'interaction']].to_numpy() # take std of 3 coef from model
-principal_errors_att = [principal_std_model_att[0], principal_std_model_att[1], 
-                    (principal_std_model_att[1] + principal_std_model_att[2])/2]   # the last std is the sum of beta2 and beta3 
+# Get the means and errors at ind level for diffferent categories of subjects
+def compute_attention_metrics(category):
+    no_tradeoff_var = globals().get(f"no_tradeoff_lottery_differences_{category}")
+    self_var = globals().get(f"self_lottery_differences_{category}")
+    charity_var = globals().get(f"charity_lottery_differences_{category}")
+    
+    model_var = globals().get(f"fixed_model_{category}_attention")
+    
+    means = [                                                   #computing means
+        no_tradeoff_var['dwell_time_ACPC_ASPS'].mean(), 
+        self_var['dwell_time_ACPS_ASPS'].mean(),
+        charity_var['dwell_time_ASPC_ACPC'].mean()
+    ]
+    
+    std_model = model_var['Std.Err.'][['charity', 'tradeoff', 'interaction']].to_numpy() # take std of 3 coef from model
+    
+    errors = [std_model[0], std_model[1], (std_model[1] + std_model[2]) / 2]  # the last std is the sum of beta2 and beta3 
+    
+    return means, errors
 
+categories = ['principal', 'EDRP', 'altruistic', 'normal', 'positive', 'negative', 'censored', 'EDRP_censored']
 
-# for Adaptive subjects
-EDRP_means_att = [no_tradeoff_lottery_differences_EDRP['dwell_time_ACPC_ASPS'].mean(), 
-              self_lottery_differences_EDRP['dwell_time_ACPS_ASPS'].mean(),
-              charity_lottery_differences_EDRP['dwell_time_ASPC_ACPC'].mean()]
-EDRP_std_model_att = fixed_model_EDRP_attention['Std.Err.'][['charity', 'tradeoff', 'interaction']].to_numpy() # take std of 3 coef from model
-EDRP_errors_att = [EDRP_std_model_att[0], EDRP_std_model_att[1], 
-                    (EDRP_std_model_att[1] + EDRP_std_model_att[2])/2]   # the last std is the sum of beta2 and beta3 
+for category in categories:
+    means, errors = compute_attention_metrics(category)
+    
+    locals()[f'{category}_means_att'] = means
+    locals()[f'{category}_errors_att'] = errors
 
-# for Altruistic subjects
-altruistic_means_att = [no_tradeoff_lottery_differences_altruistic['dwell_time_ACPC_ASPS'].mean(), 
-              self_lottery_differences_altruistic['dwell_time_ACPS_ASPS'].mean(),
-              charity_lottery_differences_altruistic['dwell_time_ASPC_ACPC'].mean()]
-altruistic_std_model_att = fixed_model_altruistic_attention['Std.Err.'][['charity', 'tradeoff', 'interaction']].to_numpy() # take std of 3 coef from model
-altruistic_errors_att = [altruistic_std_model_att[0], altruistic_std_model_att[1], 
-                    (altruistic_std_model_att[1] + altruistic_std_model_att[2])/2]   # the last std is the sum of beta2 and beta3 
-
-# for Normal subjects
-normal_means_att = [no_tradeoff_lottery_differences_normal['dwell_time_ACPC_ASPS'].mean(), 
-              self_lottery_differences_normal['dwell_time_ACPS_ASPS'].mean(),
-              charity_lottery_differences_normal['dwell_time_ASPC_ACPC'].mean()]
-normal_std_model_att = fixed_model_normal_attention['Std.Err.'][['charity', 'tradeoff', 'interaction']].to_numpy() # take std of 3 coef from model
-normal_errors_att = [normal_std_model_att[0], normal_std_model_att[1], 
-                    (normal_std_model_att[1] + normal_std_model_att[2])/2]   # the last std is the sum of beta2 and beta3 
-
-# for Censored subjects
-censored_means_att = [no_tradeoff_lottery_differences_censored['dwell_time_ACPC_ASPS'].mean(), 
-                  self_lottery_differences_censored['dwell_time_ACPS_ASPS'].mean(),
-                  charity_lottery_differences_censored['dwell_time_ASPC_ACPC'].mean()]
-censored_std_model_att = fixed_model_censored_attention['Std.Err.'][['charity', 'tradeoff', 'interaction']].to_numpy() # take std of 3 coef from model
-censored_errors_att = [censored_std_model_att[0], censored_std_model_att[1], 
-                    (censored_std_model_att[1] + censored_std_model_att[2])/2]   # the last std is the sum of beta2 and beta3 
-
-
-# for Adaptive and Censored subjects
-EDRP_censored_means_att = [no_tradeoff_lottery_differences_EDRP_censored['dwell_time_ACPC_ASPS'].mean(), 
-                  self_lottery_differences_EDRP_censored['dwell_time_ACPS_ASPS'].mean(),
-                  charity_lottery_differences_EDRP_censored['dwell_time_ASPC_ACPC'].mean()]
-EDRP_censored_std_model_att = fixed_model_EDRP_censored_attention['Std.Err.'][['charity', 'tradeoff', 'interaction']].to_numpy() # take std of 3 coef from model
-EDRP_censored_errors_att = [EDRP_censored_std_model_att[0], EDRP_censored_std_model_att[1], 
-                    (EDRP_censored_std_model_att[1] + EDRP_censored_std_model_att[2])/2]   # the last std is the sum of beta2 and beta3 
 
 
 # Plot 3 Attention differences for all probabilities (Principal Analysis)
@@ -329,77 +316,37 @@ plt.savefig('All Lottery difference plot Adaptive and Censored H2.png', dpi=1200
 plt.show()
 
 
-# Plot 3 Attention differences with probabilities combined (Principal Analysis)
-plt.bar(lottery_types_difference_attention, principal_means_att, color = ['bisque', 'lightskyblue', 'lightgreen']) 
-plt.errorbar(lottery_types_difference_attention, principal_means_att, principal_errors_att, ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
-plt.axhline(y=0, color='grey', linestyle='--')
-plt.xlabel('Lottery differences')
-plt.ylabel('Attention difference in %')
-plt.text(0.15, 0.9, f'n = {samplesize_principal}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
-plt.legend()
-plt.title('Attention differences with probabilities combined Principal Analysis')
-plt.savefig('All Lottery difference bar H2.png', dpi=1200)
-plt.show()
+# Plot 3 Attention differences with probabilities combined (for different categories of subjects)
+def plot_attention_differences(category):
+    means = globals().get(f"{category}_means_att") # reconstructing the variables names
+    errors = globals().get(f"{category}_errors_att")
+    sample_size = globals().get(f"samplesize_{category}")
+    
+    title = f"Attention differences for {category.capitalize()} subjects"
+    filename = f"Lottery differences {category.capitalize()} H2.png"
+    
+    text_position = (0.85, 0.10) 
+    
+    # Plot bar chart with error bars
+    plt.bar(lottery_types_difference_attention, means, color=['bisque', 'lightskyblue', 'lightgreen'])
+    plt.errorbar(lottery_types_difference_attention, means, errors, ecolor='black', fmt='none', alpha=0.7, label='std ind level')
+    plt.axhline(y=0, color='grey', linestyle='--')
+    plt.xlabel('Lottery differences')
+    plt.ylabel('Attention difference in %')
+    plt.text(text_position[0], text_position[1], f'n = {sample_size}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
+    plt.legend()
+    plt.title(title)
+    os.chdir(path + '/Exley_attentional/results')
+    plt.savefig(filename, dpi=1200)
+    plt.show()
 
-# Plot 3 Attention differences with probabilities combined (Adaptive subjects)
-plt.bar(lottery_types_difference_attention, EDRP_means_att, color = ['bisque', 'lightskyblue', 'lightgreen']) 
-plt.errorbar(lottery_types_difference_attention, EDRP_means_att, EDRP_errors_att, ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
-plt.axhline(y=0, color='grey', linestyle='--')
-plt.xlabel('Lottery differences')
-plt.ylabel('Attention difference in %')
-plt.text(0.15, 0.9, f'n = {samplesize_adaptive}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
-plt.legend()
-plt.title('Attention differences for Adaptive subjects')
-plt.savefig('Lottery differences Adaptive H2.png', dpi=1200)
-plt.show()
+categories = ['principal', 'EDRP', 'altruistic', 'normal', 'positive', 'negative', 'censored', 'EDRP_censored']
 
-# Plot 3 Attention differences with probabilities combined (Altruistic subjects)
-plt.bar(lottery_types_difference_attention, altruistic_means_att, color = ['bisque', 'lightskyblue', 'lightgreen']) 
-plt.errorbar(lottery_types_difference_attention, altruistic_means_att, altruistic_errors_att, ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
-plt.axhline(y=0, color='grey', linestyle='--')
-plt.xlabel('Lottery differences')
-plt.ylabel('Attention difference in %')
-plt.text(0.15, 0.9, f'n = {samplesize_altruistic}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
-plt.legend()
-plt.title('Attention differences for Altruistic subjects')
-plt.savefig('Lottery differences Altruistic H2.png', dpi=1200)
-plt.show()
+for category in categories:
+    plot_attention_differences(category)
 
-# Plot 3 Attention differences with probabilities combined (Normal subjects)
-plt.bar(lottery_types_difference_attention, normal_means_att, color = ['bisque', 'lightskyblue', 'lightgreen']) 
-plt.errorbar(lottery_types_difference_attention, normal_means_att, normal_errors_att, ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
-plt.axhline(y=0, color='grey', linestyle='--')
-plt.xlabel('Lottery differences')
-plt.ylabel('Attention difference in %')
-plt.text(0.15, 0.9, f'n = {samplesize_normal}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
-plt.legend()
-plt.title('Attention differences for Normal subjects')
-plt.savefig('Lottery differences Normal H2.png', dpi=1200)
-plt.show()
 
-# Plot 3 Attention differences with probabilities combined (Censored subjects)
-plt.bar(lottery_types_difference_attention, censored_means_att, color = ['bisque', 'lightskyblue', 'lightgreen']) 
-plt.errorbar(lottery_types_difference_attention, censored_means_att, censored_errors_att, ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
-plt.axhline(y=0, color='grey', linestyle='--')
-plt.xlabel('Lottery differences')
-plt.ylabel('Attention difference in %')
-plt.text(0.85, 0.15, f'n = {samplesize_censored}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
-plt.legend()
-plt.title('Attention differences for Censored subjects')
-plt.savefig('Lottery differences Censored H2.png', dpi=1200)
-plt.show()
 
-# Plot 3 Attention differences with probabilities combined (Adaptive and Censored subjects)
-plt.bar(lottery_types_difference_attention, EDRP_censored_means_att, color = ['bisque', 'lightskyblue', 'lightgreen']) 
-plt.errorbar(lottery_types_difference_attention, EDRP_censored_means_att, EDRP_censored_errors_att, ecolor = 'black', fmt='none', alpha=0.7, label = 'std ind level')
-plt.axhline(y=0, color='grey', linestyle='--')
-plt.xlabel('Lottery differences')
-plt.ylabel('Attention difference in %')
-plt.text(0.85, 0.15, f'n = {samplesize_EDRP_censored}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
-plt.legend()
-plt.title('Attention differences for Adaptive and Censored subjects')
-plt.savefig('Lottery differences Adaptive and Censored H2.png', dpi=1200)
-plt.show()
 
 # Plot Valuation differences between Adaptive and Censored subjects
 width = 0.35
@@ -410,8 +357,8 @@ plt.ylabel('Difference in attention in %')
 plt.title('Difference in attention for Adaptive and Censored subjects H1')
 plt.xticks(x, lottery_types_difference_attention)
 plt.axhline(y=0, color='grey', linestyle='--')
-proxy_artists = [Patch(facecolor='white', edgecolor='black', label=f'Adaptive n = {samplesize_adaptive}'),
-                 Patch(facecolor='white', edgecolor='black', hatch="//", label=f'Censored n = {samplesize_censored}')]
+proxy_artists = [Patch(facecolor='white', edgecolor='black', label=f'Adaptive n = {samplesize_EDRP}'),
+                  Patch(facecolor='white', edgecolor='black', hatch="//", label=f'Censored n = {samplesize_censored}')]
 plt.legend(handles=proxy_artists)
 plt.savefig('Merged Attention Adaptive and Censored H2.png', dpi=1200)
 plt.show()
@@ -473,6 +420,8 @@ plot_atten_per_proba(data_principal, 'Principal Analysis') # For Principal Analy
 plot_atten_per_proba(data_EDRP, 'Adaptive') # For Adaptive
 plot_atten_per_proba(data_altruistic, 'Altruistic') # For Altruistic
 plot_atten_per_proba(data_normal, 'Normal') # For Normal
+plot_atten_per_proba(data_positive, 'Positive') # For Positive
+plot_atten_per_proba(data_negative, 'Negative') # For Negative
 plot_atten_per_proba(data_censored, 'Censored') # For Censored
 
 

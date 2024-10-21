@@ -427,7 +427,7 @@ X_no_EDRP_total = data_autre_principal[data_autre_principal['number'].isin(no_ED
 
 # Sample sizes
 samplesize_principal = len(data_autre_principal) # sample size of Principal Analysis
-samplesize_adaptive = len(data_autre_EDRP) # sample size of Adaptive subjects
+samplesize_EDRP = len(data_autre_EDRP) # sample size of Adaptive subjects
 samplesize_altruistic = len(data_autre_altruistic) # sample size of Altruistic subjects
 samplesize_censored = len(data_autre_censored) # sample size of Censored subjects
 samplesize_EDRP_censored = len(data_autre_EDRP) + len(data_autre_censored) # sample size of Adaptive and Censored subjects
@@ -536,7 +536,7 @@ plt.ylabel('Frequency')
 plt.title('Distribution of X values of Adaptive subjects')
 plt.axvline(x=X_EDRP_total['charity_calibration'].mean(), color='grey', linestyle='--', label = 'Mean = '+ str(np.round(X_EDRP_total['charity_calibration'].mean(), 1)))
 plt.axvline(x=X_EDRP_total['charity_calibration'].median(), color='gainsboro', linestyle='--', label = 'Median = '+ str(np.round(X_EDRP_total['charity_calibration'].median(), 1)))
-plt.text(0.15, 0.9, f'n = {samplesize_adaptive}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
+plt.text(0.15, 0.9, f'n = {samplesize_EDRP}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
 plt.legend()
 plt.savefig('X values distribution ADAPTIVE.png', dpi=1200)
 plt.show()
@@ -822,7 +822,7 @@ plt.errorbar(lottery_types_difference, EDRP_means, EDRP_errors, ecolor = 'black'
 plt.axhline(y=0, color='grey', linestyle='--')
 plt.xlabel('Lottery differences')
 plt.ylabel('Valuation difference in %')
-plt.text(0.15, 0.9, f'n = {samplesize_adaptive}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
+plt.text(0.15, 0.9, f'n = {samplesize_EDRP}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
 plt.legend()
 plt.title('Valuation differences for Adaptive subjects')
 plt.savefig('Lottery differences Adaptive H1.png', dpi=1200)
@@ -863,7 +863,7 @@ plt.ylabel('Difference in valuation in %')
 plt.title('Difference in valuation for Adaptive and Censored subjects H1')
 plt.xticks(x, lottery_types_difference)
 plt.axhline(y=0, color='grey', linestyle='--')
-proxy_artists = [Patch(facecolor='white', edgecolor='black', label=f'Adaptive n = {samplesize_adaptive}'),
+proxy_artists = [Patch(facecolor='white', edgecolor='black', label=f'Adaptive n = {samplesize_EDRP}'),
                  Patch(facecolor='white', edgecolor='black', hatch="//", label=f'Censored n = {samplesize_censored}')]
 plt.legend(handles=proxy_artists)
 plt.savefig('Merged Valuation Adaptive and Censored H1.png', dpi=1200)

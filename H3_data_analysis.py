@@ -172,8 +172,8 @@ def plot_corr_attention_valuation(database, pop, samplesize, reg):
     plt.show()
   
 # Plot Attention vs Valuation difference for Adaptive subjects
-plot_corr_attention_valuation(self_lottery_differences_EDRP, 'Adaptive', samplesize_adaptive, reg_model_self_EDRP)
-plot_corr_attention_valuation(charity_lottery_differences_EDRP, 'Adaptive', samplesize_adaptive, reg_model_charity_EDRP)
+plot_corr_attention_valuation(self_lottery_differences_EDRP, 'Adaptive', samplesize_EDRP, reg_model_self_EDRP)
+plot_corr_attention_valuation(charity_lottery_differences_EDRP, 'Adaptive', samplesize_EDRP, reg_model_charity_EDRP)
 
 # Plot Attention vs Valuation difference for Censored subjects
 plot_corr_attention_valuation(self_lottery_differences_censored, 'Censored', samplesize_censored, reg_model_self_censored)

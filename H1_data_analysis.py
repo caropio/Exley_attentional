@@ -346,7 +346,7 @@ plt.errorbar(lottery_types_difference, EDRP_means, EDRP_errors, ecolor = 'black'
 plt.axhline(y=0, color='grey', linestyle='--')
 plt.xlabel('Lottery differences')
 plt.ylabel('Valuation difference in %')
-plt.text(0.15, 0.9, f'n = {samplesize_adaptive}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
+plt.text(0.15, 0.9, f'n = {samplesize_EDRP}', ha='center', va='center', transform=plt.gca().transAxes, fontsize=11)
 plt.legend()
 plt.title('Valuation differences for Adaptive subjects')
 plt.savefig('Lottery differences Adaptive H1.png', dpi=1200)
